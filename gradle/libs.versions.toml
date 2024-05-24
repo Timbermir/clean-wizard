@@ -1,0 +1,11 @@
+[versions]
+kotlin = "2.0.0"
+google-devtools-ksp = "2.0.0-1.0.21"
+squareup-kotlinpoet = "1.17.0"
+kotlin-kotlinx-serialization-json = "1.7.0-RC"
+[libraries]
+
+[plugins]
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "google-devtools-ksp" }

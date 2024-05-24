@@ -39,4 +39,8 @@ bin/
 .vscode/
 
 ### Mac OS ###
-.DS_Store
+**/.DS_Store
+
+### Node ###
+node_modules
+package-lock.json

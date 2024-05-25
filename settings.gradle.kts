@@ -18,5 +18,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "clean-architecture-mapper"
-include("clean-architecture-mapper-processor")
+include("processor")
 include("workload")

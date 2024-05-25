@@ -1,11 +1,10 @@
 package corp.tbm.cleanarchitecturemapper.processor.extensions
 
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSTypeReference
 import corp.tbm.cleanarchitecturemapper.processor.enums.ModelType
+import corp.tbm.cleanarchitecturemapper.processor.validators.dtoRegex
 import java.util.*
 
-val dtoRegex = Regex("(?i)dto(schema)?$")
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()

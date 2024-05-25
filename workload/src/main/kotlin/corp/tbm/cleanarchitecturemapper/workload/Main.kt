@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper
+package corp.tbm.cleanarchitecturemapper.workload
 
 import corp.tbm.cleanarchitecturemapper.processor.annotations.DTO
 import kotlinx.serialization.SerialName

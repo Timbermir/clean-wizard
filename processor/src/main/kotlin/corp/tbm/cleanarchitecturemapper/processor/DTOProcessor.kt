@@ -30,27 +30,30 @@ class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger:
             generateClass(packageName, domainClassName, dtoProperties)
 
             generateClass(packageName, dtoClassName.replace("DTOSchema", "DTO"), dtoProperties, classBuilder = {
-                addSuperinterface(DTOMapper::class.parameterizedBy(defaultClassBuilder(domainClassName,dtoProperties)))
-                    .addFunction(
-                        FunSpec.builder("toDomain")
-                            .addModifiers(KModifier.OVERRIDE)
-                            .returns(ClassName(packageName, domainClassName))
-                            .addStatement(
-                                "return %T(${dtoProperties.joinToString(", ") { it.first }})",
-                                ClassName(packageName, domainClassName)
-                            )
-                            .build()
-                    )
+                addSuperinterface(
+                    DTOMapper::class.asClassName().parameterizedBy(ClassName(packageName, domainClassName))
+                )
+                addFunction(
+                    FunSpec.builder("toDomain")
+                        .addModifiers(KModifier.OVERRIDE)
+                        .returns(ClassName(packageName, domainClassName))
+                        .addStatement(
+                            "return %T(${dtoProperties.joinToString(", ") { it.first }})",
+                            ClassName(packageName, domainClassName)
+                        )
+                        .build()
+                )
             })
             generateClass(packageName, uiClassName, dtoProperties, fileSpecBuilder = { properties ->
-                generateTopLevelMappingFunction(
-                    packageName,
-                    "toUI",
-                    uiClassName.replaceAfter("UI", "Model"),
-                    uiClassName,
-                    properties
+                addFunction(
+                    generateTopLevelMappingFunction(
+                        packageName,
+                        "toUI",
+                        uiClassName.removeSuffix("UI") + "Model",
+                        uiClassName,
+                        properties
+                    )
                 )
-                this
             })
         }
 
@@ -115,22 +118,23 @@ class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger:
         }
     }
 
-    private fun defaultClassBuilder(className: String, properties: List<Pair<String, String>>) = TypeSpec.classBuilder(className)
-        .addModifiers(KModifier.DATA)
-        .primaryConstructor(
-            FunSpec.constructorBuilder().apply {
-                properties.forEach { (name, type) ->
-                    addParameter(name, getType(type))
+    private fun defaultClassBuilder(className: String, properties: List<Pair<String, String>>) =
+        TypeSpec.classBuilder(className)
+            .addModifiers(KModifier.DATA)
+            .primaryConstructor(
+                FunSpec.constructorBuilder().apply {
+                    properties.forEach { (name, type) ->
+                        addParameter(name, getType(type))
+                    }
+                }.build()
+            )
+            .addProperties(
+                properties.map { (name, type) ->
+                    PropertySpec.builder(name, getType(type))
+                        .initializer(name)
+                        .build()
                 }
-            }.build()
-        )
-        .addProperties(
-            properties.map { (name, type) ->
-                PropertySpec.builder(name, getType(type))
-                    .initializer(name)
-                    .build()
-            }
-        )
+            )
 
     private fun getType(type: String): TypeName {
         return when (type) {

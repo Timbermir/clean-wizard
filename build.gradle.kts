@@ -1,17 +1,26 @@
+import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
+
 plugins {
-    kotlin("jvm") version "2.0.0" apply false
-    id("com.google.devtools.ksp") version "2.0.0-1.0.21"
-}
-
-group = "corp.tbm.cleanarchitecturemapper"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.google.devtools.ksp) apply false
 }
 
 buildscript {
     dependencies {
-        classpath(kotlin("gradle-plugin", version = "2.0.0"))
+        classpath(libs.kotlin.gradle.plugin)
     }
+}
+
+allprojects {
+    rootProject.project.libs.plugins.apply {
+        apply(plugin = kotlin.jvm.get().pluginId)
+        apply(plugin = kotlin.serialization.get().pluginId)
+        apply(plugin = google.devtools.ksp.get().pluginId)
+    }
+
+    kotlinExtension.jvmToolchain(19)
+
+    group = "corp.tbm.cleanarchitecturemapper"
+    version = "1.0-SNAPSHOT"
 }

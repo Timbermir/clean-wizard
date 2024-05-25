@@ -1,0 +1,26 @@
+[versions]
+# Kotlin
+kotlin = "2.0.0"
+# KotlinX
+kotlinx-serialization-json = "1.7.0-RC"
+# KSP
+google-devtools-ksp = "2.0.0-1.0.21"
+# Kotlinpoet
+squareup-kotlinpoet = "1.17.0"
+[libraries]
+# Kotlin
+kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
+# KotlinX
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
+# KSP
+google-devtools-ksp = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "google-devtools-ksp" }
+# Kotlinpoet
+squareup-kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "squareup-kotlinpoet" }
+squareup-kotlinpoet-ksp = { group = "com.squareup", name = "kotlinpoet-ksp", version.ref = "squareup-kotlinpoet" }
+[plugins]
+# Kotlin
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+# KSP
+google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "google-devtools-ksp" }

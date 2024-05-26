@@ -18,9 +18,5 @@ allprojects {
         apply(plugin = kotlin.serialization.get().pluginId)
         apply(plugin = google.devtools.ksp.get().pluginId)
     }
-
     kotlinExtension.jvmToolchain(19)
-
-    group = "corp.tbm.cleanarchitecturemapper"
-    version = "1.0-SNAPSHOT"
 }

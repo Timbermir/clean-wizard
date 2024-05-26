@@ -1,4 +1,6 @@
 [versions]
+# MavenPublish
+vanniktech-maven-publish = "0.28.0"
 # Kotlin
 kotlin = "2.0.0"
 # KotlinX
@@ -19,6 +21,8 @@ google-devtools-ksp = { group = "com.google.devtools.ksp", name = "symbol-proces
 squareup-kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "squareup-kotlinpoet" }
 squareup-kotlinpoet-ksp = { group = "com.squareup", name = "kotlinpoet-ksp", version.ref = "squareup-kotlinpoet" }
 [plugins]
+# MavenPublish
+vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }
 # Kotlin
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

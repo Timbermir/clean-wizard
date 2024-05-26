@@ -3,13 +3,20 @@ package corp.tbm.cleanarchitecturemapper.processor
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.ksp.toTypeName
 import corp.tbm.cleanarchitecturemapper.processor.annotations.DTO
+import corp.tbm.cleanarchitecturemapper.processor.extensions.getParameterName
+import corp.tbm.cleanarchitecturemapper.processor.extensions.getQualifiedPackageNameBasedOnParameterName
+import corp.tbm.cleanarchitecturemapper.processor.extensions.isCustomClass
+import corp.tbm.cleanarchitecturemapper.processor.extensions.name
 import corp.tbm.cleanarchitecturemapper.processor.mapper.DTOMapper
+import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter
+import java.util.*
 
-class Debill
 class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger: KSPLogger) : SymbolProcessor {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -17,39 +24,68 @@ class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger:
             .filterIsInstance<KSClassDeclaration>()
 
         symbols.forEach { symbol ->
-            val dtoClassName = symbol.simpleName.asString()
-            val packageName = symbol.packageName.asString()
 
-            val domainClassName = dtoClassName.replace("DTOSchema", "Model")
-            val uiClassName = dtoClassName.removeSuffix("DTOSchema") + "UI"
+            val baseName = symbol.simpleName.asString().removeSuffix("DTOSchema")
+            val basePackage = symbol.packageName.asString().split(".").dropLast(1)
+                .joinToString(".") + "." + baseName.replaceFirstChar {
+                it.lowercase(
+                    Locale.getDefault()
+                )
+            }
 
-            val dtoProperties = symbol.getAllProperties().map { property ->
-                property.simpleName.asString() to property.type.resolve().declaration.simpleName.asString()
-            }.toList()
+            fun generatePackage(suffix: String) = "${basePackage}.$suffix"
 
-            generateClass(packageName, domainClassName, dtoProperties)
+            fun generateClassName(suffix: String) = "${baseName}$suffix"
 
-            generateClass(packageName, dtoClassName.replace("DTOSchema", "DTO"), dtoProperties, classBuilder = {
+            val dtoPackage = generatePackage("dto")
+            val modelPackage = generatePackage("model")
+            val uiPackage = generatePackage("ui")
+
+            val dtoClassName = generateClassName("DTO")
+            val modelClassName = generateClassName("Model")
+            val uiClassName = generateClassName("UI")
+
+            val dtoProperties = symbol.getAllProperties().toList()
+
+            generateClass(modelPackage, modelClassName, dtoProperties)
+
+            generateClass(dtoPackage, dtoClassName, dtoProperties, classBuilder = {
                 addSuperinterface(
-                    DTOMapper::class.asClassName().parameterizedBy(ClassName(packageName, domainClassName))
+                    DTOMapper::class.asClassName()
+                        .parameterizedBy(ClassName(modelPackage, modelClassName))
                 )
                 addFunction(
                     FunSpec.builder("toDomain")
                         .addModifiers(KModifier.OVERRIDE)
-                        .returns(ClassName(packageName, domainClassName))
+                        .returns(ClassName(modelPackage, modelClassName))
                         .addStatement(
-                            "return %T(${dtoProperties.joinToString(", ") { it.first }})",
-                            ClassName(packageName, domainClassName)
+                            "return %T(${
+                                dtoProperties.map { it.getParameterName(dtoPackage) }.joinToString(", ") {
+                                    if (it.endsWith("DTO")
+                                    ) "$it.toDomain()" else it
+                                }
+                            })",
+                            ClassName(modelPackage, modelClassName)
                         )
                         .build()
                 )
             })
-            generateClass(packageName, uiClassName, dtoProperties, fileSpecBuilder = { properties ->
+
+
+            generateClass(uiPackage, uiClassName, dtoProperties, fileSpecBuilder = { properties ->
+                properties.forEach {
+                    if (it.isCustomClass)
+                        addImport(
+                            it.getQualifiedPackageNameBasedOnParameterName(uiPackage),
+                            ".toUI"
+                        )
+                }
                 addFunction(
                     generateTopLevelMappingFunction(
-                        packageName,
+                        modelPackage,
+                        uiPackage,
                         "toUI",
-                        uiClassName.removeSuffix("UI") + "Model",
+                        modelClassName,
                         uiClassName,
                         properties
                     )
@@ -61,18 +97,22 @@ class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger:
     }
 
     private fun generateTopLevelMappingFunction(
-        packageName: String,
+        classPackageToMapFrom: String,
+        classPackageToMapTo: String,
         functionName: String,
         classToMapFrom: String,
         classToMapTo: String,
-        classProperties: List<Pair<String, String>>
+        classProperties: List<KSPropertyDeclaration>
     ): FunSpec {
         return FunSpec.builder(functionName)
-            .receiver(ClassName(packageName, classToMapFrom))
-            .returns(ClassName(packageName, classToMapTo))
+            .receiver(ClassName(classPackageToMapFrom, classToMapFrom))
+            .returns(ClassName(classPackageToMapTo, classToMapTo))
             .addStatement(
-                "return %T(${classProperties.joinToString(", ") { it.first }})",
-                ClassName(packageName, classToMapTo)
+                "return %T(${
+                    classProperties.map { it.getParameterName(classPackageToMapFrom) }
+                        .joinToString(", ") { if (it.endsWith("Model")) "$it.toUI()" else it }
+                }\n)",
+                ClassName(classPackageToMapTo, classToMapTo)
             )
             .build()
     }
@@ -80,27 +120,50 @@ class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger:
     private fun generateClass(
         packageName: String,
         className: String,
-        properties: List<Pair<String, String>>,
+        properties: List<KSPropertyDeclaration>,
         classBuilder: TypeSpec.Builder.() -> TypeSpec.Builder = { this },
-        fileSpecBuilder: FileSpec.Builder.(properties: List<Pair<String, String>>) -> FileSpec.Builder = { this }
+        fileSpecBuilder: FileSpec.Builder.(properties: List<KSPropertyDeclaration>) -> FileSpec.Builder = { this }
     ) {
+        val classToBuild = classBuilder(
+            TypeSpec.classBuilder(className)
+                .addModifiers(KModifier.DATA)
+                .primaryConstructor(
+                    FunSpec.constructorBuilder().apply {
+                        properties.forEach { property ->
+                            addParameter(
+                                property.getParameterName(packageName),
+                                if (property.isCustomClass) ClassName(
+                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                    property.getParameterName(packageName).replaceFirstChar { it.uppercase() }
+                                )
+                                else property.type.toTypeName()
+                            )
+                        }
+                    }.build()
+                )
+                .addProperties(
+                    properties.map { property ->
 
-        val classToBuild = classBuilder(TypeSpec.classBuilder(className)
-            .addModifiers(KModifier.DATA)
-            .primaryConstructor(
-                FunSpec.constructorBuilder().apply {
-                    properties.forEach { (name, type) ->
-                        addParameter(name, getType(type))
-                    }
-                }.build()
-            )
-            .addProperties(
-                properties.map { (name, type) ->
-                    PropertySpec.builder(name, getType(type))
-                        .initializer(name)
-                        .build()
-                }
-            )).build()
+                        PropertySpec.builder(
+                            property.getParameterName(packageName),
+                            if (property.isCustomClass) ClassName(
+                                property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                property.getParameterName(packageName).replaceFirstChar { it.uppercase() }
+                            )
+                            else property.type.toTypeName()
+                        )
+                            .initializer(
+                                property.getParameterName(packageName),
+                            )
+
+                            .addAnnotation(
+                                AnnotationSpec.builder(SerialName::class)
+                                    .addMember("%S", property.name)
+                                    .build()
+                            )
+                            .build()
+                    })
+        ).build()
 
         val fileSpec = fileSpecBuilder(
             FileSpec.builder(packageName, className)
@@ -117,42 +180,10 @@ class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger:
             fileSpec.writeTo(writer)
         }
     }
-
-    private fun defaultClassBuilder(className: String, properties: List<Pair<String, String>>) =
-        TypeSpec.classBuilder(className)
-            .addModifiers(KModifier.DATA)
-            .primaryConstructor(
-                FunSpec.constructorBuilder().apply {
-                    properties.forEach { (name, type) ->
-                        addParameter(name, getType(type))
-                    }
-                }.build()
-            )
-            .addProperties(
-                properties.map { (name, type) ->
-                    PropertySpec.builder(name, getType(type))
-                        .initializer(name)
-                        .build()
-                }
-            )
-
-    private fun getType(type: String): TypeName {
-        return when (type) {
-            "Int" -> INT
-            "String" -> STRING
-            "Boolean" -> BOOLEAN
-            "Double" -> DOUBLE
-            else -> ClassName("", type)
-        }
-    }
 }
 
 class DtoProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         return DtoProcessor(environment.codeGenerator, environment.logger)
     }
-}
-
-interface Debil {
-
 }

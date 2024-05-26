@@ -15,6 +15,12 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
     }
+
+    versionCatalogs {
+        create("gradleProjectConfig") {
+            from(files("gradle/gradle-project-config.versions.toml"))
+        }
+    }
 }
 
 rootProject.name = "clean-architecture-mapper"

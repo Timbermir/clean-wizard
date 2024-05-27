@@ -261,11 +261,13 @@ dependencies {
   or `Model`s for `domain module`, they are generated in module where `DTOSchema` is located**
 - **SUPPORTS only [kotlinx-serialization-json](https://github.com/Kotlin/kotlinx.serialization)**
 - **DOES NOT support `enums`, `collections` or any custom type but the source ones**
- - **DOES NOT support inheriting other annotations**
-- **DOES NOT support inheriting `@SerialName` value if present, generated `@SerialName` value is derived from field's name**
+- **DOES NOT support inheriting other annotations**
+- **DOES NOT support inheriting `@SerialName` value if present, generated `@SerialName` value is derived from field's
+  name**
 - **DOES NOT support backwards mapping, i.e., from `model` to `DTO`**
-  **DOES NOT
-  support [custom processor options](https://kotlinlang.org/docs/ksp-quickstart.html#pass-options-to-processors), i.e.,
+- **DOES NOT
+  support [custom processor options](https://kotlinlang.org/docs/ksp-quickstart.html#pass-options-to-processors),
+  i.e.,
   change `DTO` classes suffix to `Dto`**
 - **DOES NOT support multiplatform**
 - **DOES NOT support [Room](https://developer.android.com/jetpack/androidx/releases/room) entity generation, therefore

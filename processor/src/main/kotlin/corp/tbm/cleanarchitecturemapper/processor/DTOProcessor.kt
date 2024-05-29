@@ -12,11 +12,16 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
-import corp.tbm.cleanarchitecturemapper.processor.foundation.annotations.DTO
-import corp.tbm.cleanarchitecturemapper.processor.foundation.extensions.*
-import corp.tbm.cleanarchitecturemapper.processor.mapper.DTOMapper
-import corp.tbm.cleanarchitecturemapper.processor.validators.dtoRegex
-import corp.tbm.cleanarchitecturemapper.processor.visitors.EnumGenerateVisitor
+import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.getParameterName
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.getQualifiedPackageNameBasedOnParameterName
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.isCustomClass
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.name
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.DTOMapper
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
+import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
 import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter
 import java.util.*
@@ -27,7 +32,6 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-
 
         val symbols = resolver.getAnnotatedSymbols<KSClassDeclaration>(DTO::class.qualifiedName!!)
 
@@ -191,6 +195,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                     property.accept(enumGenerateVisitor, "$packageName.enums")
                 }
             }
+
         val classToBuild = classBuilder(
             TypeSpec.classBuilder(className)
                 .addModifiers(KModifier.DATA)
@@ -211,6 +216,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                 )
                 .addProperties(
                     properties.map { property ->
+
                         PropertySpec.builder(
                             property.getParameterName(packageName),
                             if (property.isCustomClass) ClassName(
@@ -221,7 +227,8 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                         ).also {
                             it.mutable(property.isMutable)
                             it.addModifiers(property.modifiers.toList().map { it.toKModifier() }
-                                .filter { it?.name in allowedModifiers.map { it.name } }.filterNotNull())
+                                .filter { it?.name in allowedDataClassPropertiesModifiers.map { it.name } }
+                                .filterNotNull())
                             it.initializer(
                                 property.getParameterName(packageName)
                             )
@@ -253,10 +260,8 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
     }
 }
 
-class DTOProcessorProvider : SymbolProcessorProvider {
+internal class DTOProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         return DTOProcessor(environment.codeGenerator, environment.logger)
     }
 }
-
-val allowedModifiers = listOf(KModifier.PUBLIC, KModifier.OVERRIDE, KModifier.FINAL)

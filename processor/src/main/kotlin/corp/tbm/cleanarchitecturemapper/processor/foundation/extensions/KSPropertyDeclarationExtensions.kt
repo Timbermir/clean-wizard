@@ -1,7 +1,7 @@
-package corp.tbm.cleanarchitecturemapper.processor.extensions
+package corp.tbm.cleanarchitecturemapper.processor.foundation.extensions
 
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import corp.tbm.cleanarchitecturemapper.processor.enums.ModelType
+import corp.tbm.cleanarchitecturemapper.processor.foundation.enums.ModelType
 import corp.tbm.cleanarchitecturemapper.processor.validators.dtoRegex
 import java.util.*
 

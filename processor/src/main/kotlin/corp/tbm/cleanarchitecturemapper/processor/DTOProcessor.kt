@@ -7,86 +7,99 @@ import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
-import corp.tbm.cleanarchitecturemapper.processor.annotations.DTO
-import corp.tbm.cleanarchitecturemapper.processor.extensions.getParameterName
-import corp.tbm.cleanarchitecturemapper.processor.extensions.getQualifiedPackageNameBasedOnParameterName
-import corp.tbm.cleanarchitecturemapper.processor.extensions.isCustomClass
-import corp.tbm.cleanarchitecturemapper.processor.extensions.name
+import corp.tbm.cleanarchitecturemapper.processor.foundation.annotations.DTO
+import corp.tbm.cleanarchitecturemapper.processor.foundation.extensions.*
 import corp.tbm.cleanarchitecturemapper.processor.mapper.DTOMapper
 import corp.tbm.cleanarchitecturemapper.processor.validators.dtoRegex
+import corp.tbm.cleanarchitecturemapper.processor.visitors.EnumGenerateVisitor
 import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter
 import java.util.*
 
-class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger: KSPLogger) : SymbolProcessor {
+class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger: KSPLogger) : SymbolProcessor {
+
+    private val enumGenerateVisitor = EnumGenerateVisitor(codeGenerator, logger)
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val symbols = resolver.getSymbolsWithAnnotation(DTO::class.qualifiedName!!)
-            .filterIsInstance<KSClassDeclaration>()
+
+
+        val symbols = resolver.getAnnotatedSymbols<KSClassDeclaration>(DTO::class.qualifiedName!!)
 
         symbols.forEach { symbol ->
 
             val dtoProperties = symbol.getAllProperties().toList()
-
             generateClass(resolver, symbol, "Model", dtoProperties)
 
-            generateClass(resolver, symbol, "DTO", dtoProperties, classBuilder = { packageName, className, properties ->
-                if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
-                    addSuperinterface(
-                        DTOMapper::class.asClassName()
-                            .parameterizedBy(
-                                ClassName(
-                                    packageName.replace("dto", "model"),
-                                    className.replace("DTO", "Model")
+            generateClass(
+                resolver,
+                symbol,
+                "DTO",
+                dtoProperties,
+                classBuilder = { packageName, className, properties ->
+                    if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
+                        addSuperinterface(
+                            DTOMapper::class.asClassName()
+                                .parameterizedBy(
+                                    ClassName(
+                                        packageName.replace("dto", "model"),
+                                        className.replace("DTO", "Model")
+                                    )
                                 )
-                            )
-                    )
-                    addFunction(
-                        FunSpec.builder("toDomain")
-                            .addModifiers(KModifier.OVERRIDE)
-                            .returns(ClassName(packageName.replace("dto", "model"), className.replace("DTO", "Model")))
-                            .addStatement(
-                                "return %T(${
-                                    properties.map { it.getParameterName(packageName) }.joinToString(", ") {
-                                        if (it.endsWith("DTO")
-                                        ) "$it.toDomain()" else it
-                                    }
-                                })",
-                                ClassName(packageName.replace("dto", "model"), className.replace("DTO", "Model"))
-                            )
-                            .build()
-                    )
-                }
-                this
-            }, fileSpecBuilder = { packageName, className, properties ->
-                val dtoAnnotation = symbol.getAnnotationsByType(DTO::class).first()
-                properties.forEach {
-                    if (it.isCustomClass && resolver.getClassDeclarationByName(it.type.resolve().declaration.qualifiedName!!)
-                            ?.getAnnotationsByType(DTO::class)?.first()?.toDomainAsTopLevel == true
-                    )
-                        addImport(
-                            it.getQualifiedPackageNameBasedOnParameterName(packageName),
-                            ".toDomain"
                         )
-                }
-                if (dtoAnnotation.toDomainAsTopLevel) {
-                    addFunction(
-                        generateTopLevelMappingFunction(
-                            packageName,
-                            packageName.replace("dto", "model"),
-                            "toDomain",
-                            className,
-                            className.replace("DTO", "Model"),
-                            properties
+                        addFunction(
+                            FunSpec.builder("toDomain")
+                                .addModifiers(KModifier.OVERRIDE)
+                                .returns(
+                                    ClassName(
+                                        packageName.replace("dto", "model"),
+                                        className.replace("DTO", "Model")
+                                    )
+                                )
+                                .addStatement(
+                                    "return %T(${
+                                        properties.map { it.getParameterName(packageName) }.joinToString(", ") {
+                                            if (it.endsWith("DTO")
+                                            ) "$it.toDomain()" else it
+                                        }
+                                    })",
+                                    ClassName(packageName.replace("dto", "model"), className.replace("DTO", "Model"))
+                                )
+                                .build()
                         )
-                    )
-                }
-                this
-            })
+                    }
+                    this
+                },
+                fileSpecBuilder = { packageName, className, properties ->
+                    val dtoAnnotation = symbol.getAnnotationsByType(DTO::class).first()
+                    properties.forEach {
+                        if (it.isCustomClass && resolver.getClassDeclarationByName(it.type.resolve().declaration.qualifiedName!!)
+                                ?.getAnnotationsByType(DTO::class)?.firstOrNull()?.toDomainAsTopLevel == true
+                        )
+                            addImport(
+                                it.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                ".toDomain"
+                            )
+                    }
+                    if (dtoAnnotation.toDomainAsTopLevel) {
+                        addFunction(
+                            generateTopLevelMappingFunction(
+                                packageName,
+                                packageName.replace("dto", "model"),
+                                "toDomain",
+                                className,
+                                className.replace("DTO", "Model"),
+                                properties
+                            )
+                        )
+                    }
+                    this
+                })
 
             generateClass(
                 resolver,
@@ -114,7 +127,7 @@ class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger:
                 })
         }
 
-        return emptyList()
+        return symbols.filter { !it.validate() }
     }
 
     private fun generateTopLevelMappingFunction(
@@ -172,6 +185,12 @@ class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger:
             }.${neededSuffix.lowercase()}"
         }
 
+        if (neededSuffix == "Model")
+            properties.forEach { property ->
+                if (property.annotations.filter { it.shortName.asString().contains("Enum") }.toList().isNotEmpty()) {
+                    property.accept(enumGenerateVisitor, "$packageName.enums")
+                }
+            }
         val classToBuild = classBuilder(
             TypeSpec.classBuilder(className)
                 .addModifiers(KModifier.DATA)
@@ -179,11 +198,6 @@ class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger:
                 .primaryConstructor(
                     FunSpec.constructorBuilder().apply {
                         properties.forEach { property ->
-                            logger.warn(
-                                ClassName.bestGuess(
-                                    property.getParameterName(packageName)
-                                        .replaceFirstChar { it.uppercase() }).simpleName
-                            )
                             addParameter(
                                 property.getParameterName(packageName),
                                 if (property.isCustomClass) ClassName(
@@ -205,8 +219,11 @@ class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger:
                             )
                             else property.type.toTypeName()
                         ).also {
+                            it.mutable(property.isMutable)
+                            it.addModifiers(property.modifiers.toList().map { it.toKModifier() }
+                                .filter { it?.name in allowedModifiers.map { it.name } }.filterNotNull())
                             it.initializer(
-                                property.getParameterName(packageName),
+                                property.getParameterName(packageName)
                             )
                             if (symbol.isAnnotationPresent(DTO::class))
                                 it.addAnnotation(
@@ -236,8 +253,10 @@ class DtoProcessor(private val codeGenerator: CodeGenerator, private val logger:
     }
 }
 
-class DtoProcessorProvider : SymbolProcessorProvider {
+class DTOProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return DtoProcessor(environment.codeGenerator, environment.logger)
+        return DTOProcessor(environment.codeGenerator, environment.logger)
     }
 }
+
+val allowedModifiers = listOf(KModifier.PUBLIC, KModifier.OVERRIDE, KModifier.FINAL)

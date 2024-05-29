@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.processor.enums
+package corp.tbm.cleanarchitecturemapper.processor.foundation.enums
 
 enum class ModelType(val suffix: String) {
     DTO("DTO"),

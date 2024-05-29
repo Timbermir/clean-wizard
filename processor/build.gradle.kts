@@ -8,7 +8,6 @@ dependencies {
     implementation(projects.foundation.codegen.ksp)
     implementation(projects.foundation.codegen.kotlinpoet)
     implementation(projects.visitors.enums)
-    api(projects.foundation.annotations)
     api(projects.foundation.codegen.universal)
 }
 

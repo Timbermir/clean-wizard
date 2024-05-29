@@ -24,5 +24,12 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "clean-architecture-mapper"
+include(
+    "foundation:annotations",
+    "foundation:codegen:ksp",
+    "foundation:codegen:kotlinpoet",
+    "foundation:codegen:universal"
+)
+include("visitors:enums")
 include("processor")
 include("workload")

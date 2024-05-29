@@ -12,7 +12,6 @@ squareup-kotlinpoet = "1.17.0"
 [libraries]
 # Kotlin
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
-kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 # KotlinX
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 # KSP
@@ -20,6 +19,8 @@ google-devtools-ksp = { group = "com.google.devtools.ksp", name = "symbol-proces
 # Kotlinpoet
 squareup-kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "squareup-kotlinpoet" }
 squareup-kotlinpoet-ksp = { group = "com.squareup", name = "kotlinpoet-ksp", version.ref = "squareup-kotlinpoet" }
+[bundles]
+foundation-codegen= ["kotlinx-serialization-json", "google-devtools-ksp", "squareup-kotlinpoet", "squareup-kotlinpoet-ksp"]
 [plugins]
 # MavenPublish
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }

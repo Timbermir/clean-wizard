@@ -1,10 +1,9 @@
-package corp.tbm.cleanarchitecturemapper.processor.extensions
+package corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks
 
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import corp.tbm.cleanarchitecturemapper.processor.enums.ModelType
-import corp.tbm.cleanarchitecturemapper.processor.validators.dtoRegex
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.ModelType
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
 import java.util.*
-
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()

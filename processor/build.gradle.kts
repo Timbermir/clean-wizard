@@ -1,21 +1,19 @@
 import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
+    id(libs.plugins.cleanarchitecturemapper.codegen.visitor.get().pluginId)
     alias(libs.plugins.vanniktech.maven.publish)
 }
 
 dependencies {
-    implementation(projects.foundation.codegen.ksp)
-    implementation(projects.foundation.codegen.kotlinpoet)
     implementation(projects.visitors.enums)
-    api(projects.foundation.codegen.universal)
 }
 
 mavenPublishing {
     coordinates(
-        gradleProjectConfig.versions.group.get(),
-        gradleProjectConfig.versions.artifact.get(),
-        gradleProjectConfig.versions.version.get()
+        projectConfig.versions.group.get(),
+        projectConfig.versions.artifact.get(),
+        projectConfig.versions.version.get()
     )
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
 

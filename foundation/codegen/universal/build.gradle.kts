@@ -1,4 +1,3 @@
-dependencies {
-    api(projects.foundation.annotations)
-    api(libs.bundles.foundation.codegen)
+plugins {
+    id(libs.plugins.cleanarchitecturemapper.codegen.foundation.get().pluginId)
 }

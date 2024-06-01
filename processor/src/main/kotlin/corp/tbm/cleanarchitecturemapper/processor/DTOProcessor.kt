@@ -18,9 +18,9 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.get
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.getQualifiedPackageNameBasedOnParameterName
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.isCustomClass
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.name
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.DTOMapper
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
 import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter

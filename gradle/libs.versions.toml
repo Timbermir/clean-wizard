@@ -4,6 +4,8 @@ vanniktech-maven-publish = "0.28.0"
 # Kotlin
 kotlin = "2.0.0"
 # KotlinX
+kotlinx-collections-immutable = "0.3.7"
+kotlinx-datetime = "0.6.0"
 kotlinx-serialization-json = "1.7.0-RC"
 # KSP
 google-devtools-ksp = "2.0.0-1.0.21"
@@ -13,15 +15,22 @@ squareup-kotlinpoet = "1.17.0"
 # Kotlin
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 # KotlinX
+kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 # KSP
 google-devtools-ksp = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "google-devtools-ksp" }
 # Kotlinpoet
-squareup-kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "squareup-kotlinpoet" }
 squareup-kotlinpoet-ksp = { group = "com.squareup", name = "kotlinpoet-ksp", version.ref = "squareup-kotlinpoet" }
 [bundles]
-foundation-codegen= ["kotlinx-serialization-json", "google-devtools-ksp", "squareup-kotlinpoet", "squareup-kotlinpoet-ksp"]
+kotlinx = ["kotlinx-collections-immutable", "kotlinx-datetime", "kotlinx-serialization-json"]
+foundation-codegen = ["kotlinx-serialization-json", "google-devtools-ksp", "squareup-kotlinpoet-ksp"]
 [plugins]
+# Custom Plugins
+cleanarchitecturemapper-kotlin = { id = "corp.tbm.cleanarchitecturemapper.kotlin" }
+cleanarchitecturemapper-codegen-foundation = { id = "corp.tbm.cleanarchitecturemapper.codegen.foundation" }
+cleanarchitecturemapper-codegen-visitor = { id = "corp.tbm.cleanarchitecturemapper.codegen.visitor" }
+cleanarchitecturemapper-workload = { id = "corp.tbm.cleanarchitecturemapper.workload" }
 # MavenPublish
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }
 # Kotlin

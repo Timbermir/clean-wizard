@@ -1,4 +1,3 @@
-dependencies {
-    implementation(projects.foundation.codegen.ksp)
-    implementation(projects.foundation.codegen.kotlinpoet)
+plugins {
+    id(libs.plugins.cleanarchitecturemapper.codegen.visitor.get().pluginId)
 }

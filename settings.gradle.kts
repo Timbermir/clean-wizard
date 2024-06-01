@@ -17,13 +17,14 @@ dependencyResolutionManagement {
     }
 
     versionCatalogs {
-        create("gradleProjectConfig") {
-            from(files("gradle/gradle-project-config.versions.toml"))
+        create("projectConfig") {
+            from(files("gradle/project-config.versions.toml"))
         }
     }
 }
 
 rootProject.name = "clean-architecture-mapper"
+includeBuild("build-logic")
 include(
     "foundation:annotations",
     "foundation:codegen:ksp",

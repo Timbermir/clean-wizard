@@ -11,12 +11,3 @@ buildscript {
         classpath(libs.kotlin.gradle.plugin)
     }
 }
-
-allprojects {
-    rootProject.project.libs.plugins.apply {
-        apply(plugin = kotlin.jvm.get().pluginId)
-        apply(plugin = kotlin.serialization.get().pluginId)
-        apply(plugin = google.devtools.ksp.get().pluginId)
-    }
-    kotlinExtension.jvmToolchain(19)
-}

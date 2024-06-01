@@ -1,3 +1,3 @@
-dependencies {
-    api(projects.foundation.codegen.universal)
+plugins {
+    id(libs.plugins.cleanarchitecturemapper.codegen.foundation.get().pluginId)
 }

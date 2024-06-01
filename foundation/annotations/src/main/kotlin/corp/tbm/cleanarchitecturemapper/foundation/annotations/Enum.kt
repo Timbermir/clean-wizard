@@ -45,4 +45,4 @@ annotation class BooleanEnum(val enumEntries: Array<String>, val valueName: Stri
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class CustomEnum(val enumEntries: Array<KClass<*>>, val valueName: String, val values: Array<KClass<*>>)
+annotation class CustomEnum(val enumEntries: Array<String>, val valueName: String, val values: Array<KClass<*>>)

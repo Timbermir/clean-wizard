@@ -1,0 +1,5 @@
+[versions]
+foundation-kotlin-implementation = "corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.plugins.KotlinPlugin"
+foundation-codegen-implementation = "corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.plugins.CodegenPlugin"
+visitor-implementation = "corp.tbm.cleanarchitecturemapper.buildLogic.convention.plugins.codegen.VisitorPlugin"
+workload-implementation = "corp.tbm.cleanarchitecturemapper.buildLogic.convention.plugins.WorkloadPlugin"

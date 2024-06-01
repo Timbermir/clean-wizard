@@ -1,30 +1,28 @@
 package corp.tbm.cleanarchitecturemapper.processor
 
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getAnnotationsByType
-import com.google.devtools.ksp.isAnnotationPresent
+import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
-import com.squareup.kotlinpoet.ksp.toTypeName
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.getParameterName
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.getQualifiedPackageNameBasedOnParameterName
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.isCustomClass
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.name
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.DTOMapper
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.*
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.log
 import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
 import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter
 import java.util.*
+
+const val PARAMETER_SEPARATOR = ", \n"
+const val PARAMETER_PREFIX = "\n"
 
 class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger: KSPLogger) : SymbolProcessor {
 
@@ -67,11 +65,12 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                                 )
                                 .addStatement(
                                     "return %T(${
-                                        properties.map { it.getParameterName(packageName) }.joinToString(", ") {
-                                            if (it.endsWith("DTO")
-                                            ) "$it.toDomain()" else it
-                                        }
-                                    })",
+                                        properties.map { it.getParameterName(packageName) }
+                                            .joinToString(separator = PARAMETER_SEPARATOR, prefix = PARAMETER_PREFIX) {
+                                                if (it.endsWith("DTO")
+                                                ) "$it.toDomain()" else it
+                                            }
+                                    }\n)",
                                     ClassName(packageName.replace("dto", "model"), className.replace("DTO", "Model"))
                                 )
                                 .build()
@@ -81,26 +80,93 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                 },
                 fileSpecBuilder = { packageName, className, properties ->
                     val dtoAnnotation = symbol.getAnnotationsByType(DTO::class).first()
-                    properties.forEach {
-                        if (it.isCustomClass && resolver.getClassDeclarationByName(it.type.resolve().declaration.qualifiedName!!)
-                                ?.getAnnotationsByType(DTO::class)?.firstOrNull()?.toDomainAsTopLevel == true
-                        )
+                    when {
+                        !dtoAnnotation.toDomainAsTopLevel -> {
                             addImport(
-                                it.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                "corp.tbm.cleanarchitecturemapper.foundation.codegen.universal",
                                 ".toDomain"
                             )
-                    }
-                    if (dtoAnnotation.toDomainAsTopLevel) {
-                        addFunction(
-                            generateTopLevelMappingFunction(
-                                packageName,
-                                packageName.replace("dto", "model"),
-                                "toDomain",
-                                className,
-                                className.replace("DTO", "Model"),
-                                properties
+                        }
+
+                        dtoAnnotation.toDomainAsTopLevel -> {
+                            addFunction(
+                                generateTopLevelMappingFunctions(
+                                    "toDomain",
+                                    properties,
+                                    ClassName(
+                                        packageName,
+                                        className
+                                    ),
+                                    ClassName(
+                                        packageName.replace("dto", "model"),
+                                        className.replace("DTO", "Model")
+                                    ),
+                                    packageName
+                                )
                             )
-                        )
+                        }
+                    }
+                    properties.forEach { property ->
+                        when {
+
+                            dtoAnnotation.toDomainAsTopLevel -> {
+
+                                when {
+                                    property.type.resolve().isMappable -> {
+                                        addImport(
+                                            property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                            ".toDomain"
+                                        )
+                                    }
+
+                                    property.type.resolve().isListMappable -> {
+                                        addFunction(
+                                            generateTopLevelMappingFunctions(
+                                                "toDomain", properties, List::class.asClassName()
+                                                    .parameterizedBy(
+                                                        ClassName(
+                                                            property.getQualifiedPackageNameBasedOnParameterName(
+                                                                packageName
+                                                            ),
+                                                            property.getParameterName(packageName)
+                                                                .replaceFirstChar { it.uppercase() })
+                                                    ),
+                                                List::class.asClassName()
+                                                    .parameterizedBy(
+                                                        ClassName(
+                                                            property.getQualifiedPackageNameBasedOnParameterName(
+                                                                packageName.replace("dto", "model")
+                                                            ),
+                                                            property.getParameterName(packageName)
+                                                                .replace("DTO", "Model")
+                                                                .replaceFirstChar { it.uppercase() })
+                                                    ),
+                                                packageName.replace("dto", "model"),
+                                                "return map { ${
+                                                    property.getParameterName(
+                                                        packageName.replace(
+                                                            "model",
+                                                            "dto"
+                                                        )
+                                                    )
+                                                } -> ${
+                                                    property.getParameterName(packageName)
+                                                }.toDomain() }",
+                                                List::class.asClassName()
+                                                    .parameterizedBy(
+                                                        ClassName(
+                                                            property.getQualifiedPackageNameBasedOnParameterName(
+                                                                packageName
+                                                            ),
+                                                            property.getParameterName(packageName)
+                                                                .replaceFirstChar { it.uppercase() })
+                                                    )
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                     this
                 })
@@ -111,46 +177,98 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                 "UI",
                 dtoProperties,
                 fileSpecBuilder = { packageName, className, properties ->
-                    properties.forEach {
-                        if (it.isCustomClass)
-                            addImport(
-                                it.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                ".toUI"
-                            )
-                    }
                     addFunction(
-                        generateTopLevelMappingFunction(
-                            packageName.replace("ui", "model"),
-                            packageName,
-                            "toUI",
-                            className.replace("UI", "Model"),
-                            className,
-                            properties
+                        generateTopLevelMappingFunctions(
+                            "toUI", properties, ClassName(
+                                packageName.replace("ui", "model"),
+                                className.replace("UI", "Model")
+                            ),
+                            ClassName(packageName, className),
+                            packageName.replace("ui", "model")
                         )
                     )
+                    properties.forEach { property ->
+                        when {
+
+                            property.type.resolve().isMappable -> {
+                                addImport(
+                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                    ".toUI"
+                                )
+                            }
+
+                            property.type.resolve().isListMappable -> {
+                                addImport(
+                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                    ".toUI"
+                                )
+                                addFunction(
+                                    generateTopLevelMappingFunctions(
+                                        "toUI", properties, List::class.asClassName()
+                                            .parameterizedBy(
+                                                ClassName(
+                                                    property.getQualifiedPackageNameBasedOnParameterName(packageName)
+                                                        .replace("ui", "model"),
+                                                    property.getParameterName(packageName).replace("UI", "Model")
+                                                        .replaceFirstChar { it.uppercase() })
+                                            ),
+                                        List::class.asClassName()
+                                            .parameterizedBy(
+                                                ClassName(
+                                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                                    property.getParameterName(packageName)
+                                                        .replaceFirstChar { it.uppercase() })
+                                            ),
+                                        packageName.replace("ui", "model"),
+                                        "return map { ${
+                                            property.getParameterName(
+                                                packageName.replace(
+                                                    "ui",
+                                                    "model"
+                                                )
+                                            )
+                                        } -> ${
+                                            property.getParameterName(packageName.replace("ui", "model"))
+                                        }.toUI() }",
+                                        List::class.asClassName()
+                                            .parameterizedBy(
+                                                ClassName(
+                                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                                    property.getParameterName(packageName)
+                                                        .replaceFirstChar { it.uppercase() })
+                                            )
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    this
                 })
         }
 
         return symbols.filter { !it.validate() }
     }
 
-    private fun generateTopLevelMappingFunction(
-        classPackageToMapFrom: String,
-        classPackageToMapTo: String,
+    private fun generateTopLevelMappingFunctions(
         functionName: String,
-        classToMapFrom: String,
-        classToMapTo: String,
-        classProperties: List<KSPropertyDeclaration>
+        properties: List<KSPropertyDeclaration>,
+        receiver: TypeName,
+        returns: TypeName,
+        receiverPackageName: String,
+        statementFormat: String = "return %T(${
+            properties.map { it.getParameterName(receiverPackageName) }
+                .joinToString(
+                    separator = "$PARAMETER_SEPARATOR    ",
+                    prefix = "$PARAMETER_PREFIX    "
+                ) { if (it.endsWith("Model") || it.endsWith("DTO")) "$it.$functionName()" else it }
+        }\n)",
+        statementArgs: Any = returns,
     ): FunSpec {
         return FunSpec.builder(functionName)
-            .receiver(ClassName(classPackageToMapFrom, classToMapFrom))
-            .returns(ClassName(classPackageToMapTo, classToMapTo))
+            .receiver(receiver)
+            .returns(returns)
             .addStatement(
-                "return %T(${
-                    classProperties.map { it.getParameterName(classPackageToMapFrom) }
-                        .joinToString(", ") { if (it.endsWith("Model") || it.endsWith("DTO")) "$it.$functionName()" else it }
-                }\n)",
-                ClassName(classPackageToMapTo, classToMapTo)
+                statementFormat, statementArgs
             )
             .build()
     }
@@ -176,7 +294,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                     )
                 }
             }.${neededSuffix.lowercase()}").toList()
-                .none { it.simpleName.asString().endsWith(neededSuffix) }
+                .none { it.simpleName.asString().contains(neededSuffix) }
         ) {
             className = symbol.simpleName.asString().replace(dtoRegex, "") + neededSuffix
             packageName = "${
@@ -203,13 +321,11 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                 .primaryConstructor(
                     FunSpec.constructorBuilder().apply {
                         properties.forEach { property ->
+                            logger.log(property.type.resolve().toClassName().simpleName)
+                            logger.log(property.closestClassDeclaration())
                             addParameter(
                                 property.getParameterName(packageName),
-                                if (property.isCustomClass) ClassName(
-                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                    property.getParameterName(packageName).replaceFirstChar { it.uppercase() }
-                                )
-                                else property.type.toTypeName()
+                                property.determineParameterType(packageName)
                             )
                         }
                     }.build()
@@ -219,11 +335,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
 
                         PropertySpec.builder(
                             property.getParameterName(packageName),
-                            if (property.isCustomClass) ClassName(
-                                property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                property.getParameterName(packageName).replaceFirstChar { it.uppercase() }
-                            )
-                            else property.type.toTypeName()
+                            property.determineParameterType(packageName)
                         ).also {
                             it.mutable(property.isMutable)
                             it.addModifiers(property.modifiers.toList().map { it.toKModifier() }

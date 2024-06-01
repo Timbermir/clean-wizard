@@ -10,6 +10,7 @@ using [Kotlinpoet](https://square.github.io/kotlinpoet)**.
 ## Basic Usage
 
 1. **Define your `DTOSchema` that you want to generate classes from and annotate it with `@DTO`**
+
 ```kotlin
 @DTO
 data class ComputerDTOSchema(
@@ -35,6 +36,7 @@ data class CpuDTOSchema(
 ```
 
 2. **See the result**
+
 ```kotlin
 public data class ComputerDTO(
     @SerialName("motherboard")
@@ -45,14 +47,15 @@ public data class ComputerDTO(
     public val isWorking: Boolean,
 )
 
-public fun ComputerDTO.toDomain(): ComputerModel = ComputerModel(motherboardDTO.toDomain(),
+public fun ComputerDTO.toDomain(): ComputerModel = ComputerModel(
+    motherboardDTO.toDomain(),
     cpuDTO.toDomain(), isWorking
 )
 
 public data class ComputerModel(
-  public val motherboardModel: MotherboardModel,
-  public val cpuModel: CpuModel,
-  public val isWorking: Boolean,
+    public val motherboardModel: MotherboardModel,
+    public val cpuModel: CpuModel,
+    public val isWorking: Boolean,
 )
 
 public data class ComputerUI(
@@ -61,10 +64,12 @@ public data class ComputerUI(
     public val isWorking: Boolean,
 )
 
-public fun ComputerModel.toUI(): ComputerUI = ComputerUI(motherboardModel.toUI(), cpuModel.toUI(),
+public fun ComputerModel.toUI(): ComputerUI = ComputerUI(
+    motherboardModel.toUI(), cpuModel.toUI(),
     isWorking
 )
 ```
+
 > [!TIP]  
 > In case your @SerialName annotation value is the same as field name
 > you can just skip adding @SerialName, processor will do it for you, so
@@ -87,7 +92,9 @@ data class CpuDTOSchema(
     val name: String,
 )
 ```
+
 **will produce the same:**
+
 ```kotlin
 public data class ComputerDTO(
     @SerialName("motherboard")
@@ -98,14 +105,15 @@ public data class ComputerDTO(
     public val isWorking: Boolean,
 )
 
-public fun ComputerDTO.toDomain(): ComputerModel = ComputerModel(motherboardDTO.toDomain(),
+public fun ComputerDTO.toDomain(): ComputerModel = ComputerModel(
+    motherboardDTO.toDomain(),
     cpuDTO.toDomain(), isWorking
 )
 
 public data class ComputerModel(
-  public val motherboardModel: MotherboardModel,
-  public val cpuModel: CpuModel,
-  public val isWorking: Boolean,
+    public val motherboardModel: MotherboardModel,
+    public val cpuModel: CpuModel,
+    public val isWorking: Boolean,
 )
 
 public data class ComputerUI(
@@ -114,11 +122,14 @@ public data class ComputerUI(
     public val isWorking: Boolean,
 )
 
-public fun ComputerModel.toUI(): ComputerUI = ComputerUI(motherboardModel.toUI(), cpuModel.toUI(),
+public fun ComputerModel.toUI(): ComputerUI = ComputerUI(
+    motherboardModel.toUI(), cpuModel.toUI(),
     isWorking
 )
 ```
+
 **Generated classes can be found under build package**:
+
 ```
 build/
   └── generated/
@@ -161,12 +172,13 @@ import corp.tbm.cleanarchitecturemapper.motherboard.ui.toUI
 import kotlin.Boolean
 
 public data class ComputerUI(
-  public val motherboardUI: MotherboardUI,
-  public val cpuUI: CpuUI,
-  public val isWorking: Boolean,
+    public val motherboardUI: MotherboardUI,
+    public val cpuUI: CpuUI,
+    public val isWorking: Boolean,
 )
 
-public fun ComputerModel.toUI(): ComputerUI = ComputerUI(motherboardModel.toUI(), cpuModel.toUI(),
+public fun ComputerModel.toUI(): ComputerUI = ComputerUI(
+    motherboardModel.toUI(), cpuModel.toUI(),
     isWorking
 )
 ```
@@ -181,18 +193,22 @@ data class ComputerDTOSchema(
     val isWorking: Boolean
 )
 ```
+
 **It will produce the following output:**
+
 ```kotlin
 public data class ComputerDTO(
-  @SerialName("motherboard")
-  public val motherboardDTO: MotherboardDTO,
-  @SerialName("cpu")
-  public val cpuDTO: CpuDTO,
-  @SerialName("isWorking")
-  public val isWorking: Boolean,
+    @SerialName("motherboard")
+    public val motherboardDTO: MotherboardDTO,
+    @SerialName("cpu")
+    public val cpuDTO: CpuDTO,
+    @SerialName("isWorking")
+    public val isWorking: Boolean,
 ) : DTOMapper<ComputerModel> {
-  override fun toDomain(): ComputerModel = ComputerModel(motherboardDTO.toDomain(),
-      cpuDTO.toDomain(), isWorking)
+    override fun toDomain(): ComputerModel = ComputerModel(
+        motherboardDTO.toDomain(),
+        cpuDTO.toDomain(), isWorking
+    )
 }
 ```
 
@@ -217,6 +233,7 @@ plugins {
     id 'com.google.devtools.ksp' version '1.9.22-1.0.17'
 }
 ```
+
 </details>
 
 <details>
@@ -227,8 +244,8 @@ plugins {
     id("com.google.devtools.ksp") version "1.9.22-1.0.17"
 }
 ```
-</details>
 
+</details>
 
 2. **Add dependencies**
 
@@ -241,6 +258,7 @@ dependencies {
     ksp 'io.github.timbermir:clean-architecture-mapper:1.0.0-snapshot'
 }
 ```
+
 </details>
 
 <details>
@@ -275,8 +293,26 @@ dependencies {
 - **DOES NOT utilize [Incremental processing](https://kotlinlang.org/docs/ksp-incremental.html)**
 - **DOES NOT utilize [Multiple round processing](https://kotlinlang.org/docs/ksp-multi-round.html)**
 
+## Building
+
+**It is recommended to use the latest released version of IntelliJ IDEA** (**Community** or **Ultimate Edition**).
+You can download
+[IntelliJ IDEA](https://www.jetbrains.com/idea/download/) here.
+
+The project **requires JDK 19 to build classes and to run tests**.
+**Gradle will try to find it among the installed JDKs** or
+**provision it automatically if it couldn't be found**.
+
+For local builds, **you can use an earlier or later version of JDK if you don't have that version installed**.
+Specify
+the version of this JDK with the ``jdk`` property
+in [project-config.versions.toml](gradle/project-config.versions.toml).
+
+After that, you are able to try it out by
+running [Main.kt](workload/src/main/kotlin/corp/tbm/cleanarchitecturemapper/workload/Main.kt)
+
 ## License
 
- **clean-architecture-mapper** is distributed under the terms of the **Apache License (Version 2.0)**.
- See the [license](LICENSE.txt) for more
-  information.
+**clean-architecture-mapper** is distributed under the terms of the **Apache License (Version 2.0)**.
+See the [license](LICENSE.txt) for more
+information.

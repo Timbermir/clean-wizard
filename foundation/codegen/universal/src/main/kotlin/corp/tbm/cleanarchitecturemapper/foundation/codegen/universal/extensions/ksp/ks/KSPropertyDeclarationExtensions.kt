@@ -9,6 +9,8 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.ModelType
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharUppercase
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()
@@ -59,9 +61,7 @@ fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(packageNam
                     packageName.contains("model") -> "Model"
                     else -> "UI"
                 }
-            ).replaceFirstChar {
-                it.lowercase()
-            }
+            ).firstCharLowercase()
 
         resolvedType.isListMappable -> (resolvedType.arguments.first().type?.resolve()
             ?.toClassName()?.simpleName?.replace(dtoRegex, "") + ModelType.entries.first {
@@ -72,9 +72,7 @@ fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(packageNam
                 packageName.contains("model") -> "Model"
                 else -> "UI"
             }
-        ).replaceFirstChar {
-            it.lowercase()
-        }
+        ).firstCharLowercase()
 
         else -> (name.replace(dtoRegex, "") + ModelType.entries.first {
             packageName.split(".").last() == it.suffix.lowercase()
@@ -84,9 +82,7 @@ fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(packageNam
                 packageName.contains("model") -> "Model"
                 else -> "UI"
             }
-        ).replaceFirstChar {
-            it.lowercase()
-        }
+        ).firstCharLowercase()
     }
 
     return relevantParts.joinToString(".")
@@ -98,7 +94,7 @@ fun KSPropertyDeclaration.determineParameterType(packageName: String): TypeName 
 
         type.resolve().isClassMappable -> ClassName(
             getQualifiedPackageNameBasedOnParameterName(packageName),
-            getParameterName(packageName).replaceFirstChar { it.uppercase() }
+            getParameterName(packageName).firstCharUppercase()
         )
 
         type.resolve().isListMappable ->
@@ -106,7 +102,7 @@ fun KSPropertyDeclaration.determineParameterType(packageName: String): TypeName 
                 .parameterizedBy(
                     ClassName(
                         getQualifiedPackageNameBasedOnParameterName(packageName),
-                        getParameterName(packageName).replaceFirstChar { it.uppercase() }
+                        getParameterName(packageName).firstCharUppercase()
                     )
                 )
 

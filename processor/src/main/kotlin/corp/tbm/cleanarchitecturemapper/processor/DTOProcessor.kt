@@ -18,7 +18,6 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.*
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.log
 import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
 import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter
@@ -252,9 +251,6 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
             symbol.packageName.asString().split(".").dropLast(1)
                 .joinToString(".") + "." + symbol.simpleName.asString().replace(dtoRegex, "").firstCharLowercase()
         }.${neededSuffix.lowercase()}"
-        properties.forEach {
-            logger.log(it.annotations.toList().toString())
-        }
 
         if (neededSuffix == "Model")
             properties.forEach { property ->

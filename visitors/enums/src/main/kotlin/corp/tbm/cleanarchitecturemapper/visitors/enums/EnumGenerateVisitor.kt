@@ -1,6 +1,5 @@
 package corp.tbm.cleanarchitecturemapper.visitors.enums
 
-import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSNode
@@ -25,7 +24,6 @@ class EnumGenerateVisitor(
         generateEnumClassForProperty(property, data)
     }
 
-    @OptIn(KspExperimental::class)
     @Suppress("UNCHECKED_CAST")
     private fun generateEnumClassForProperty(
         property: KSPropertyDeclaration,

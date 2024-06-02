@@ -5,44 +5,89 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class StringEnum(val enumEntries: Array<String>, val valueName: String, val values: Array<String>)
+annotation class StringEnum(
+    val enumName: String = "",
+    val parameterName: String = "",
+    val enumEntries: Array<String>,
+    val enumEntryValues: Array<String>
+)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class ByteEnum(val enumEntries: Array<String>, val valueName: String, val values: ByteArray)
+annotation class ByteEnum(
+    val enumName: String = "",
+    val parameterName: String = "",
+    val enumEntries: Array<String>,
+    val enumEntryValues: ByteArray
+)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class ShortEnum(val enumEntries: Array<String>, val valueName: String, val values: ShortArray)
+annotation class ShortEnum(
+    val enumName: String = "",
+    val parameterName: String = "",
+    val enumEntries: Array<String>,
+    val enumEntryValues: ShortArray
+)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class IntEnum(val enumEntries: Array<String>, val valueName: String, val values: IntArray)
+annotation class IntEnum(
+    val enumName: String = "",
+    val parameterName: String = "",
+    val enumEntries: Array<String>,
+    val enumEntryValues: IntArray
+)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class LongEnum(val enumEntries: Array<String>, val valueName: String, val values: LongArray)
+annotation class LongEnum(
+    val enumName: String = "",
+    val parameterName: String = "",
+    val enumEntries: Array<String>,
+    val enumEntryValues: LongArray
+)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class FloatEnum(val enumEntries: Array<String>, val valueName: String, val values: FloatArray)
+annotation class FloatEnum(
+    val enumName: String = "",
+    val parameterName: String = "",
+    val enumEntries: Array<String>,
+    val enumEntryValues: FloatArray
+)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class DoubleEnum(val enumEntries: Array<String>, val valueName: String, val values: DoubleArray)
+annotation class DoubleEnum(
+    val enumName: String = "",
+    val parameterName: String = "",
+    val enumEntries: Array<String>,
+    val enumEntryValues: DoubleArray
+)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class BooleanEnum(val enumEntries: Array<String>, val valueName: String, val values: BooleanArray)
+annotation class BooleanEnum(
+    val enumName: String = "",
+    val parameterName: String = "",
+    val enumEntries: Array<String>,
+    val enumEntryValues: BooleanArray
+)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class CustomEnum(val enumEntries: Array<String>, val valueName: String, val values: Array<KClass<*>>)
+annotation class CustomEnum(
+    val enumName: String = "",
+    val parameterName: String = "",
+    val enumEntries: Array<String>,
+    val enumEntryValues: Array<KClass<*>>
+)

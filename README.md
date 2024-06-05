@@ -7,9 +7,9 @@
 <h1> A Kotlin Symbol Processor that generates data classes for Clean Architecture layers</h1>
 </div>
 
-**A [`KSP Processor`](https://kotlinlang.org/docs/ksp-overview.html)
-that processes annotations and generates data classes for other
-two [`Clean Architecture`](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) layers
+**Clean Wizard is a [`KSP Processor`](https://kotlinlang.org/docs/ksp-overview.html)
+that processes annotations and generates data classes for
+[`Clean Architecture`](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) layers
 using [`Kotlinpoet`](https://square.github.io/kotlinpoet)**.
 
 ## Basic Usage

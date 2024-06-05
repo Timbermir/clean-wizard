@@ -1,4 +1,7 @@
+<div align="center">
+
 ![logo](.github/documentation/logo.svg)
+</div>
 
 <div align="center">
 <h1> A Kotlin Symbol Processor that generates data classes for Clean Architecture layers</h1>

@@ -1,11 +1,13 @@
-## Are you tired of creating three similar data classes just for the sake of following Clean Architecture principles? Are you not fed up with creating those mapping functions and clearing JSON annotations? Then you have to give a shot to this thing:
+![logo](.github/documentation/logo.svg)
 
-# Clean Architecture Mapper
+<div align="center">
+<h1> A Kotlin Symbol Processor that generates data classes for Clean Architecture layers</h1>
+</div>
 
-**A [KSP Processor](https://kotlinlang.org/docs/ksp-overview.html)
+**A [`KSP Processor`](https://kotlinlang.org/docs/ksp-overview.html)
 that processes annotations and generates data classes for other
-two [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) layers
-using [Kotlinpoet](https://square.github.io/kotlinpoet)**.
+two [`Clean Architecture`](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) layers
+using [`Kotlinpoet`](https://square.github.io/kotlinpoet)**.
 
 ## Basic Usage
 

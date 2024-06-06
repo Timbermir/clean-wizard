@@ -1,23 +1,24 @@
 package corp.tbm.cleanarchitecturemapper.processor
 
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getAnnotationsByType
-import com.google.devtools.ksp.isAnnotationPresent
+import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.*
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toKModifier
+import com.squareup.kotlinpoet.ksp.toTypeName
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.DTOMapper
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.exceptions.references.PropertyAlreadyMarkedWithEnumException
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.*
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.log
 import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
 import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter
@@ -26,6 +27,12 @@ const val PARAMETER_SEPARATOR = ", \n"
 const val PARAMETER_PREFIX = "\n"
 
 class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogger) : SymbolProcessor {
+
+    private var processingRound = 0
+
+    private val enumGenerateVisitor by lazy {
+        EnumGenerateVisitor(codeGenerator, logger)
+    }
 
     private val statementListFormatMapping: (functionName: String, packageName: String, properties: List<KSPropertyDeclaration>) -> String =
         { mappingFunctionName, packageName, properties ->
@@ -39,11 +46,10 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                         val filteredProperties = properties.filter { it.name == currentProperty.name }
                         when {
 
-                            filteredProperties.any { it.type.resolve().isClassMappable } -> {
+                            filteredProperties.any { it.type.resolve().isClassMappable } ->
                                 "${currentProperty.name}.$mappingFunctionName()"
-                            }
 
-                            filteredProperties.any { it.type.resolve().isListMappable } -> {
+                            filteredProperties.any { it.type.resolve().isListMappable } ->
                                 "${currentProperty.name}.map { ${
                                     currentProperty.getParameterName(
                                         packageName
@@ -51,7 +57,6 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                                 } -> ${
                                     currentProperty.getParameterName(packageName).firstCharLowercase()
                                 }.$mappingFunctionName() }"
-                            }
 
                             else -> currentProperty.name
                         }
@@ -59,23 +64,45 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
             }\n)"
         }
 
-    private val enumGenerateVisitor = EnumGenerateVisitor(codeGenerator, logger)
-
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        processingRound++
 
         val symbols = resolver.getAnnotatedSymbols<KSClassDeclaration>(DTO::class.qualifiedName!!)
 
         symbols.forEach { symbol ->
 
-            val dtoProperties = symbol.getAllProperties().toList()
-            generateClass(resolver, symbol, "Model", dtoProperties)
+            if (processingRound == 1) {
+                symbol.getDeclaredProperties().forEach { property ->
+                    val packageName = "${
+                        symbol.packageName.asString().split(".").dropLast(1)
+                            .joinToString(".") + "." + symbol.simpleName.asString().replace(dtoRegex, "")
+                            .firstCharLowercase()
+                    }.model"
+
+                    val propertyAnnotations = property.annotations.filter { it.name.endsWith("Enum") }.toList()
+
+                    if (propertyAnnotations.isNotEmpty()) {
+
+                        if (propertyAnnotations.size >= 2) {
+                            throw PropertyAlreadyMarkedWithEnumException(
+                                "Property [${property.name}] in \n[${property.parentDeclaration?.fullyQualifiedName}] has the following $propertyAnnotations enums annotations. Only 1 is allowed"
+                            )
+                        }
+
+                        property.accept(enumGenerateVisitor, "$packageName.enums")
+                    }
+
+                }
+                return symbols.filter { it.validate() }
+            }
+
+            generateClass(resolver, symbol, "Model")
 
             generateClass(
                 resolver,
                 symbol,
                 "DTO",
-                dtoProperties,
                 classBuilder = { packageName, className, properties ->
                     if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
                         addSuperinterface(
@@ -108,7 +135,10 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                                                     "$parameter.toDomain()" else parameter
                                             }
                                     }\n)",
-                                    ClassName(packageName.replace("dto", "model"), className.replace("DTO", "Model"))
+                                    ClassName(
+                                        packageName.replace("dto", "model"),
+                                        className.replace("DTO", "Model")
+                                    )
                                 )
                                 .build()
                         )
@@ -118,6 +148,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                 fileSpecBuilder = { packageName, className, properties ->
                     val dtoAnnotation = symbol.getAnnotationsByType(DTO::class).first()
                     when {
+
                         !dtoAnnotation.toDomainAsTopLevel -> {
                             addImport(
                                 "corp.tbm.cleanarchitecturemapper.foundation.codegen.universal",
@@ -139,7 +170,6 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                                         packageName.replace("dto", "model"),
                                         className.replace("DTO", "Model")
                                     ),
-                                    packageName,
                                     statementFormat = statementListFormatMapping(
                                         mappingFunctionName,
                                         packageName,
@@ -178,7 +208,6 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                 resolver,
                 symbol,
                 "UI",
-                dtoProperties,
                 fileSpecBuilder = { packageName, className, properties ->
                     val mappingFunctionName = "toUI"
                     addFunction(
@@ -188,8 +217,11 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                                 className.replace("UI", "Model")
                             ),
                             ClassName(packageName, className),
-                            packageName.replace("ui", "model"),
-                            statementFormat = statementListFormatMapping(mappingFunctionName, packageName, properties)
+                            statementFormat = statementListFormatMapping(
+                                mappingFunctionName,
+                                packageName,
+                                properties
+                            )
                         )
                     )
                     properties.forEach { property ->
@@ -212,7 +244,6 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
         properties: List<KSPropertyDeclaration>,
         receiver: TypeName,
         returns: TypeName,
-        receiverPackageName: String,
         statementFormat: String = "return %T(${
             properties.map { it.name }
                 .joinToString(
@@ -241,25 +272,67 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
         resolver: Resolver,
         symbol: KSClassDeclaration,
         neededSuffix: String,
-        properties: List<KSPropertyDeclaration>,
         classBuilder: TypeSpec.Builder.(packageName: String, className: String, properties: List<KSPropertyDeclaration>) -> TypeSpec.Builder = { _, _, _ -> this },
         fileSpecBuilder: FileSpec.Builder.(packageName: String, className: String, properties: List<KSPropertyDeclaration>) -> FileSpec.Builder = { _, _, _ -> this }
     ) {
 
+        val properties = symbol.getDeclaredProperties().toList()
+
         val className = symbol.simpleName.asString().replace(dtoRegex, "") + neededSuffix
+
         val packageName = "${
             symbol.packageName.asString().split(".").dropLast(1)
                 .joinToString(".") + "." + symbol.simpleName.asString().replace(dtoRegex, "").firstCharLowercase()
         }.${neededSuffix.lowercase()}"
 
-        if (neededSuffix == "Model")
-            properties.forEach { property ->
-                if (property.annotations.filter { it.shortName.asString().contains("Enum") }.toList()
-                        .isNotEmpty()
-                ) {
-                    property.accept(enumGenerateVisitor, "$packageName.enums")
+        properties.forEach {
+            if (it.type.resolve().declaration.closestClassDeclaration()?.classKind == ClassKind.ENUM_CLASS) {
+                val enum = it.type.resolve().declaration.closestClassDeclaration()
+                logger.log(it.type.resolve().declaration.closestClassDeclaration())
+
+                val parameters = mutableSetOf<ParameterSpec>()
+
+                enum?.getDeclaredProperties()?.forEach {
+                    parameters.add(ParameterSpec(it.name, it.type.resolve().toTypeName()))
                 }
+
+//                val enumBuilder = TypeSpec.enumBuilder(enum.name)
+//
+//                val primaryConstructor = FunSpec.constructorBuilder()
+//
+//                parameters.forEach {
+//                    primaryConstructor.addParameter(it)
+//                }
+//                parameters.map { PropertySpec.builder(it.name, it.type).build() }.map { enumBuilder.addProperty(it) }
+//
+//                enumBuilder.addEnumConstant()
+//
+//                primaryConstructor.build()
+//
+//                TypeSpec.enumBuilder(enum.name)
+//                    .primaryConstructor(
+//                        FunSpec.constructorBuilder()
+//                            .addParameter(parameters.iterator().next())
+//                            .addParameter(enum.dec enumEntryValues . first ()::class)
+//                            .build()
+//                    )
+//                    .addProperty(
+//                        PropertySpec.builder(parameterName, enumEntryValues.first()::class)
+//                            .initializer(parameterName)
+//                            .build()
+//                    ).apply {
+//
+//                        generateAppropriateEnumBuilder(
+//                            enumType,
+//                            Triple(
+//                                enumEntries,
+//                                parameterName,
+//                                enumEntryValues
+//                            ), this
+//                        )
+//                    }.build()
             }
+        }
 
         val classToBuild = classBuilder(
             TypeSpec.classBuilder(className)
@@ -270,7 +343,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                         properties.forEach { property ->
                             addParameter(
                                 property.name,
-                                property.determineParameterType(packageName)
+                                property.determineParameterType(symbol, resolver, packageName, logger)
                             )
                         }
                     }.build()
@@ -280,7 +353,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
 
                         PropertySpec.builder(
                             property.name,
-                            property.determineParameterType(packageName)
+                            property.determineParameterType(symbol, resolver, packageName, logger)
                         ).also {
                             it.mutable(property.isMutable)
                             it.addModifiers(property.modifiers.toList().map { it.toKModifier() }
@@ -306,7 +379,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
         ).build()
 
         val file = codeGenerator.createNewFile(
-            Dependencies.ALL_FILES,
+            Dependencies(true, symbol.containingFile!!),
             packageName,
             className
         )

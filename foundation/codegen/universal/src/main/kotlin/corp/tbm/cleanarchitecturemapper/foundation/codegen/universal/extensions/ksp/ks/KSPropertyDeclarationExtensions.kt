@@ -1,7 +1,6 @@
 package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks
 
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -16,7 +15,6 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.ModelType
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharUppercase
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.log
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()

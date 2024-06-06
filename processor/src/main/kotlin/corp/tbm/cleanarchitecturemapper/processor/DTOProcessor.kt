@@ -8,6 +8,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
@@ -18,7 +19,6 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.exceptions.
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.*
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.log
 import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
 import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter
@@ -288,7 +288,6 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
         properties.forEach {
             if (it.type.resolve().declaration.closestClassDeclaration()?.classKind == ClassKind.ENUM_CLASS) {
                 val enum = it.type.resolve().declaration.closestClassDeclaration()
-                logger.log(it.type.resolve().declaration.closestClassDeclaration())
 
                 val parameters = mutableSetOf<ParameterSpec>()
 
@@ -296,41 +295,35 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                     parameters.add(ParameterSpec(it.name, it.type.resolve().toTypeName()))
                 }
 
-//                val enumBuilder = TypeSpec.enumBuilder(enum.name)
-//
-//                val primaryConstructor = FunSpec.constructorBuilder()
-//
-//                parameters.forEach {
-//                    primaryConstructor.addParameter(it)
-//                }
-//                parameters.map { PropertySpec.builder(it.name, it.type).build() }.map { enumBuilder.addProperty(it) }
-//
-//                enumBuilder.addEnumConstant()
-//
-//                primaryConstructor.build()
-//
-//                TypeSpec.enumBuilder(enum.name)
-//                    .primaryConstructor(
-//                        FunSpec.constructorBuilder()
-//                            .addParameter(parameters.iterator().next())
-//                            .addParameter(enum.dec enumEntryValues . first ()::class)
-//                            .build()
-//                    )
-//                    .addProperty(
-//                        PropertySpec.builder(parameterName, enumEntryValues.first()::class)
-//                            .initializer(parameterName)
-//                            .build()
-//                    ).apply {
-//
-//                        generateAppropriateEnumBuilder(
-//                            enumType,
-//                            Triple(
-//                                enumEntries,
-//                                parameterName,
-//                                enumEntryValues
-//                            ), this
+                val enumBuilder = TypeSpec.enumBuilder(enum.name)
+
+                val primaryConstructor = FunSpec.constructorBuilder()
+
+                parameters.forEach {
+                    primaryConstructor.addParameter(it)
+                }
+                parameters.map { PropertySpec.builder(it.name, it.type).build() }.map { enumBuilder.addProperty(it) }
+
+                val enumEntries = enum?.declarations?.toList()
+                    ?.filter { it.closestClassDeclaration()?.classKind == ClassKind.ENUM_ENTRY }
+                    ?.map { it.closestClassDeclaration() }
+
+                enumEntries?.forEach { enumEntry ->
+
+                    enumEntry?.getAllProperties()?.toList()?.forEach {
+//                        enumBuilder.addEnumConstant(
+//                            it.name,
+//                            TypeSpec.anonymousClassBuilder()
+//                                .addSuperclassConstructorParameter(
+//                                    when (it.type.resolve().toClassName().simpleName == "String") {
+//                                        true -> "%S"
+//                                        else -> "%L"
+//                                    },
+//                                    "${it.name} = $enumValue${enumType.parameterValueSuffix.toString().trim()}"
+//                                ).build()
 //                        )
-//                    }.build()
+                    }
+                }
             }
         }
 

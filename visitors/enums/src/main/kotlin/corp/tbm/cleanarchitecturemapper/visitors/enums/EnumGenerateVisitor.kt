@@ -9,10 +9,11 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.name
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.EnumType
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharUppercase
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.name
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.takeIfNotEmptyOrReturnDefault
 
 class EnumGenerateVisitor(
     private val codeGenerator: CodeGenerator,
@@ -28,45 +29,62 @@ class EnumGenerateVisitor(
         property: KSPropertyDeclaration,
         packageName: String,
     ) {
-        val enumClass = TypeSpec.enumBuilder(property.name)
-            .primaryConstructor(
-                FunSpec.constructorBuilder()
-                    .addParameter(property.name, property.type.toTypeName())
-                    .build()
-            )
-            .addProperty(
-                PropertySpec.builder(property.name, property.type.toTypeName())
-                    .initializer(property.name)
-                    .build()
-            )
-            .apply {
-                val annotationArguments =
-                    property.annotations.find { it.shortName.asString().contains("Enum") }?.arguments
-                generateAppropriateEnumBuilder(
-                    EnumType.entries.first {
-                        it.name == property.annotations.firstNotNullOf { annotation ->
-                            annotation.shortName.asString().substringBefore("Enum").uppercase()
-                        }
-                    }.also {
-                        logger.warn(it.toString())
-                    },
-                    Triple(
-                        annotationArguments?.first()?.value as ArrayList<String>,
-                        annotationArguments[1].value.toString(),
-                        annotationArguments[2].value as ArrayList<Any>
-                    ), this
+        val enumAnnotation = property.annotations.first { it.shortName.asString().endsWith("Enum") }
+
+        val findAnnotationArgument: (nameToCompare: String) -> Any? = { nameToCompareTo ->
+            enumAnnotation.arguments.first { it.name?.asString() == nameToCompareTo }.value
+        }
+
+        val enumType =
+            EnumType.entries.first {
+                it.name == property.annotations.firstNotNullOf { annotation ->
+                    annotation.shortName.asString().substringBefore("Enum").uppercase()
+                }
+            }
+
+        enumType.enumName =
+            findAnnotationArgument("enumName").toString() takeIfNotEmptyOrReturnDefault property.name.firstCharUppercase()
+
+        enumType.enumEntries =
+            findAnnotationArgument("enumEntries") as ArrayList<String>
+
+        enumType.parameterName =
+            findAnnotationArgument("parameterName").toString() takeIfNotEmptyOrReturnDefault property.name
+
+        enumType.enumEntryValues = findAnnotationArgument("enumEntryValues") as ArrayList<Any>
+        val enumClass = with(enumType) {
+            TypeSpec.enumBuilder(enumName)
+                .primaryConstructor(
+                    FunSpec.constructorBuilder()
+                        .addParameter(parameterName, enumEntryValues.first()::class)
+                        .build()
                 )
-            }.build()
-        logger.warn(property.packageName.asString())
+                .addProperty(
+                    PropertySpec.builder(parameterName, enumEntryValues.first()::class)
+                        .initializer(parameterName)
+                        .build()
+                )
+                .apply {
+
+                    generateAppropriateEnumBuilder(
+                        enumType,
+                        Triple(
+                            enumEntries,
+                            parameterName,
+                            enumEntryValues
+                        ), this
+                    )
+                }.build()
+        }
 
         val fileSpec = FileSpec.builder(
             packageName,
-            property.name
+            enumType.enumName
         ).apply {
             addType(enumClass)
         }.build()
 
-        fileSpec.writeTo(codeGenerator, false)
+        fileSpec.writeTo(codeGenerator, true)
     }
 
     private fun generateAppropriateEnumBuilder(
@@ -81,7 +99,7 @@ class EnumGenerateVisitor(
                         when (enumType) {
                             EnumType.STRING -> "%S"
                             else -> "%L"
-                        }, enumValue
+                        }, "${arguments.second} = $enumValue${enumType.parameterValueSuffix.toString().trim()}"
                     ).build()
             )
         }

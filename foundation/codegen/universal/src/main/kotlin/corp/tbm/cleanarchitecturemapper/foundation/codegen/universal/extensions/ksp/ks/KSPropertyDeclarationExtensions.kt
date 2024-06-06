@@ -1,5 +1,10 @@
 package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks
 
+import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.closestClassDeclaration
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -11,6 +16,7 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.ModelType
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharUppercase
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.log
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()
@@ -42,6 +48,18 @@ fun KSPropertyDeclaration.getParameterName(packageName: String): String {
 
 fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(packageName: String): String {
 
+    fun appendPackagePath(className: String?): String {
+        return (className?.replace(dtoRegex, "") + ModelType.entries.first {
+            packageName.split(".").last() == it.suffix.lowercase()
+        }.suffix).removeSuffix(
+            when {
+                packageName.contains(dtoRegex) -> "DTO"
+                packageName.contains("model") -> "Model"
+                else -> "UI"
+            }
+        ).firstCharLowercase()
+    }
+
     val parts = packageName.split(".")
     val startIndex = parts.indexOfFirst { it == "corp" }
 
@@ -52,52 +70,56 @@ fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(packageNam
     val relevantParts = parts.drop(startIndex).toMutableList()
     val resolvedType = type.resolve()
     relevantParts[3] = when {
+
         resolvedType.isClassMappable ->
-            (type.resolve().toClassName().simpleName.replace(dtoRegex, "") + ModelType.entries.first {
-                packageName.split(".").last() == it.suffix.lowercase()
-            }.suffix).removeSuffix(
-                when {
-                    packageName.contains(dtoRegex) -> "DTO"
-                    packageName.contains("model") -> "Model"
-                    else -> "UI"
-                }
-            ).firstCharLowercase()
+            appendPackagePath(type.resolve().toClassName().simpleName)
 
-        resolvedType.isListMappable -> (resolvedType.arguments.first().type?.resolve()
-            ?.toClassName()?.simpleName?.replace(dtoRegex, "") + ModelType.entries.first {
-            packageName.split(".").last() == it.suffix.lowercase()
-        }.suffix).removeSuffix(
-            when {
-                packageName.contains(dtoRegex) -> "DTO"
-                packageName.contains("model") -> "Model"
-                else -> "UI"
-            }
-        ).firstCharLowercase()
+        resolvedType.isListMappable -> appendPackagePath(
+            resolvedType.arguments.first().type?.resolve()
+                ?.toClassName()?.simpleName
+        )
 
-        else -> (name.replace(dtoRegex, "") + ModelType.entries.first {
-            packageName.split(".").last() == it.suffix.lowercase()
-        }.suffix).removeSuffix(
-            when {
-                packageName.contains(dtoRegex) -> "DTO"
-                packageName.contains("model") -> "Model"
-                else -> "UI"
-            }
-        ).firstCharLowercase()
+        else -> appendPackagePath(name)
     }
 
     return relevantParts.joinToString(".")
 }
 
-fun KSPropertyDeclaration.determineParameterType(packageName: String): TypeName {
+@OptIn(KspExperimental::class)
+fun KSPropertyDeclaration.determineParameterType(
+    symbol: KSClassDeclaration,
+    resolver: Resolver,
+    packageName: String,
+    logger: KSPLogger
+): TypeName {
+
+    val type = type.resolve()
 
     return when {
 
-        type.resolve().isClassMappable -> ClassName(
+        annotations.filter { it.name.endsWith("Enum") }.toList().isNotEmpty() -> {
+
+            val enumPackageName = "${
+                symbol.packageName.asString().split(".").dropLast(1).joinToString(".")
+            }.${
+                symbol.simpleName.asString().replace(dtoRegex, "").firstCharLowercase()
+            }.model.enums"
+
+            val declarations = resolver.getDeclarationsFromPackage(
+                enumPackageName
+            ).toList()
+
+            val enum = declarations.firstOrNull()
+
+            ClassName(enum?.packageName?.asString().toString(), enum.name)
+        }
+
+        type.isClassMappable -> ClassName(
             getQualifiedPackageNameBasedOnParameterName(packageName),
             getParameterName(packageName).firstCharUppercase()
         )
 
-        type.resolve().isListMappable ->
+        type.isListMappable ->
             List::class.asClassName()
                 .parameterizedBy(
                     ClassName(

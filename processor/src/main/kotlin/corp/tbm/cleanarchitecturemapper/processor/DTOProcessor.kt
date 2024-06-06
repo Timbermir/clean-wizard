@@ -16,14 +16,43 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.exceptions.
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.*
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.log
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ClassGenerationConfig
 import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
 import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter
 
 const val PARAMETER_SEPARATOR = ", \n"
 const val PARAMETER_PREFIX = "\n"
+const val DTO_CLASS_PREFIX_KEY = "DTO_CLASS_PREFIX"
+const val DOMAIN_CLASS_PREFIX_KEY = "DOMAIN_CLASS_PREFIX"
+const val UI_CLASS_PREFIX_KEY = "UI_CLASS_PREFIX"
+const val DTO_CLASS_PACKAGE_NAME_KEY = "DTO_CLASS_PACKAGE_NAME"
+const val DOMAIN_CLASS_PACKAGE_NAME_KEY = "DOMAIN_CLASS_PACKAGE_NAME"
+const val UI_CLASS_PACKAGE_NAME_KEY = "UI_CLASS_PACKAGE_NAME"
+const val DEFAULT_JSON_SERIALIZER_KEY = "DEFAULT_JSON_SERIALIZER"
 
-class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogger) : SymbolProcessor {
+class DTOProcessor(
+    private val codeGenerator: CodeGenerator,
+    private val processorOptions: Map<String, String>,
+    val logger: KSPLogger
+) : SymbolProcessor {
+
+    init {
+        ClassGenerationConfig.setProcessorOptions(processorOptions)
+        ProcessorOptions.dtoOptions.prefix =
+            processorOptions[DTO_CLASS_PREFIX_KEY] ?: "DTO"
+        ProcessorOptions.dtoOptions.packageName =
+            processorOptions[DTO_CLASS_PACKAGE_NAME_KEY] ?: "dto"
+        ProcessorOptions.domainOptions.prefix =
+            processorOptions[DOMAIN_CLASS_PREFIX_KEY] ?: "Model"
+        ProcessorOptions.domainOptions.packageName =
+            processorOptions[DOMAIN_CLASS_PACKAGE_NAME_KEY] ?: "model"
+        ProcessorOptions.uiOptions.prefix =
+            processorOptions[UI_CLASS_PREFIX_KEY] ?: "UI"
+        ProcessorOptions.uiOptions.packageName =
+            processorOptions[UI_CLASS_PACKAGE_NAME_KEY] ?: "ui"
+    }
 
     private var processingRound = 0
 
@@ -61,53 +90,75 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
             }\n)"
         }
 
+    val dtoOptions =
+        GeneratedClassOptions(
+            processorOptions[DTO_CLASS_PREFIX_KEY] ?: "DTO",
+            processorOptions[DTO_CLASS_PACKAGE_NAME_KEY] ?: "dto"
+        )
+
+    val domainOptions = GeneratedClassOptions(
+        processorOptions[DOMAIN_CLASS_PREFIX_KEY] ?: "Model",
+        processorOptions[DOMAIN_CLASS_PACKAGE_NAME_KEY] ?: "model"
+    )
+
+    val uiOptions = GeneratedClassOptions(
+        processorOptions[UI_CLASS_PREFIX_KEY] ?: "UI",
+        processorOptions[UI_CLASS_PACKAGE_NAME_KEY] ?: "ui"
+    )
+
+    val defaultSerializer = processorOptions[DEFAULT_JSON_SERIALIZER_KEY] ?: "kotlinx-serialization"
+
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         processingRound++
 
         val symbols = resolver.getAnnotatedSymbols<KSClassDeclaration>(DTO::class.qualifiedName!!)
+        logger.log(processingRound)
 
         symbols.forEach { symbol ->
 
-            if (processingRound == 1) {
-                symbol.getDeclaredProperties().forEach { property ->
-                    val packageName = "${
-                        symbol.packageName.asString().split(".").dropLast(1)
-                            .joinToString(".") + "." + symbol.simpleName.asString().replace(dtoRegex, "")
-                            .firstCharLowercase()
-                    }.model"
+            if (symbol.getDeclaredProperties()
+                    .any { property -> property.annotations.filter { it.name.endsWith("Enum") }.toList().isNotEmpty() }
+            ) {
+                if (processingRound == 1) {
+                    symbol.getDeclaredProperties().forEach { property ->
+                        val packageName = "${
+                            symbol.packageName.asString().split(".").dropLast(1)
+                                .joinToString(".") + "." + symbol.simpleName.asString().replace(dtoRegex, "")
+                                .firstCharLowercase()
+                        }.model"
 
-                    val propertyAnnotations = property.annotations.filter { it.name.endsWith("Enum") }.toList()
+                        val propertyAnnotations = property.annotations.filter { it.name.endsWith("Enum") }.toList()
 
-                    if (propertyAnnotations.isNotEmpty()) {
+                        if (propertyAnnotations.isNotEmpty()) {
 
-                        if (propertyAnnotations.size >= 2) {
-                            throw PropertyAlreadyMarkedWithEnumException(
-                                "Property [${property.name}] in \n[${property.parentDeclaration?.fullyQualifiedName}] has the following $propertyAnnotations enums annotations. Only 1 is allowed"
-                            )
+                            if (propertyAnnotations.size >= 2) {
+                                throw PropertyAlreadyMarkedWithEnumException(
+                                    "Property [${property.name}] in \n[${property.parentDeclaration?.fullyQualifiedName}] has the following $propertyAnnotations enums annotations. Only 1 is allowed"
+                                )
+                            }
+
+                            property.accept(enumGenerateVisitor, "$packageName.enums")
                         }
-
-                        property.accept(enumGenerateVisitor, "$packageName.enums")
                     }
-
+                    return symbols.filter { it.validate() }
                 }
-                return symbols.filter { it.validate() }
             }
 
-            generateClass(resolver, symbol, "Model")
+            generateClass(resolver, symbol, domainOptions.prefix)
 
             generateClass(
                 resolver,
                 symbol,
-                "DTO",
+                dtoOptions.prefix,
                 classBuilder = { packageName, className, properties ->
                     if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
                         addSuperinterface(
                             DTOMapper::class.asClassName()
                                 .parameterizedBy(
                                     ClassName(
-                                        packageName.replace("dto", "model"),
-                                        className.replace("DTO", "Model")
+                                        packageName.replace(dtoOptions.packageName, domainOptions.packageName),
+                                        className.replace(dtoOptions.prefix, domainOptions.prefix)
                                     )
                                 )
                         )
@@ -116,8 +167,8 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                                 .addModifiers(KModifier.OVERRIDE)
                                 .returns(
                                     ClassName(
-                                        packageName.replace("dto", "model"),
-                                        className.replace("DTO", "Model")
+                                        packageName.replace(dtoOptions.packageName, domainOptions.packageName),
+                                        className.replace(dtoOptions.prefix, domainOptions.prefix)
                                     )
                                 )
                                 .addStatement(
@@ -133,8 +184,8 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                                             }
                                     }\n)",
                                     ClassName(
-                                        packageName.replace("dto", "model"),
-                                        className.replace("DTO", "Model")
+                                        packageName.replace(dtoOptions.packageName, domainOptions.packageName),
+                                        className.replace(dtoOptions.prefix, domainOptions.prefix)
                                     )
                                 )
                                 .build()
@@ -164,8 +215,8 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                                         className
                                     ),
                                     ClassName(
-                                        packageName.replace("dto", "model"),
-                                        className.replace("DTO", "Model")
+                                        packageName.replace(dtoOptions.packageName, domainOptions.packageName),
+                                        className.replace(dtoOptions.prefix, domainOptions.prefix)
                                     ),
                                     statementFormat = statementListFormatMapping(
                                         mappingFunctionName,
@@ -204,14 +255,14 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
             generateClass(
                 resolver,
                 symbol,
-                "UI",
+                uiOptions.prefix,
                 fileSpecBuilder = { packageName, className, properties ->
                     val mappingFunctionName = "toUI"
                     addFunction(
                         generateTopLevelMappingFunctions(
                             mappingFunctionName, properties, ClassName(
-                                packageName.replace("ui", "model"),
-                                className.replace("UI", "Model")
+                                packageName.replace(uiOptions.packageName, domainOptions.packageName),
+                                className.replace(uiOptions.prefix, domainOptions.prefix)
                             ),
                             ClassName(packageName, className),
                             statementFormat = statementListFormatMapping(
@@ -344,6 +395,6 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
 
 internal class DTOProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return DTOProcessor(environment.codeGenerator, environment.logger)
+        return DTOProcessor(environment.codeGenerator, environment.options, environment.logger)
     }
 }

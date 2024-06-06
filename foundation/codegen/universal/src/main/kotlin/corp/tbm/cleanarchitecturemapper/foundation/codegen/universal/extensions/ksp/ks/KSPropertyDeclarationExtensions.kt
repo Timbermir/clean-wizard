@@ -15,6 +15,7 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.ModelType
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharUppercase
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.JsonSerializer
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()
@@ -51,9 +52,9 @@ fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(packageNam
             packageName.split(".").last() == it.suffix.lowercase()
         }.suffix).removeSuffix(
             when {
-                packageName.contains(dtoRegex) -> "DTO"
-                packageName.contains("model") -> "Model"
-                else -> "UI"
+                packageName.contains(dtoRegex) -> ProcessorOptions.dtoOptions.prefix
+                packageName.contains("model") -> ProcessorOptions.domainOptions.prefix
+                else -> ProcessorOptions.uiOptions.prefix
             }
         ).firstCharLowercase()
     }
@@ -129,3 +130,8 @@ fun KSPropertyDeclaration.determineParameterType(
         else -> type.toTypeName()
     }
 }
+
+data class GeneratedClassOptions(
+    var prefix: String,
+    var packageName: String
+)

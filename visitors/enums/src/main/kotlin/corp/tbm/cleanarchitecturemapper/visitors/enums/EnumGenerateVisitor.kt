@@ -1,9 +1,7 @@
 package corp.tbm.cleanarchitecturemapper.visitors.enums
 
-import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.visitor.KSDefaultVisitor
@@ -16,10 +14,6 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.EnumType
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharUppercase
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.name
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.takeIfNotEmptyOrReturnDefault
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
-import java.io.File
 
 class EnumGenerateVisitor(
     private val codeGenerator: CodeGenerator,

@@ -69,30 +69,33 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
 
         symbols.forEach { symbol ->
 
-            if (processingRound == 1) {
-                symbol.getDeclaredProperties().forEach { property ->
-                    val packageName = "${
-                        symbol.packageName.asString().split(".").dropLast(1)
-                            .joinToString(".") + "." + symbol.simpleName.asString().replace(dtoRegex, "")
-                            .firstCharLowercase()
-                    }.model"
+            if (symbol.getDeclaredProperties()
+                    .any { property -> property.annotations.filter { it.name.endsWith("Enum") }.toList().isNotEmpty() }
+            )
+                if (processingRound == 1) {
+                    symbol.getDeclaredProperties().forEach { property ->
+                        val packageName = "${
+                            symbol.packageName.asString().split(".").dropLast(1)
+                                .joinToString(".") + "." + symbol.simpleName.asString().replace(dtoRegex, "")
+                                .firstCharLowercase()
+                        }.model"
 
-                    val propertyAnnotations = property.annotations.filter { it.name.endsWith("Enum") }.toList()
+                        val propertyAnnotations = property.annotations.filter { it.name.endsWith("Enum") }.toList()
 
-                    if (propertyAnnotations.isNotEmpty()) {
+                        if (propertyAnnotations.isNotEmpty()) {
 
-                        if (propertyAnnotations.size >= 2) {
-                            throw PropertyAlreadyMarkedWithEnumException(
-                                "Property [${property.name}] in \n[${property.parentDeclaration?.fullyQualifiedName}] has the following $propertyAnnotations enums annotations. Only 1 is allowed"
-                            )
+                            if (propertyAnnotations.size >= 2) {
+                                throw PropertyAlreadyMarkedWithEnumException(
+                                    "Property [${property.name}] in \n[${property.parentDeclaration?.fullyQualifiedName}] has the following $propertyAnnotations enums annotations. Only 1 is allowed"
+                                )
+                            }
+
+                            property.accept(enumGenerateVisitor, "$packageName.enums")
                         }
 
-                        property.accept(enumGenerateVisitor, "$packageName.enums")
                     }
-
+                    return symbols.filter { it.validate() }
                 }
-                return symbols.filter { it.validate() }
-            }
 
             generateClass(resolver, symbol, "Model")
 

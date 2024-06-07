@@ -1,5 +1,5 @@
 plugins {
-    id(libs.plugins.cleanarchitecturemapper.codegen.foundation.get().pluginId)
+    alias(libs.plugins.cleanarchitecturemapper.codegen.foundation)
 }
 dependencies {
     implementation(projects.foundation.codegen.universal)

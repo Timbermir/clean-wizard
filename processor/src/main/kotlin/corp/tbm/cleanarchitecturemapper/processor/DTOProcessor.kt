@@ -10,48 +10,33 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toKModifier
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.DTOMapper
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.exceptions.references.PropertyAlreadyMarkedWithEnumException
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.*
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.log
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ClassGenerationConfig
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.domainOptions
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.dtoOptions
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.uiOptions
 import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
+import corp.tbm.cleanwizard.DTOMapper
 import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter
 
 const val PARAMETER_SEPARATOR = ", \n"
 const val PARAMETER_PREFIX = "\n"
-const val DTO_CLASS_PREFIX_KEY = "DTO_CLASS_PREFIX"
-const val DOMAIN_CLASS_PREFIX_KEY = "DOMAIN_CLASS_PREFIX"
-const val UI_CLASS_PREFIX_KEY = "UI_CLASS_PREFIX"
-const val DTO_CLASS_PACKAGE_NAME_KEY = "DTO_CLASS_PACKAGE_NAME"
-const val DOMAIN_CLASS_PACKAGE_NAME_KEY = "DOMAIN_CLASS_PACKAGE_NAME"
-const val UI_CLASS_PACKAGE_NAME_KEY = "UI_CLASS_PACKAGE_NAME"
-const val DEFAULT_JSON_SERIALIZER_KEY = "DEFAULT_JSON_SERIALIZER"
 
 class DTOProcessor(
     private val codeGenerator: CodeGenerator,
-    private val processorOptions: Map<String, String>,
+    processorOptions: Map<String, String>,
     val logger: KSPLogger
 ) : SymbolProcessor {
 
     init {
-        ClassGenerationConfig.setProcessorOptions(processorOptions)
-        ProcessorOptions.dtoOptions.prefix =
-            processorOptions[DTO_CLASS_PREFIX_KEY] ?: "DTO"
-        ProcessorOptions.dtoOptions.packageName =
-            processorOptions[DTO_CLASS_PACKAGE_NAME_KEY] ?: "dto"
-        ProcessorOptions.domainOptions.prefix =
-            processorOptions[DOMAIN_CLASS_PREFIX_KEY] ?: "Model"
-        ProcessorOptions.domainOptions.packageName =
-            processorOptions[DOMAIN_CLASS_PACKAGE_NAME_KEY] ?: "model"
-        ProcessorOptions.uiOptions.prefix =
-            processorOptions[UI_CLASS_PREFIX_KEY] ?: "UI"
-        ProcessorOptions.uiOptions.packageName =
-            processorOptions[UI_CLASS_PACKAGE_NAME_KEY] ?: "ui"
+        logger.log(processorOptions.toString())
+        ProcessorOptions.generateConfigs(processorOptions)
     }
 
     private var processingRound = 0
@@ -90,24 +75,6 @@ class DTOProcessor(
             }\n)"
         }
 
-    val dtoOptions =
-        GeneratedClassOptions(
-            processorOptions[DTO_CLASS_PREFIX_KEY] ?: "DTO",
-            processorOptions[DTO_CLASS_PACKAGE_NAME_KEY] ?: "dto"
-        )
-
-    val domainOptions = GeneratedClassOptions(
-        processorOptions[DOMAIN_CLASS_PREFIX_KEY] ?: "Model",
-        processorOptions[DOMAIN_CLASS_PACKAGE_NAME_KEY] ?: "model"
-    )
-
-    val uiOptions = GeneratedClassOptions(
-        processorOptions[UI_CLASS_PREFIX_KEY] ?: "UI",
-        processorOptions[UI_CLASS_PACKAGE_NAME_KEY] ?: "ui"
-    )
-
-    val defaultSerializer = processorOptions[DEFAULT_JSON_SERIALIZER_KEY] ?: "kotlinx-serialization"
-
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         processingRound++
@@ -116,6 +83,7 @@ class DTOProcessor(
         logger.log(processingRound)
 
         symbols.forEach { symbol ->
+//            TypeSpec.interfaceBuilder("DTOMapper").addType().build()
 
             if (symbol.getDeclaredProperties()
                     .any { property -> property.annotations.filter { it.name.endsWith("Enum") }.toList().isNotEmpty() }
@@ -145,12 +113,12 @@ class DTOProcessor(
                 }
             }
 
-            generateClass(resolver, symbol, domainOptions.prefix)
+            generateClass(resolver, symbol, domainOptions.suffix)
 
             generateClass(
                 resolver,
                 symbol,
-                dtoOptions.prefix,
+                dtoOptions.suffix,
                 classBuilder = { packageName, className, properties ->
                     if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
                         addSuperinterface(
@@ -158,7 +126,7 @@ class DTOProcessor(
                                 .parameterizedBy(
                                     ClassName(
                                         packageName.replace(dtoOptions.packageName, domainOptions.packageName),
-                                        className.replace(dtoOptions.prefix, domainOptions.prefix)
+                                        className.replace(dtoOptions.suffix, domainOptions.suffix)
                                     )
                                 )
                         )
@@ -168,7 +136,7 @@ class DTOProcessor(
                                 .returns(
                                     ClassName(
                                         packageName.replace(dtoOptions.packageName, domainOptions.packageName),
-                                        className.replace(dtoOptions.prefix, domainOptions.prefix)
+                                        className.replace(dtoOptions.suffix, domainOptions.suffix)
                                     )
                                 )
                                 .addStatement(
@@ -185,7 +153,7 @@ class DTOProcessor(
                                     }\n)",
                                     ClassName(
                                         packageName.replace(dtoOptions.packageName, domainOptions.packageName),
-                                        className.replace(dtoOptions.prefix, domainOptions.prefix)
+                                        className.replace(dtoOptions.suffix, domainOptions.suffix)
                                     )
                                 )
                                 .build()
@@ -199,13 +167,13 @@ class DTOProcessor(
 
                         !dtoAnnotation.toDomainAsTopLevel -> {
                             addImport(
-                                "corp.tbm.cleanarchitecturemapper.foundation.codegen.universal",
+                                "corp.tbm.cleanwizard",
                                 ".toDomain"
                             )
                         }
 
                         dtoAnnotation.toDomainAsTopLevel -> {
-                            val mappingFunctionName = "toDomain"
+                            val mappingFunctionName = dtoOptions.dtoToDomainMapFunctionName
                             addFunction(
                                 generateTopLevelMappingFunctions(
                                     mappingFunctionName,
@@ -216,7 +184,7 @@ class DTOProcessor(
                                     ),
                                     ClassName(
                                         packageName.replace(dtoOptions.packageName, domainOptions.packageName),
-                                        className.replace(dtoOptions.prefix, domainOptions.prefix)
+                                        className.replace(dtoOptions.suffix, domainOptions.suffix)
                                     ),
                                     statementFormat = statementListFormatMapping(
                                         mappingFunctionName,
@@ -235,14 +203,14 @@ class DTOProcessor(
                                     property.type.resolve().isClassMappable -> {
                                         addImport(
                                             property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                            ".toDomain"
+                                            ".${dtoOptions.dtoToDomainMapFunctionName}"
                                         )
                                     }
 
                                     property.type.resolve().isListMappable -> {
                                         addImport(
                                             property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                            ".toDomain"
+                                            ".${dtoOptions.dtoToDomainMapFunctionName}"
                                         )
                                     }
                                 }
@@ -255,18 +223,17 @@ class DTOProcessor(
             generateClass(
                 resolver,
                 symbol,
-                uiOptions.prefix,
+                uiOptions.suffix,
                 fileSpecBuilder = { packageName, className, properties ->
-                    val mappingFunctionName = "toUI"
                     addFunction(
                         generateTopLevelMappingFunctions(
-                            mappingFunctionName, properties, ClassName(
+                            uiOptions.domainToUiMapFunctionName, properties, ClassName(
                                 packageName.replace(uiOptions.packageName, domainOptions.packageName),
-                                className.replace(uiOptions.prefix, domainOptions.prefix)
+                                className.replace(uiOptions.suffix, domainOptions.suffix)
                             ),
                             ClassName(packageName, className),
                             statementFormat = statementListFormatMapping(
-                                mappingFunctionName,
+                                uiOptions.domainToUiMapFunctionName,
                                 packageName,
                                 properties
                             )
@@ -277,7 +244,7 @@ class DTOProcessor(
                         if (property.type.resolve().isMappable)
                             addImport(
                                 property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                ".toUI"
+                                ".${uiOptions.domainToUiMapFunctionName}"
                             )
                     }
                     this

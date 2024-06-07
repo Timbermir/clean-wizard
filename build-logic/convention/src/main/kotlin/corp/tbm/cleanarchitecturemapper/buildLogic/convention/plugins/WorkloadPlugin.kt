@@ -18,8 +18,7 @@ class WorkloadPlugin : Plugin<Project> {
             applyPlugin(libs.plugins.cleanarchitecturemapper.codegen.foundation)
 
             dependencies {
-                implementation(project(":foundation:codegen:universal"))
-                implementation(project(":processor"))
+                implementation(project(":clean-wizard"))
                 ksp(project(":processor"))
             }
 

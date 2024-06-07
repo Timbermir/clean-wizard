@@ -3,7 +3,6 @@ package corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.plugin
 import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.applyPlugin
 import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.implementation
 import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.libs
-import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.pluginConfig
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
@@ -19,6 +18,7 @@ internal class CodegenPlugin : Plugin<Project> {
 
             dependencies {
                 implementation(project(":foundation:annotations"))
+                implementation(project(":clean-wizard"))
                 implementation(libs.bundles.foundation.codegen)
             }
         }

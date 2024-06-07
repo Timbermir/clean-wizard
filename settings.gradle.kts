@@ -34,3 +34,4 @@ include(
 include("visitors:enums")
 include("processor")
 include("workload")
+include("clean-wizard")

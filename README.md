@@ -304,6 +304,11 @@ dependencies {
 You can download
 [IntelliJ IDEA](https://www.jetbrains.com/idea/download/) here.
 
+The project **relies on [**`Gradle`**](https://gradle.org/) as its main build tool**.
+[**Currently used version is** `8.8`](https://docs.gradle.org/8.8/release-notes.html?_gl=1*1gusy0x*_ga*NDAwNDUzNzY3LjE3MTU4NDUzOTY.*_ga_7W7NC6YNPT*MTcxNzc1MDYxOS43LjEuMTcxNzc1MTAxMC40OS4wLjA.).
+**IntelliJ will try to find it among the installed Gradle Versions** or **download it automatically if it
+couldn't be found**.
+
 The project **requires JDK 19 to build classes and to run tests**.
 **Gradle will try to find it among the installed JDKs** or
 **provision it automatically if it couldn't be found**.
@@ -311,10 +316,10 @@ The project **requires JDK 19 to build classes and to run tests**.
 For local builds, **you can use an earlier or later version of JDK if you don't have that version installed**.
 Specify
 the version of this JDK with the ``jdk`` property
-in [project-config.versions.toml](gradle/project-config.versions.toml).
+in [`project-config.versions.toml`](gradle/project-config.versions.toml).
 
-After that, you are able to try it out by
-running [Main.kt](workload/src/main/kotlin/corp/tbm/cleanarchitecturemapper/workload/Main.kt)
+After that, `Gradle` will download all dependencies the project depends on.
+Run the processor via [`Main.kt`](workload/src/main/kotlin/corp/tbm/cleanarchitecturemapper/workload/Main.kt)
 
 ## License
 

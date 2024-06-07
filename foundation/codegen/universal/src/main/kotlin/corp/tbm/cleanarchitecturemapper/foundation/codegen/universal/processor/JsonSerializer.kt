@@ -1,8 +1,8 @@
 package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor
 
-enum class JsonSerializer {
-    KOTLINX_SERIALIZATION,
-    GSON,
-    MOSHI,
-    JACKSON;
+enum class JsonSerializer(val serializer: String) {
+    KOTLINX_SERIALIZATION("kotlinx-serialization"),
+    GSON("gson"),
+    MOSHI("moshi"),
+    JACKSON("jackson");
 }

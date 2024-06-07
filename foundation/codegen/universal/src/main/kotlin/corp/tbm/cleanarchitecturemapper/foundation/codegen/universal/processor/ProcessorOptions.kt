@@ -2,27 +2,30 @@ package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor
 
 object ProcessorOptions {
 
-    val dtoOptions =
-        ClassGenerationConfig.DTO(
-            "DTO", "dto",
-            "toDomain",
-            "toDTO"
-        )
+    private var _dtoOptions = ClassGenerationConfig.DTO()
 
-    val domainOptions = ClassGenerationConfig.Domain(
-        "Model",
-        "model"
-    )
+    val dtoOptions: ClassGenerationConfig.DTO
+        get() = _dtoOptions
 
-    val uiOptions = ClassGenerationConfig.UI(
-        "UI",
-        "ui",
-        "toDomain"
-    )
+    private var _domainOptions = ClassGenerationConfig.Domain()
 
-    val defaultJsonSerializer: JsonSerializer = JsonSerializer.KOTLINX_SERIALIZATION
+    val domainOptions: ClassGenerationConfig.Domain
+        get() = _domainOptions
+
+    private var _uiOptions = ClassGenerationConfig.UI()
+
+    val uiOptions: ClassGenerationConfig.UI
+        get() = _uiOptions
+
+    private var _defaultJsonSerializer = JsonSerializer.KOTLINX_SERIALIZATION
+
+    val defaultJsonSerializer: JsonSerializer
+        get() = _defaultJsonSerializer
 
     fun generateConfigs(processorOptions: Map<String, String>) {
-
+        ClassGenerationConfig.setProcessorOptions(processorOptions)
+        _dtoOptions = ClassGenerationConfig.DTO.constructConfig()
+        _domainOptions = ClassGenerationConfig.Domain.constructConfig()
+        _uiOptions = ClassGenerationConfig.UI.constructConfig()
     }
 }

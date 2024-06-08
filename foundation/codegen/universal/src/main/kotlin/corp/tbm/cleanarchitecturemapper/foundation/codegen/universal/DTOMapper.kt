@@ -4,4 +4,7 @@ interface DTOMapper<MODEL> {
     fun toDomain(): MODEL
 }
 
-fun <MODEL> List<DTOMapper<MODEL>>.toDomain() = map { it.toDomain() }
+fun <MODEL> List<DTOMapper<MODEL>>.toDomain(): List<MODEL> {
+    return map { it.toDomain() }
+}
+

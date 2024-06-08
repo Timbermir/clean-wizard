@@ -4,17 +4,19 @@ import corp.tbm.cleanarchitecturemapper.foundation.annotations.BackwardsMappingC
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
 
 fun main() {
+
 }
 
-@DTO(backwardsMappingConfig = BackwardsMappingConfig.FULL_MAPPING)
-data class CarDto(
-    val carName: String,
-    val carValue: CarValueDto
+@DTO(true, backwardsMappingConfig = BackwardsMappingConfig.FULL_MAPPING)
+data class AutoDTOSchema(
+    val name: String,
+    val dateRelease: DateReleaseDTOSchema,
+    val list: List<DateReleaseDTOSchema>
 )
 
-@DTO(backwardsMappingConfig = BackwardsMappingConfig.FULL_MAPPING)
-data class CarValueDto(
-    val carValue: Int
+@DTO(true, backwardsMappingConfig = BackwardsMappingConfig.FULL_MAPPING)
+data class DateReleaseDTOSchema(
+    val dateRelease: Double
 )
 
 

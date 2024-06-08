@@ -11,7 +11,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.name
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.name
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.EnumType
 
 class EnumGenerateVisitor(

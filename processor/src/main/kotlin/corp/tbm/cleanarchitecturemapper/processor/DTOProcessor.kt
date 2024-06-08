@@ -12,15 +12,17 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
+import corp.tbm.cleanarchitecturemapper.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.getParameterName
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.getQualifiedPackageNameBasedOnParameterName
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.isCustomClass
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks.name
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.getParameterName
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.getQualifiedPackageNameBasedOnParameterName
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.isCustomClass
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.name
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.DTOMapper
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.log
 import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
 import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter
@@ -46,7 +48,8 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                 "DTO",
                 dtoProperties,
                 classBuilder = { packageName, className, properties ->
-                    if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
+                    val dtoAnnotation = symbol.getAnnotationsByType(DTO::class).first()
+                    if (!dtoAnnotation.toDomainAsTopLevel) {
                         addSuperinterface(
                             DTOMapper::class.asClassName()
                                 .parameterizedBy(
@@ -68,8 +71,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                                 .addStatement(
                                     "return %T(${
                                         properties.map { it.getParameterName(packageName) }.joinToString(", ") {
-                                            if (it.endsWith("DTO")
-                                            ) "$it.toDomain()" else it
+                                            if (it.endsWith("DTO")) "$it.toDomain()" else it
                                         }
                                     })",
                                     ClassName(packageName.replace("dto", "model"), className.replace("DTO", "Model"))
@@ -77,6 +79,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                                 .build()
                         )
                     }
+
                     this
                 },
                 fileSpecBuilder = { packageName, className, properties ->
@@ -102,6 +105,35 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                             )
                         )
                     }
+                    if (dtoAnnotation.backwardsMappingConfig == BackwardsMappingConfig.DOMAIN_TO_DATA ||
+                        dtoAnnotation.backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
+                    ) {
+                        properties.forEach {
+                            if (it.isCustomClass && resolver.getClassDeclarationByName(it.type.resolve().declaration.qualifiedName!!)
+                                    ?.getAnnotationsByType(DTO::class)
+                                    ?.firstOrNull()?.backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING || resolver.getClassDeclarationByName(
+                                    it.type.resolve().declaration.qualifiedName!!
+                                )
+                                    ?.getAnnotationsByType(DTO::class)
+                                    ?.firstOrNull()?.backwardsMappingConfig == BackwardsMappingConfig.DOMAIN_TO_DATA
+                            )
+                                addImport(
+                                    it.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                    ".fromDomain"
+                                )
+                        }
+
+                        addFunction(
+                            generateTopLevelMappingFunction(
+                                packageName.replace("dto", "model"),
+                                packageName,
+                                "fromDomain",
+                                className.replace("DTO", "Model"),
+                                className,
+                                properties
+                            )
+                        )
+                    }
                     this
                 })
 
@@ -111,6 +143,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                 "UI",
                 dtoProperties,
                 fileSpecBuilder = { packageName, className, properties ->
+                    val dtoAnnotation = symbol.getAnnotationsByType(DTO::class).first()
                     properties.forEach {
                         if (it.isCustomClass)
                             addImport(
@@ -128,6 +161,33 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                             properties
                         )
                     )
+                    if (dtoAnnotation.backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING) {
+                        properties.forEach {
+                            if (it.isCustomClass && resolver.getClassDeclarationByName(it.type.resolve().declaration.qualifiedName!!)
+                                    ?.getAnnotationsByType(DTO::class)
+                                    ?.firstOrNull()?.backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING || resolver.getClassDeclarationByName(
+                                    it.type.resolve().declaration.qualifiedName!!
+                                )
+                                    ?.getAnnotationsByType(DTO::class)
+                                    ?.firstOrNull()?.backwardsMappingConfig == BackwardsMappingConfig.DOMAIN_TO_DATA
+                            )
+                                addImport(
+                                    it.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                    ".fromUI"
+                                )
+                        }
+                        addFunction(
+                            generateTopLevelMappingFunction(
+                                packageName,
+                                packageName.replace("ui", "model"),
+                                "fromUI",
+                                className,
+                                className.replace("UI", "Model"),
+                                properties
+                            )
+                        )
+                    }
+                    this
                 })
         }
 
@@ -199,7 +259,6 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
         val classToBuild = classBuilder(
             TypeSpec.classBuilder(className)
                 .addModifiers(KModifier.DATA)
-
                 .primaryConstructor(
                     FunSpec.constructorBuilder().apply {
                         properties.forEach { property ->
@@ -216,7 +275,6 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, private val logger:
                 )
                 .addProperties(
                     properties.map { property ->
-
                         PropertySpec.builder(
                             property.getParameterName(packageName),
                             if (property.isCustomClass) ClassName(

@@ -2,4 +2,11 @@ package corp.tbm.cleanarchitecturemapper.foundation.annotations
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class DTO(val toDomainAsTopLevel: Boolean = false)
+annotation class DTO(
+    val toDomainAsTopLevel: Boolean = false,
+    val backwardsMappingConfig: BackwardsMappingConfig = BackwardsMappingConfig.NONE
+)
+
+enum class BackwardsMappingConfig {
+    NONE, DOMAIN_TO_DATA, FULL_MAPPING
+}

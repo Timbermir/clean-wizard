@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.foundation.codegen.ksp.extensions.ks
+package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks
 
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.ModelType

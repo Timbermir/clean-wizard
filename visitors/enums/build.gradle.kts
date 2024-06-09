@@ -1,3 +1,3 @@
 plugins {
-    id(libs.plugins.cleanarchitecturemapper.codegen.visitor.get().pluginId)
+    alias(libs.plugins.cleanarchitecturemapper.codegen.visitor)
 }

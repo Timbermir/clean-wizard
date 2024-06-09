@@ -29,6 +29,7 @@ kotlinx = ["kotlinx-collections-immutable", "kotlinx-datetime", "kotlinx-seriali
 foundation-codegen = ["kotlinx-serialization-json", "google-devtools-ksp", "squareup-kotlinpoet-ksp"]
 [plugins]
 # Custom Plugins
+cleanwizard = { id = "corp.tbm.cleanwizard", version = "1.0.0" }
 cleanarchitecturemapper-kotlin = { id = "corp.tbm.cleanarchitecturemapper.kotlin" }
 cleanarchitecturemapper-codegen-foundation = { id = "corp.tbm.cleanarchitecturemapper.codegen.foundation" }
 cleanarchitecturemapper-codegen-visitor = { id = "corp.tbm.cleanarchitecturemapper.codegen.visitor" }

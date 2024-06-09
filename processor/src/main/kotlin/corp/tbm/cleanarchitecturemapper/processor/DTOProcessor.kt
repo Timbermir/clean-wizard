@@ -43,12 +43,10 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                     { currentProperty ->
                         val filteredProperties = properties.filter { it.name == currentProperty.name }
                         when {
-
                             filteredProperties.any { it.type.resolve().isClassMappable } ->
                                 "${currentProperty.name}.$mappingFunctionName()"
 
                             filteredProperties.any { it.type.resolve().isListMappable } ->
-
                                 "${currentProperty.name}.map { ${
                                     currentProperty.getParameterName(
                                         packageName

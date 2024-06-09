@@ -1,7 +1,6 @@
 package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks
 
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -46,33 +45,25 @@ fun KSPropertyDeclaration.getParameterName(packageName: String): String {
     }
 }
 
-fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(packageName: String): String {
+fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(
+    packageName: String
+): String {
 
-    fun appendPackagePath(className: String?): String {
-        return (className?.replace(dtoRegex, "")?.firstCharLowercase().toString())
-    }
+    val relevantParts = packageName.split(".").toMutableList()
 
-    val parts = packageName.split(".")
-    val startIndex = parts.indexOfFirst { it == "corp" }
-
-    if (startIndex == -1 || startIndex + 3 >= parts.size) {
-        return packageName
-    }
-
-    val relevantParts = parts.drop(startIndex).toMutableList()
     val resolvedType = type.resolve()
-    relevantParts[3] = when {
 
-        resolvedType.isClassMappable ->
-            appendPackagePath(type.resolve().toClassName().simpleName)
+    relevantParts[relevantParts.lastIndex - 1] =
+        when {
+            resolvedType.isClassMappable ->
+                type.resolve().toClassName().simpleName
 
-        resolvedType.isListMappable -> appendPackagePath(
-            resolvedType.arguments.first().type?.resolve()
-                ?.toClassName()?.simpleName
-        )
+            resolvedType.isListMappable ->
+                resolvedType.arguments.first().type?.resolve()
+                    ?.toClassName()?.simpleName
 
-        else -> appendPackagePath(name)
-    }
+            else -> name
+        }?.replace(dtoRegex, "")?.firstCharLowercase().toString()
 
     return relevantParts.joinToString(".")
 }
@@ -81,8 +72,7 @@ fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(packageNam
 fun KSPropertyDeclaration.determineParameterType(
     symbol: KSClassDeclaration,
     resolver: Resolver,
-    packageName: String,
-    logger: KSPLogger
+    packageName: String
 ): TypeName {
 
     val type = type.resolve()
@@ -92,7 +82,7 @@ fun KSPropertyDeclaration.determineParameterType(
         annotations.filter { it.name.endsWith("Enum") }.toList().isNotEmpty() -> {
 
             val enumPackageName = "${
-                symbol.packagePath.split(".").dropLast(1).joinToString(".")
+                symbol.basePackagePath
             }.${
                 symbol.name.replace(dtoRegex, "").firstCharLowercase()
             }.${ProcessorOptions.domainOptions.packageName}.enums"

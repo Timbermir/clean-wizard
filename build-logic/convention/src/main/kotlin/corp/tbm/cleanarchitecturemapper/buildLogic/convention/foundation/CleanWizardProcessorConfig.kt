@@ -6,11 +6,11 @@ open class CleanWizardProcessorConfig(
     var dtoInterfaceMapperName: String = "DTOMapper",
     var dtoToDomainMapFunctionName: String = "toDomain",
     var domainToDtoMapFunctionName: String = "toDTO",
-    var domainClassSuffix: String = "Domain",
+    var domainClassSuffix: String = "Model",
     var domainClassPackageName: String = "model",
     var uiClassSuffix: String = "UI",
     var uiClassPackageName: String = "ui",
     var domainToUiMapFunctionName: String = "toUI",
     var uiToDomainMapFunctionName: String = "toDomain",
-    var defaultJsonSerializer: String = "kotlinx-serialization"
+    var defaultJsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KOTLINX_SERIALIZATION
 )

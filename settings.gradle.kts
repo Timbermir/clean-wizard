@@ -35,6 +35,6 @@ include("clean-wizard")
 include("visitors:enums")
 include("processor")
 include(
-    "workload:single-module",
-    "workload:multi-module"
+    "workloads:single-module",
+    "workloads:multi-module"
 )

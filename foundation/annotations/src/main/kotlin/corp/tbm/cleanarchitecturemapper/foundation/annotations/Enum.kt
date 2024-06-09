@@ -1,7 +1,5 @@
 package corp.tbm.cleanarchitecturemapper.foundation.annotations
 
-import kotlin.reflect.KClass
-
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
@@ -80,14 +78,4 @@ annotation class BooleanEnum(
     val parameterName: String = "",
     val enumEntries: Array<String>,
     val enumEntryValues: BooleanArray
-)
-
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
-@MustBeDocumented
-annotation class CustomEnum(
-    val enumName: String = "",
-    val parameterName: String = "",
-    val enumEntries: Array<String>,
-    val enumEntryValues: Array<KClass<*>>
 )

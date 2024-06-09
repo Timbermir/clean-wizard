@@ -31,7 +31,10 @@ include(
     "foundation:codegen:kotlinpoet",
     "foundation:codegen:universal"
 )
+include("clean-wizard")
 include("visitors:enums")
 include("processor")
-include("workload")
-include("clean-wizard")
+include(
+    "workload:single-module",
+    "workload:multi-module"
+)

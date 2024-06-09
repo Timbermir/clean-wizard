@@ -30,8 +30,8 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.P
 import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
 import java.io.OutputStreamWriter
 
-const val PARAMETER_SEPARATOR = ", \n"
-const val PARAMETER_PREFIX = "\n"
+const val PARAMETER_SEPARATOR = ", \n    "
+const val PARAMETER_PREFIX = "\n    "
 
 class DTOProcessor(
     private val codeGenerator: CodeGenerator,
@@ -54,8 +54,8 @@ class DTOProcessor(
             "return %T(${
                 properties.map { it }
                     .joinToString(
-                        separator = "$PARAMETER_SEPARATOR    ",
-                        prefix = "$PARAMETER_PREFIX    "
+                        separator = PARAMETER_SEPARATOR,
+                        prefix = PARAMETER_PREFIX
                     )
                     { currentProperty ->
                         val filteredProperties = properties.filter { it.name == currentProperty.name }
@@ -136,10 +136,8 @@ class DTOProcessor(
             ) {
                 if (processingRound == 1) {
                     symbol.getDeclaredProperties().forEach { property ->
-                        val packageName = "${
-                            symbol.packagePath.split(".").dropLast(1)
-                                .joinToString(".") + "." + symbol.name.replace(dtoRegex, "")
-                                .firstCharLowercase()
+                        val packageName = "${symbol.basePackagePath}.${
+                            symbol.name.replace(dtoRegex, "").firstCharLowercase()
                         }.${domainOptions.packageName}"
 
                         val propertyAnnotations = property.annotations.filter { it.name.endsWith("Enum") }.toList()
@@ -380,8 +378,8 @@ class DTOProcessor(
         statementFormat: String = "return %T(${
             properties.map { it.name }
                 .joinToString(
-                    separator = "$PARAMETER_SEPARATOR    ",
-                    prefix = "$PARAMETER_PREFIX    "
+                    separator = PARAMETER_SEPARATOR,
+                    prefix = PARAMETER_PREFIX
                 )
                 { propertyName ->
                     if (properties.filter { it.name == propertyName }
@@ -413,22 +411,20 @@ class DTOProcessor(
 
         val className = symbol.name.replace(dtoRegex, "") + classGenerationConfig.suffix
 
-        val packageName = "${
-            symbol.packagePath.split(".").dropLast(1)
-                .joinToString(".") + "." + symbol.name.replace(dtoRegex, "").firstCharLowercase()
+        val packageName = "${symbol.basePackagePath}.${
+            symbol.name.replace(dtoRegex, "").firstCharLowercase()
         }.${classGenerationConfig.packageName}"
 
         val classToBuild = classBuilder(
             TypeSpec.classBuilder(className)
                 .addModifiers(KModifier.DATA)
-
                 .primaryConstructor(
                     FunSpec.constructorBuilder().apply {
                         properties.forEach { property ->
                             addParameter(
                                 ParameterSpec.builder(
                                     property.name,
-                                    property.determineParameterType(symbol, resolver, packageName, logger)
+                                    property.determineParameterType(symbol, resolver, packageName)
                                 ).also {
                                     if (property.type.resolve().isMarkedNullable)
                                         it.defaultValue("%S", null)
@@ -441,7 +437,7 @@ class DTOProcessor(
 
                         PropertySpec.builder(
                             property.name,
-                            property.determineParameterType(symbol, resolver, packageName, logger)
+                            property.determineParameterType(symbol, resolver, packageName)
                         ).also {
                             it.mutable(property.isMutable)
                             it.addModifiers(property.modifiers.toList().map { modifier -> modifier.toKModifier() }
@@ -470,10 +466,9 @@ class DTOProcessor(
                 className
             )
 
-            if (!resolver.getNewFiles().any { it.filePath in codeGenerator.generatedFile.map { file -> file.path } })
-                OutputStreamWriter(file).use { writer ->
-                    fileSpec.writeTo(writer)
-                }
+            OutputStreamWriter(file).use { writer ->
+                fileSpec.writeTo(writer)
+            }
         } catch (_: FileAlreadyExistsException) {
         }
     }

@@ -12,7 +12,6 @@ sealed class ClassGenerationConfig(open val suffix: String, open val packageName
 
         companion object {
 
-
             private const val DTO_CLASS_SUFFIX_KEY = "DTO_CLASS_SUFFIX"
             private const val DTO_CLASS_PACKAGE_NAME_KEY = "DTO_CLASS_PACKAGE_NAME"
             private const val DTO_INTERFACE_MAPPER_NAME_KEY = "DTO_INTERFACE_MAPPER_NAME"

@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.workload.multimodule
+package corp.tbm.cleanwizard.workloads.multimodule
 
 fun main() {
 

@@ -9,4 +9,4 @@ inline val KSClassDeclaration.packagePath
     get() = packageName.asString()
 
 inline val KSClassDeclaration.basePackagePath
-    get() = packagePath.split(".").dropLastWhile { it.isEmpty() }.take(5).joinToString(".")
+    get() = packagePath.split(".").dropLastWhile { it.isEmpty() }.take(6).joinToString(".")

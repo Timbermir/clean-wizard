@@ -1,10 +1,13 @@
 package corp.tbm.cleanarchitecturemapper.processor
 
-import com.google.devtools.ksp.*
+import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
@@ -20,11 +23,11 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.*
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ClassGenerationConfig
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.defaultJsonSerializer
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.domainOptions
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.dtoOptions
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.uiOptions
 import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
-import kotlinx.serialization.SerialName
 import java.io.OutputStreamWriter
 
 const val PARAMETER_SEPARATOR = ", \n    "
@@ -197,8 +200,7 @@ class DTOProcessor(
                                         packageName.replace(dtoOptions.packageName, domainOptions.packageName),
                                         className.replace(dtoOptions.suffix, domainOptions.suffix)
                                     )
-                                )
-                                .build()
+                                ).build()
                         )
                     }
                     this
@@ -293,6 +295,13 @@ class DTOProcessor(
                             )
                         )
                     }
+                    this
+                }, propertyBuilder = { _, _, property ->
+                    addAnnotation(
+                        AnnotationSpec.builder(
+                            defaultJsonSerializer.annotation
+                        ).addMember("${defaultJsonSerializer.nameProperty} = %S", property.name).build()
+                    )
                     this
                 })
 
@@ -389,13 +398,13 @@ class DTOProcessor(
             .build()
     }
 
-    @OptIn(KspExperimental::class)
     private fun generateClass(
         resolver: Resolver,
         symbol: KSClassDeclaration,
         classGenerationConfig: ClassGenerationConfig,
         classBuilder: TypeSpec.Builder.(packageName: String, className: String, properties: List<KSPropertyDeclaration>) -> TypeSpec.Builder = { _, _, _ -> this },
-        fileSpecBuilder: FileSpec.Builder.(packageName: String, className: String, properties: List<KSPropertyDeclaration>) -> FileSpec.Builder = { _, _, _ -> this }
+        fileSpecBuilder: FileSpec.Builder.(packageName: String, className: String, properties: List<KSPropertyDeclaration>) -> FileSpec.Builder = { _, _, _ -> this },
+        propertyBuilder: PropertySpec.Builder.(packageName: String, className: String, property: KSPropertyDeclaration) -> PropertySpec.Builder = { _, _, _ -> this }
     ) {
 
         val properties = symbol.getDeclaredProperties().toList()
@@ -423,8 +432,7 @@ class DTOProcessor(
                             )
                         }
                     }.build()
-                )
-                .addProperties(
+                ).addProperties(
                     properties.map { property ->
 
                         PropertySpec.builder(
@@ -440,14 +448,9 @@ class DTOProcessor(
                                 }
                                 .filterNotNull())
                             it.initializer(property.name)
-                            if (symbol.isAnnotationPresent(DTO::class))
-                                it.addAnnotation(
-                                    AnnotationSpec.builder(SerialName::class)
-                                        .addMember("%S", property.name)
-                                        .build()
-                                )
-                        }
-                            .build()
+                            propertyBuilder(it, packageName, className, property)
+
+                        }.build()
                     }), packageName, className, properties
         ).build()
 

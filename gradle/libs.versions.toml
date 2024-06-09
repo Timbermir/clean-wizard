@@ -8,10 +8,14 @@ kotlinx-collections-immutable = "0.3.7"
 kotlinx-datetime = "0.6.0"
 kotlinx-serialization-json = "1.7.0-RC"
 kotlinx-coroutines = "1.9.0-RC"
-# KSP
+# Google
 google-devtools-ksp = "2.0.0-1.0.22"
-# Kotlinpoet
+google-gson = "2.11.0"
+# Squareup
 squareup-kotlinpoet = "1.17.0"
+squareup-moshi = "1.15.1"
+# FasterXML
+fasterxml-jackson = "2.17.1"
 [libraries]
 # Kotlin
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -20,10 +24,14 @@ kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotli
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
-# KSP
+# Google
 google-devtools-ksp = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "google-devtools-ksp" }
-# Kotlinpoet
+google-gson = { group = "com.google.code.gson", name = "gson", version.ref = "google-gson" }
+# Squareup
 squareup-kotlinpoet-ksp = { group = "com.squareup", name = "kotlinpoet-ksp", version.ref = "squareup-kotlinpoet" }
+squareup-moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "squareup-moshi" }
+# FasterXML
+fasterxml-jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "fasterxml-jackson" }
 [bundles]
 kotlinx = ["kotlinx-collections-immutable", "kotlinx-datetime", "kotlinx-serialization-json", "kotlinx-coroutines-core"]
 foundation-codegen = ["kotlinx-serialization-json", "google-devtools-ksp", "squareup-kotlinpoet-ksp"]

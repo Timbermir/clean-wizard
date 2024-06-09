@@ -48,6 +48,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                                 "${currentProperty.name}.$mappingFunctionName()"
 
                             filteredProperties.any { it.type.resolve().isListMappable } ->
+
                                 "${currentProperty.name}.map { ${
                                     currentProperty.getParameterName(
                                         packageName
@@ -207,21 +208,14 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                     ) {
                         val backWardMappingFunctionName = "fromDomain"
                         properties.forEach { property ->
-                            val propertyType = property.type.resolve()
-                            val classDeclaration =
-                                resolver.getClassDeclarationByName(propertyType.declaration.qualifiedName!!)
-                            val dtoInnerAnnotation = classDeclaration?.getAnnotationsByType(DTO::class)?.firstOrNull()
-
-                            if (propertyType.isMappable &&
-                                (dtoInnerAnnotation?.backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING ||
-                                        dtoInnerAnnotation?.backwardsMappingConfig == BackwardsMappingConfig.DOMAIN_TO_DATA)
-                            ) {
+                            if (property.type.resolve().isMappable) {
                                 addImport(
                                     property.getQualifiedPackageNameBasedOnParameterName(packageName),
                                     ".fromDomain"
                                 )
                             }
                         }
+
 
                         addFunction(
                             generateTopLevelMappingFunctions(
@@ -278,15 +272,7 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
                     ) {
                         val backWardMappingFunctionName = "fromUI"
                         properties.forEach { property ->
-                            val propertyType = property.type.resolve()
-                            val classDeclaration =
-                                resolver.getClassDeclarationByName(propertyType.declaration.qualifiedName!!)
-                            val dtoInnerAnnotation = classDeclaration?.getAnnotationsByType(DTO::class)?.firstOrNull()
-
-                            if (propertyType.isMappable &&
-                                (dtoInnerAnnotation?.backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING ||
-                                        dtoInnerAnnotation?.backwardsMappingConfig == BackwardsMappingConfig.DOMAIN_TO_DATA)
-                            ) {
+                            if (property.type.resolve().isMappable) {
                                 addImport(
                                     property.getQualifiedPackageNameBasedOnParameterName(packageName),
                                     ".fromUI"
@@ -321,35 +307,22 @@ class DTOProcessor(private val codeGenerator: CodeGenerator, val logger: KSPLogg
         return symbols.filter { !it.validate() }
     }
 
-    private fun getSuffix(typeName: String): String {
-        return when {
-            typeName.contains("DTO") -> "Model"
-            typeName.contains("Model") -> "DTO"
-            typeName.contains("UI") -> "Domain"
-            else -> "Domain"
-        }
-    }
-
     private fun generateTopLevelMappingFunctions(
         functionName: String,
         properties: List<KSPropertyDeclaration>,
         receiver: TypeName,
         returns: TypeName,
         statementFormat: String = "return %T(${
-            properties.joinToString(
-                separator = "$PARAMETER_SEPARATOR    ",
-                prefix = "$PARAMETER_PREFIX    "
-            ) { property ->
-                val propertyName = property.name
-                val isMappable = property.type.resolve().isMappable
-                if (isMappable) {
-                    val propertyTypeName = property.type.resolve().declaration.simpleName.asString()
-                    val suffix = getSuffix(propertyTypeName)
-                    "$propertyName.map { ${propertyName}$suffix -> ${propertyName}$suffix.$functionName() }"
-                } else {
-                    propertyName
+            properties.map { it.name }
+                .joinToString(
+                    separator = "$PARAMETER_SEPARATOR    ",
+                    prefix = "$PARAMETER_PREFIX    "
+                )
+                { propertyName ->
+                    if (properties.filter { it.name == propertyName }
+                            .any { it.type.resolve().isMappable })
+                        "$propertyName.$functionName()" else propertyName
                 }
-            }
         }\n)",
         statementArgs: Any = returns,
     ): FunSpec {

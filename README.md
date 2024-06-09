@@ -399,7 +399,7 @@ You need to apply `clean-wizard` plugin to your root `build.gradle.kts`
 
 ```gradle
 plugins {
-    id 'corp.tbm.cleanwizard' version '2.0.0
+    id 'corp.tbm.cleanwizard' version '2.0.0'
 }
 ```
 </details>
@@ -533,7 +533,7 @@ dependencies {
 
 ```gradle
 plugins {
-    id 'corp.tbm.cleanwizard' version '2.0.0
+    id 'corp.tbm.cleanwizard' version '2.0.0'
 }
 ```
 </details>

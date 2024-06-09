@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.plugins
+package corp.tbm.cleanarchitecturemapper.buildLogic.convention.plugins.codegen
 
 import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.applyPlugin
 import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.implementation
@@ -18,7 +18,6 @@ internal class CodegenPlugin : Plugin<Project> {
 
             dependencies {
                 implementation(project(":foundation:annotations"))
-                implementation(project(":clean-wizard"))
                 implementation(libs.bundles.foundation.codegen)
             }
         }

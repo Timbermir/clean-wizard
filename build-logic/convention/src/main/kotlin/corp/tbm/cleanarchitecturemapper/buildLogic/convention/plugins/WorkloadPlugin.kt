@@ -18,8 +18,9 @@ internal class WorkloadPlugin : Plugin<Project> {
             applyPlugin(libs.plugins.cleanarchitecturemapper.codegen.foundation)
 
             dependencies {
-                if (name != "clean-wizard")
+                if (name != "clean-wizard") {
                     implementation(project(":clean-wizard"))
+                }
                 ksp(project(":processor"))
             }
 

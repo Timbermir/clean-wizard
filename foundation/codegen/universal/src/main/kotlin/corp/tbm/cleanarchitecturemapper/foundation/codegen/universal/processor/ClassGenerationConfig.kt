@@ -5,14 +5,17 @@ sealed class ClassGenerationConfig(open val suffix: String, open val packageName
     data class DTO(
         override val suffix: String = "DTO",
         override val packageName: String = "dto",
+        val dtoInterfaceMapperName: String = "DTOMapper",
         val dtoToDomainMapFunctionName: String = "toDomain",
         val domainToDtoMapFunctionName: String = "toDTO",
     ) : ClassGenerationConfig(suffix, packageName) {
 
         companion object {
 
+
             private const val DTO_CLASS_SUFFIX_KEY = "DTO_CLASS_SUFFIX"
             private const val DTO_CLASS_PACKAGE_NAME_KEY = "DTO_CLASS_PACKAGE_NAME"
+            private const val DTO_INTERFACE_MAPPER_NAME_KEY = "DTO_INTERFACE_MAPPER_NAME"
             private const val DTO_TO_DOMAIN_MAP_FUNCTION_NAME_KEY = "DTO_TO_DOMAIN_MAP_FUNCTION_NAME"
             private const val DOMAIN_TO_DTO_MAP_FUNCTION_NAME_KEY = "DOMAIN_TO_DTO_MAP_FUNCTION_NAME"
 
@@ -20,6 +23,7 @@ sealed class ClassGenerationConfig(open val suffix: String, open val packageName
                 return DTO(
                     processorOptions[DTO_CLASS_SUFFIX_KEY] ?: "DTO",
                     processorOptions[DTO_CLASS_PACKAGE_NAME_KEY] ?: "dto",
+                    processorOptions[DTO_INTERFACE_MAPPER_NAME_KEY] ?: "DTOMapper",
                     processorOptions[DTO_TO_DOMAIN_MAP_FUNCTION_NAME_KEY] ?: "toDomain",
                     processorOptions[DOMAIN_TO_DTO_MAP_FUNCTION_NAME_KEY] ?: "toDTO"
                 )

@@ -27,7 +27,7 @@ class CleanWizardPlugin : Plugin<Project> {
                                     arg("UI_CLASS_PACKAGE_NAME", extension.uiClassPackageName)
                                     arg("DOMAIN_TO_UI_MAP_FUNCTION_NAME", extension.domainToUiMapFunctionName)
                                     arg("UI_TO_DOMAIN_MAP_FUNCTION_NAME", extension.uiToDomainMapFunctionName)
-                                    arg("DEFAULT_JSON_SERIALIZER", extension.defaultJsonSerializer)
+                                    arg("DEFAULT_JSON_SERIALIZER", extension.defaultJsonSerializer.serializer)
                                 }
                         }
                     }

@@ -9,6 +9,7 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.ksp.toKModifier
+import corp.tbm.cleanarchitecturemapper.foundation.annotations.BackwardsMappingConfig
 import com.squareup.kotlinpoet.ksp.writeTo
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
@@ -32,7 +33,7 @@ const val PARAMETER_PREFIX = "\n"
 class DTOProcessor(
     private val codeGenerator: CodeGenerator,
     processorOptions: Map<String, String>,
-    val logger: KSPLogger
+    private val logger: KSPLogger
 ) : SymbolProcessor {
 
     init {
@@ -120,7 +121,7 @@ class DTOProcessor(
                 }.build()
 
                 fileSpec.writeTo(codeGenerator, true)
-            } catch (fileAlreadyExists: FileAlreadyExistsException) {
+            } catch (_: FileAlreadyExistsException) {
             }
 
         val symbols = resolver.getAnnotatedSymbols<KSClassDeclaration>(DTO::class.qualifiedName!!)
@@ -260,6 +261,40 @@ class DTOProcessor(
                             }
                         }
                     }
+                    if (dtoAnnotation.backwardsMappingConfig == BackwardsMappingConfig.DOMAIN_TO_DATA ||
+                        dtoAnnotation.backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
+                    ) {
+                        val backWardMappingFunctionName = dtoOptions.domainToDtoMapFunctionName
+                        properties.forEach { property ->
+                            if (property.type.resolve().isMappable) {
+                                addImport(
+                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                    ".$backWardMappingFunctionName"
+                                )
+                            }
+                        }
+
+
+                        addFunction(
+                            generateTopLevelMappingFunctions(
+                                backWardMappingFunctionName,
+                                properties,
+                                ClassName(
+                                    packageName.replace(dtoOptions.packageName, domainOptions.packageName),
+                                    className.replace(dtoOptions.suffix, domainOptions.suffix)
+                                ),
+                                ClassName(
+                                    packageName,
+                                    className
+                                ),
+                                statementFormat = statementListFormatMapping(
+                                    backWardMappingFunctionName,
+                                    packageName.replace(dtoOptions.packageName, domainOptions.packageName),
+                                    properties
+                                )
+                            )
+                        )
+                    }
                     this
                 })
 
@@ -277,23 +312,54 @@ class DTOProcessor(
                             ClassName(packageName, className),
                             statementFormat = statementListFormatMapping(
                                 uiOptions.domainToUiMapFunctionName,
-                                packageName,
+                                packageName.replace(uiOptions.packageName, domainOptions.packageName),
                                 properties
                             )
                         )
                     )
                     properties.forEach { property ->
-
                         if (property.type.resolve().isMappable)
                             addImport(
                                 property.getQualifiedPackageNameBasedOnParameterName(packageName),
                                 ".${uiOptions.domainToUiMapFunctionName}"
                             )
                     }
+                    if (symbol.getAnnotationsByType(DTO::class)
+                            .first().backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
+                    ) {
+                        val backWardMappingFunctionName = uiOptions.uiToDomainMapFunctionName
+                        properties.forEach { property ->
+                            if (property.type.resolve().isMappable) {
+                                addImport(
+                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                    ".${backWardMappingFunctionName}"
+                                )
+                            }
+                        }
+
+                        addFunction(
+                            generateTopLevelMappingFunctions(
+                                backWardMappingFunctionName,
+                                properties,
+                                ClassName(
+                                    packageName,
+                                    className
+                                ),
+                                ClassName(
+                                    packageName.replace(uiOptions.packageName, domainOptions.packageName),
+                                    className.replace(uiOptions.suffix, domainOptions.suffix)
+                                ),
+                                statementFormat = statementListFormatMapping(
+                                    backWardMappingFunctionName,
+                                    packageName,
+                                    properties
+                                )
+                            )
+                        )
+                    }
                     this
                 })
         }
-
         return emptyList()
     }
 
@@ -401,11 +467,11 @@ class DTOProcessor(
                 className
             )
 
-            if (!resolver.getNewFiles().any { it.filePath in codeGenerator.generatedFile.map { it.path } })
+            if (!resolver.getNewFiles().any { it.filePath in codeGenerator.generatedFile.map { file -> file.path } })
                 OutputStreamWriter(file).use { writer ->
                     fileSpec.writeTo(writer)
                 }
-        } catch (fileAlreadyExists: FileAlreadyExistsException) {
+        } catch (_: FileAlreadyExistsException) {
         }
     }
 }

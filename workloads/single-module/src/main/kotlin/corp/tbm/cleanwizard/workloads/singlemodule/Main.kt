@@ -1,7 +1,8 @@
-package corp.tbm.cleanarchitecturemapper.workload
+package corp.tbm.cleanwizard.workloads.singlemodule
 
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
+import corp.tbm.cleanarchitecturemapper.foundation.annotations.IntEnum
 
 fun main() {
 
@@ -9,6 +10,12 @@ fun main() {
 
 @DTO(backwardsMappingConfig = BackwardsMappingConfig.FULL_MAPPING)
 data class ComplexDTOSchema(
+    @IntEnum(
+        "UserAuthenticationStatus",
+        "isAuthenticated",
+        enumEntries = ["Authenticated", "NotAuthenticated", "AuthenticatedButNotAuthorized"],
+        [1, 2, 3]
+    )
     val userId: String,
     val userName: String,
     val email: String,

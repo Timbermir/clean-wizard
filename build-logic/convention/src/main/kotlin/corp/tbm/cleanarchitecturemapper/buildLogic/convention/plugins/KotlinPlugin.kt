@@ -20,6 +20,9 @@ internal class KotlinPlugin : Plugin<Project> {
 
             dependencies {
                 implementation(libs.bundles.kotlinx)
+                implementation(libs.google.gson)
+                implementation(libs.squareup.moshi)
+                implementation(libs.fasterxml.jackson.databind)
             }
 
             tasks.withType<KotlinCompile>().configureEach {

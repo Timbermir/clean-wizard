@@ -27,5 +27,8 @@ object ProcessorOptions {
         _dtoOptions = ClassGenerationConfig.DTO.constructConfig()
         _domainOptions = ClassGenerationConfig.Domain.constructConfig()
         _uiOptions = ClassGenerationConfig.UI.constructConfig()
+        _defaultJsonSerializer = JsonSerializer.entries.first {
+            it.serializer == processorOptions["DEFAULT_JSON_SERIALIZER"]
+        }
     }
 }

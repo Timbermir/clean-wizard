@@ -10,7 +10,7 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
-class WorkloadPlugin : Plugin<Project> {
+internal class WorkloadPlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
         with(target) {
@@ -18,8 +18,9 @@ class WorkloadPlugin : Plugin<Project> {
             applyPlugin(libs.plugins.cleanarchitecturemapper.codegen.foundation)
 
             dependencies {
-                implementation(project(":foundation:codegen:universal"))
-                implementation(project(":processor"))
+                if (name != "clean-wizard") {
+                    implementation(project(":clean-wizard"))
+                }
                 ksp(project(":processor"))
             }
 

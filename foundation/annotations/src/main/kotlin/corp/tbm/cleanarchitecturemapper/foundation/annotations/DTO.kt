@@ -3,7 +3,7 @@ package corp.tbm.cleanarchitecturemapper.foundation.annotations
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class DTO(
-    val toDomainAsTopLevel: Boolean = false,
+    val toDomainAsTopLevel: Boolean = true,
     val backwardsMappingConfig: BackwardsMappingConfig = BackwardsMappingConfig.NONE
 )
 

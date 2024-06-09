@@ -1,10 +1,12 @@
 plugins {
     `kotlin-dsl`
+    alias(libs.plugins.google.devtools.ksp)
 }
 
 dependencies {
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.google.devtools.ksp)
+    compileOnly(files(ksp.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(projectConfig.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(pluginConfig.javaClass.superclass.protectionDomain.codeSource.location))
@@ -16,6 +18,10 @@ gradlePlugin {
 
             val pluginConfigVersions = pluginConfig.versions
 
+            register(libs.plugins.cleanwizard.pluginId) {
+                id = libs.plugins.cleanwizard.pluginId
+                implementationClass = pluginConfigVersions.cleanwizard.implementation.get()
+            }
             register(kotlin.pluginId) {
                 id = kotlin.pluginId
                 implementationClass = pluginConfigVersions.foundation.kotlin.implementation.get()

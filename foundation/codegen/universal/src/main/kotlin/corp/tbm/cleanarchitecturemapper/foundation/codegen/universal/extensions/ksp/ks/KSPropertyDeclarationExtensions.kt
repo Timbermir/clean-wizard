@@ -15,12 +15,14 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.ModelType
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharUppercase
+import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()
 
 fun KSPropertyDeclaration.getParameterName(packageName: String): String {
     val resolvedType = type.resolve()
+
     return when {
 
         resolvedType.isClassMappable ->
@@ -28,7 +30,7 @@ fun KSPropertyDeclaration.getParameterName(packageName: String): String {
                 dtoRegex,
                 ""
             ) + ModelType.entries.first {
-                packageName.split(".").last() == it.suffix.lowercase()
+                packageName.split(".").last() == it.packageName.lowercase()
             }.suffix
 
         resolvedType.isListMappable -> {
@@ -36,7 +38,7 @@ fun KSPropertyDeclaration.getParameterName(packageName: String): String {
                 dtoRegex,
                 ""
             ) + ModelType.entries.first {
-                packageName.split(".").last() == it.suffix.lowercase()
+                packageName.split(".").last() == it.packageName.lowercase()
             }.suffix
         }
 
@@ -47,15 +49,7 @@ fun KSPropertyDeclaration.getParameterName(packageName: String): String {
 fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(packageName: String): String {
 
     fun appendPackagePath(className: String?): String {
-        return (className?.replace(dtoRegex, "") + ModelType.entries.first {
-            packageName.split(".").last() == it.suffix.lowercase()
-        }.suffix).removeSuffix(
-            when {
-                packageName.contains(dtoRegex) -> "DTO"
-                packageName.contains("model") -> "Model"
-                else -> "UI"
-            }
-        ).firstCharLowercase()
+        return (className?.replace(dtoRegex, "")?.firstCharLowercase().toString())
     }
 
     val parts = packageName.split(".")
@@ -98,10 +92,10 @@ fun KSPropertyDeclaration.determineParameterType(
         annotations.filter { it.name.endsWith("Enum") }.toList().isNotEmpty() -> {
 
             val enumPackageName = "${
-                symbol.packageName.asString().split(".").dropLast(1).joinToString(".")
+                symbol.packagePath.split(".").dropLast(1).joinToString(".")
             }.${
-                symbol.simpleName.asString().replace(dtoRegex, "").firstCharLowercase()
-            }.model.enums"
+                symbol.name.replace(dtoRegex, "").firstCharLowercase()
+            }.${ProcessorOptions.domainOptions.packageName}.enums"
 
             val declarations = resolver.getDeclarationsFromPackage(
                 enumPackageName

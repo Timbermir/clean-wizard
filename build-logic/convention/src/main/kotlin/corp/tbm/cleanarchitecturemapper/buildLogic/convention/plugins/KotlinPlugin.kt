@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.plugins
+package corp.tbm.cleanarchitecturemapper.buildLogic.convention.plugins
 
 import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.applyPlugin
 import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.implementation

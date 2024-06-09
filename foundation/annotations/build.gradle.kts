@@ -1,3 +1,3 @@
 plugins {
-    id(libs.plugins.cleanarchitecturemapper.kotlin.get().pluginId)
+    alias(libs.plugins.cleanarchitecturemapper.kotlin)
 }

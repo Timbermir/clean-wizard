@@ -36,10 +36,10 @@ class EnumGenerateVisitor(
         }
 
         val enumType =
-            EnumType.entries.first {
-                it.name == property.annotations.firstNotNullOf { annotation ->
-                    annotation.shortName.asString().substringBefore("Enum").uppercase()
-                }
+            EnumType.entries.first { enumType ->
+                enumType.name == property.annotations.first { annotation ->
+                    annotation.name.endsWith("Enum")
+                }.name.substringBefore("Enum").uppercase()
             }
 
         enumType.enumName =

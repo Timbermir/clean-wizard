@@ -36,5 +36,7 @@ include("visitors:enums")
 include("processor")
 include(
     "workloads:single-module",
-    "workloads:multi-module"
+    "workloads:multi-module:data",
+    "workloads:multi-module:domain",
+    "workloads:multi-module:presentation"
 )

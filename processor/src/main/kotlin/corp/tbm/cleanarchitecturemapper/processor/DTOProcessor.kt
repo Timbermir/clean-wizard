@@ -9,8 +9,8 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.ksp.toKModifier
-import corp.tbm.cleanarchitecturemapper.foundation.annotations.BackwardsMappingConfig
 import com.squareup.kotlinpoet.ksp.writeTo
+import corp.tbm.cleanarchitecturemapper.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex

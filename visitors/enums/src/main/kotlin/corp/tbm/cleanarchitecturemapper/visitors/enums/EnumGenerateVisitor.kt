@@ -69,7 +69,7 @@ class EnumGenerateVisitor(
                     generateAppropriateEnumBuilder(
                         enumType,
                         Triple(
-                            enumEntries,
+                            enumEntries.map { it.uppercase() },
                             parameterName,
                             enumEntryValues
                         ), this

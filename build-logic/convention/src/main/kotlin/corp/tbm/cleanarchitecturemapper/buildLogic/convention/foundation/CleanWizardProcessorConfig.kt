@@ -1,6 +1,9 @@
 package corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation
 
 open class CleanWizardProcessorConfig(
+    var dataModuleName: String = "data",
+    var domainModuleName: String = "domain",
+    var presentationModuleName: String = "presentation",
     var dtoClassSuffix: String = "DTO",
     var dtoClassPackageName: String = "dto",
     var dtoInterfaceMapperName: String = "DTOMapper",

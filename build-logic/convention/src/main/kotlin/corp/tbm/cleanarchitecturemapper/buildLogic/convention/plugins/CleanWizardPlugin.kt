@@ -16,6 +16,9 @@ class CleanWizardPlugin : Plugin<Project> {
                         ksp {
                             rootProject.extensions.findByType(CleanWizardProcessorConfig::class.java)
                                 ?.let { extension ->
+                                    arg("DATA_MODULE_NAME", extension.dataModuleName)
+                                    arg("DOMAIN_MODULE_NAME", extension.domainModuleName)
+                                    arg("PRESENTATION_MODULE_NAME", extension.presentationModuleName)
                                     arg("DTO_CLASS_SUFFIX", extension.dtoClassSuffix)
                                     arg("DTO_CLASS_PACKAGE_NAME", extension.dtoClassPackageName)
                                     arg("DTO_INTERFACE_MAPPER_NAME", extension.dtoInterfaceMapperName)

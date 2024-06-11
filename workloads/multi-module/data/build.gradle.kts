@@ -10,44 +10,98 @@ dependencies {
 
 tasks.register<Copy>("moveGeneratedFiles") {
     dependsOn("kspKotlin")
+    val oldPackageName = "corp/tbm/cleanwizard/workloads/multimodule/`data`"
+    val newDomainPackageName = "corp/tbm/cleanwizard/workloads/multimodule/domain"
 
-    from("build/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/data/") {
-        rootProject.extensions.findByType(CleanWizardProcessorConfig::class.java)?.let {
-            exclude("**/${it.dtoClassPackageName}/**")
-            exclude("**/${it.uiClassPackageName}/**")
+    rootProject.extensions.findByType(CleanWizardProcessorConfig::class.java)?.let { cleanWizardConfig ->
+        from("build/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/data/") {
+            exclude("**/${cleanWizardConfig.dtoClassPackageName}/**")
+            exclude("**/${cleanWizardConfig.uiClassPackageName}/**")
         }
 
         eachFile {
-            path = path.replaceBefore(this.name, "")
+            path = if (path.contains("enums")) path.replaceBefore("enums", "") else path.replaceBefore(this.name, "")
         }
 
         include("**/*.kt")
         includeEmptyDirs = false
+
+        this.filter { line ->
+            when {
+                line.startsWith("package") -> {
+                    val newPackageLine = line.replace(
+                        oldPackageName.replace('/', '.'),
+                        newDomainPackageName.replace('/', '.')
+                    ).split(".").dropLastWhile { it != cleanWizardConfig.domainModuleName }
+                        .joinToString(".")
+
+                    when (line.endsWith("enums")) {
+                        true ->
+                            "$newPackageLine.enums"
+
+                        false ->
+                            newPackageLine
+                    }
+                }
+
+                line.startsWith("import") && line.contains(cleanWizardConfig.dtoClassSuffix) || line.contains(
+                    cleanWizardConfig.dtoClassPackageName
+                ) -> {
+                    ""
+                }
+
+                else -> line
+            }
+        }
+
+        into("${projects.workloads.multiModule.domain.dependencyProject.layout.buildDirectory.asFile.get().path}/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/domain/")
     }
-
-    into("${projects.workloads.multiModule.domain.dependencyProject.layout.buildDirectory.asFile.get().path}/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/domain/")
-
     finalizedBy("copyGeneratedUIClassesToPresentation")
+}
+
+fun changePackageName(line: String) {
+
 }
 
 tasks.register<Copy>("copyGeneratedUIClassesToPresentation") {
     dependsOn("moveGeneratedFiles")
-    from("build/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/data/") {
-        rootProject.extensions.findByType(CleanWizardProcessorConfig::class.java)?.let {
-            exclude("**/${it.dtoClassPackageName}/**")
-            exclude("**/${it.domainClassPackageName}/**")
+    rootProject.extensions.findByType(CleanWizardProcessorConfig::class.java)?.let { cleanWizardProcessorConfig ->
+        from("build/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/data/") {
+            exclude("**/${cleanWizardProcessorConfig.dtoClassPackageName}/**")
+            exclude("**/${cleanWizardProcessorConfig.domainClassPackageName}/**")
+
+            eachFile {
+                path = path.replaceBefore(this.name, "")
+            }
+
+            include("**/*.kt")
+            includeEmptyDirs = false
+
+            val oldPackageName = "corp/tbm/cleanwizard/workloads/multimodule/`data`"
+            val newDomainPackageName = "corp/tbm/cleanwizard/workloads/multimodule/presentation"
+            this.filter { line ->
+                when {
+                    line.startsWith("package") -> {
+                        line.replace(
+                            oldPackageName.replace('/', '.'),
+                            newDomainPackageName.replace('/', '.')
+                        ).split(".").dropLastWhile { it != cleanWizardProcessorConfig.presentationModuleName }
+                            .joinToString(".")
+                    }
+
+                    line.startsWith("import") && line.contains(cleanWizardProcessorConfig.dtoClassSuffix) || line.contains(
+                        cleanWizardProcessorConfig.dtoClassPackageName
+                    ) -> {
+                        ""
+                    }
+
+                    else -> line
+                }
+            }
         }
 
-        eachFile {
-            path = path.replaceBefore(this.name, "")
-        }
-
-        include("**/*.kt")
-        includeEmptyDirs = false
+        into("${projects.workloads.multiModule.presentation.dependencyProject.layout.buildDirectory.asFile.get().path}/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/presentation/")
     }
-
-    into("${projects.workloads.multiModule.presentation.dependencyProject.layout.buildDirectory.asFile.get().path}/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/presentation/")
-
     finalizedBy("cleanDomainAndPresentationClassesInData")
 }
 
@@ -60,24 +114,27 @@ tasks.register<Delete>("cleanDomainAndPresentationClassesInData") {
             include("**/*.kt")
         }
         delete(fileTree)
-    }
-    finalizedBy("plainCopy")
-}
-tasks.register<Copy>("plainCopy") {
-    dependsOn("cleanDomainAndPresentationClassesInData")
-    from("build/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/data/") {
-
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        eachFile {
-            path = path.replaceBefore(this.name, "")
-            println(path)
+        fileTree(dataDir) {
+            this.files.forEach {
+            }
         }
-
-        include("**/*.kt")
-        includeEmptyDirs = false
     }
-    into("build/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/domain/")
 }
+
+//tasks.register<Copy>("plainCopy") {
+//    dependsOn("cleanDomainAndPresentationClassesInData")
+//    from("build/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/data/") {
+//
+//        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+//        eachFile {
+//            path = path.replaceBefore(this.name, "")
+//        }
+//
+//        include("**/*.kt")
+//        includeEmptyDirs = false
+//    }
+//    into("build/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule/domain/")
+//}
 
 tasks.withType<KspTask>().configureEach {
     finalizedBy("moveGeneratedFiles")

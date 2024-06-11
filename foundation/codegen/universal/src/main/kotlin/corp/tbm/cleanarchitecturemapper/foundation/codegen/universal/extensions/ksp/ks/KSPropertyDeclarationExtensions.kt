@@ -79,7 +79,10 @@ fun KSPropertyDeclaration.determineParameterType(
 
     return when {
 
-        annotations.filter { it.name.endsWith("Enum") }.toList().isNotEmpty() -> {
+        annotations.filter { it.isEnum }.toList().isNotEmpty() -> {
+            val filteredAnnotations =
+                annotations.filter { it.isEnum }
+                    .toList().first()
 
             val enumPackageName = "${
                 symbol.basePackagePath
@@ -91,7 +94,12 @@ fun KSPropertyDeclaration.determineParameterType(
                 enumPackageName
             ).toList()
 
-            val enum = declarations.firstOrNull()
+            val enum =
+                declarations.firstOrNull {
+                    it.name == this.name.firstCharUppercase() || it.name == filteredAnnotations.arguments.first { valueArgument ->
+                        valueArgument.simpleName == "enumName"
+                    }.simpleName
+                }
 
             ClassName(enum?.packageName?.asString().toString(), enum.name)
         }

@@ -10,11 +10,11 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
-import corp.tbm.cleanwizard.foundation.codegen.universal.ModelType
 import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()
@@ -28,17 +28,13 @@ fun KSPropertyDeclaration.getParameterName(packageName: String): String {
             resolvedType.toClassName().simpleName.replace(
                 dtoRegex,
                 ""
-            ) + ModelType.entries.first {
-                packageName.split(".").last() == it.packageName.lowercase()
-            }.suffix
+            ) + dataClassGenerationPattern.findRightModelType(packageName).suffix
 
         resolvedType.isListMappable -> {
             resolvedType.arguments.first().type?.resolve()?.toClassName()?.simpleName?.replace(
                 dtoRegex,
                 ""
-            ) + ModelType.entries.first {
-                packageName.split(".").last() == it.packageName.lowercase()
-            }.suffix
+            ) + dataClassGenerationPattern.findRightModelType(packageName).suffix
         }
 
         else -> name
@@ -51,21 +47,7 @@ fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(
 
     val relevantParts = packageName.split(".").toMutableList()
 
-    val resolvedType = type.resolve()
-
-    relevantParts[relevantParts.lastIndex - 1] =
-        when {
-            resolvedType.isClassMappable ->
-                type.resolve().toClassName().simpleName
-
-            resolvedType.isListMappable ->
-                resolvedType.arguments.first().type?.resolve()
-                    ?.toClassName()?.simpleName
-
-            else -> name
-        }?.replace(dtoRegex, "")?.firstCharLowercase().toString()
-
-    return relevantParts.joinToString(".")
+    return dataClassGenerationPattern.getQualifiedPackageName(relevantParts, type.resolve())
 }
 
 @OptIn(KspExperimental::class)

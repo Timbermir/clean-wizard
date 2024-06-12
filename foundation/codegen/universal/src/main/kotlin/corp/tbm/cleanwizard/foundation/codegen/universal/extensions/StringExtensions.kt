@@ -11,3 +11,6 @@ fun String.firstCharUppercase(): String {
 infix fun String?.takeIfNotEmptyOrReturnDefault(default: String): String {
     return toString().takeIf { it.isNotEmpty() } ?: default
 }
+
+inline val String.packageLastSegment
+    get() = split(".").last()

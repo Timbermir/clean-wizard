@@ -20,7 +20,6 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanwizard.foundation.codegen.universal.exceptions.references.PropertyAlreadyMarkedWithEnumException
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.*
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ClassGenerationConfig
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.defaultJsonSerializer

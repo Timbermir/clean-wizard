@@ -19,9 +19,9 @@ mavenPublishing {
 
     pom {
         inceptionYear.set("2024")
-        name.set("Clean Architecture Mapper")
-        url.set("https://github.com/Timbermir/clean-architecture-mapper")
-        description.set("Clean Architecture Mapper - KSP simple Clean Architecture Data Classes Processor")
+        name.set("Clean Wizard")
+        url.set("https://github.com/Timbermir/clean-wizard")
+        description.set("Clean Wizard - KSP simple Clean Architecture Processor")
 
         licenses {
             license {
@@ -31,9 +31,9 @@ mavenPublishing {
         }
 
         scm {
-            url.set("https://github.com/Timbermir/clean-architecture-mapper")
-            connection.set("scm:git:git://github.com/Timbermir/clean-architecture-mapper.git")
-            developerConnection.set("scm:git@github.com:Timbermir/clean-architecture-mapper.git")
+            url.set("https://github.com/Timbermir/clean-wizard")
+            connection.set("scm:git:git://github.com/Timbermir/clean-wizard.git")
+            developerConnection.set("scm:git@github.com:Timbermir/clean-wizard.git")
         }
 
         developers {

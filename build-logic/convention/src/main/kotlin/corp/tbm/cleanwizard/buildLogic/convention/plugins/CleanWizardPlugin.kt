@@ -16,6 +16,11 @@ class CleanWizardPlugin : Plugin<Project> {
                         ksp {
                             rootProject.extensions.findByType(CleanWizardProcessorConfig::class.java)
                                 ?.let { extension ->
+                                    arg(
+                                        "DATA_CLASS_GENERATION_PATTERN",
+                                        extension.dataClassGenerationPattern.name
+                                    )
+                                    arg("JSON_SERIALIZER", extension.jsonSerializer.serializer)
                                     arg("DATA_MODULE_NAME", extension.dataModuleName)
                                     arg("DOMAIN_MODULE_NAME", extension.domainModuleName)
                                     arg("PRESENTATION_MODULE_NAME", extension.presentationModuleName)
@@ -30,7 +35,6 @@ class CleanWizardPlugin : Plugin<Project> {
                                     arg("UI_CLASS_PACKAGE_NAME", extension.uiClassPackageName)
                                     arg("DOMAIN_TO_UI_MAP_FUNCTION_NAME", extension.domainToUiMapFunctionName)
                                     arg("UI_TO_DOMAIN_MAP_FUNCTION_NAME", extension.uiToDomainMapFunctionName)
-                                    arg("DEFAULT_JSON_SERIALIZER", extension.defaultJsonSerializer.serializer)
                                 }
                         }
                     }

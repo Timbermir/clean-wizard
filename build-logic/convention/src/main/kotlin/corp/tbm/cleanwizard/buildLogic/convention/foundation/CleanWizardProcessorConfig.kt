@@ -1,7 +1,9 @@
 package corp.tbm.cleanwizard.buildLogic.convention.foundation
 
 open class CleanWizardProcessorConfig(
-    var dataModuleName: String = "data",
+    var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER,
+    var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KOTLINX_SERIALIZATION,
+    var dataModuleName: String = "`data`",
     var domainModuleName: String = "domain",
     var presentationModuleName: String = "presentation",
     var dtoClassSuffix: String = "DTO",
@@ -14,6 +16,5 @@ open class CleanWizardProcessorConfig(
     var uiClassSuffix: String = "UI",
     var uiClassPackageName: String = "ui",
     var domainToUiMapFunctionName: String = "toUI",
-    var uiToDomainMapFunctionName: String = "toDomain",
-    var defaultJsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KOTLINX_SERIALIZATION
+    var uiToDomainMapFunctionName: String = "toDomain"
 )

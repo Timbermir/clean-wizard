@@ -16,18 +16,20 @@ import com.squareup.kotlinpoet.ksp.writeTo
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 import corp.tbm.cleanwizard.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
+import corp.tbm.cleanwizard.foundation.codegen.universal.ModelType
 import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanwizard.foundation.codegen.universal.exceptions.references.PropertyAlreadyMarkedWithEnumException
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.*
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ClassGenerationConfig
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.defaultJsonSerializer
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dtoOptions
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.jsonSerializer
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.uiOptions
 import corp.tbm.cleanwizard.visitors.enums.EnumGenerateVisitor
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.*
 import java.io.OutputStreamWriter
 
 const val PARAMETER_SEPARATOR = ", \n    "
@@ -165,24 +167,20 @@ class DTOProcessor(
                 dtoOptions,
                 classBuilder = { packageName, className, properties ->
 
+                    val domainClassName =
+                        dataClassGenerationPattern.classNameReplacement(packageName, className, ModelType.DTO)
                     if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
                         addSuperinterface(
                             ClassName("corp.tbm.cleanwizard", dtoOptions.dtoInterfaceMapperName)
                                 .parameterizedBy(
-                                    ClassName(
-                                        packageName.replace(dtoOptions.packageName, domainOptions.packageName),
-                                        className.replace(dtoOptions.suffix, domainOptions.suffix)
-                                    )
+                                    domainClassName
                                 )
                         )
                         addFunction(
                             FunSpec.builder(dtoOptions.dtoToDomainMapFunctionName)
                                 .addModifiers(KModifier.OVERRIDE)
                                 .returns(
-                                    ClassName(
-                                        packageName.replace(dtoOptions.packageName, domainOptions.packageName),
-                                        className.replace(dtoOptions.suffix, domainOptions.suffix)
-                                    )
+                                    domainClassName
                                 )
                                 .addStatement(
                                     "return %T(${
@@ -196,10 +194,7 @@ class DTOProcessor(
                                                     "$parameter.${dtoOptions.dtoToDomainMapFunctionName}()" else parameter
                                             }
                                     }\n)",
-                                    ClassName(
-                                        packageName.replace(dtoOptions.packageName, domainOptions.packageName),
-                                        className.replace(dtoOptions.suffix, domainOptions.suffix)
-                                    )
+                                    domainClassName
                                 ).build()
                         )
                     }
@@ -207,6 +202,8 @@ class DTOProcessor(
                 },
                 fileSpecBuilder = { packageName, className, properties ->
                     val dtoAnnotation = symbol.getAnnotationsByType(DTO::class).first()
+                    val domainClassName =
+                        dataClassGenerationPattern.classNameReplacement(packageName, className, ModelType.DTO)
                     when {
 
                         !dtoAnnotation.toDomainAsTopLevel -> {
@@ -226,10 +223,7 @@ class DTOProcessor(
                                         packageName,
                                         className
                                     ),
-                                    ClassName(
-                                        packageName.replace(dtoOptions.packageName, domainOptions.packageName),
-                                        className.replace(dtoOptions.suffix, domainOptions.suffix)
-                                    ),
+                                    domainClassName,
                                     statementFormat = statementListFormatMapping(
                                         mappingFunctionName,
                                         packageName,
@@ -279,10 +273,7 @@ class DTOProcessor(
                             generateTopLevelMappingFunctions(
                                 backWardMappingFunctionName,
                                 properties,
-                                ClassName(
-                                    packageName.replace(dtoOptions.packageName, domainOptions.packageName),
-                                    className.replace(dtoOptions.suffix, domainOptions.suffix)
-                                ),
+                                domainClassName,
                                 ClassName(
                                     packageName,
                                     className
@@ -299,8 +290,8 @@ class DTOProcessor(
                 }, propertyBuilder = { _, _, property ->
                     addAnnotation(
                         AnnotationSpec.builder(
-                            defaultJsonSerializer.annotation
-                        ).addMember("${defaultJsonSerializer.nameProperty} = %S", property.name).build()
+                            jsonSerializer.annotation
+                        ).addMember("${jsonSerializer.nameProperty} = %S", property.name).build()
                     )
                     this
                 })
@@ -310,16 +301,15 @@ class DTOProcessor(
                 symbol,
                 uiOptions,
                 fileSpecBuilder = { packageName, className, properties ->
+                    val domainClassName =
+                        dataClassGenerationPattern.classNameReplacement(packageName, className, ModelType.UI)
                     addFunction(
                         generateTopLevelMappingFunctions(
-                            uiOptions.domainToUiMapFunctionName, properties, ClassName(
-                                packageName.replace(uiOptions.packageName, domainOptions.packageName),
-                                className.replace(uiOptions.suffix, domainOptions.suffix)
-                            ),
+                            uiOptions.domainToUiMapFunctionName, properties, domainClassName,
                             ClassName(packageName, className),
                             statementFormat = statementListFormatMapping(
                                 uiOptions.domainToUiMapFunctionName,
-                                packageName.replace(uiOptions.packageName, domainOptions.packageName),
+                                dataClassGenerationPattern.packageNameReplacement(packageName, ModelType.UI),
                                 properties
                             )
                         )
@@ -352,10 +342,7 @@ class DTOProcessor(
                                     packageName,
                                     className
                                 ),
-                                ClassName(
-                                    packageName.replace(uiOptions.packageName, domainOptions.packageName),
-                                    className.replace(uiOptions.suffix, domainOptions.suffix)
-                                ),
+                                domainClassName,
                                 statementFormat = statementListFormatMapping(
                                     backWardMappingFunctionName,
                                     packageName,
@@ -411,9 +398,7 @@ class DTOProcessor(
 
         val className = symbol.name.replace(dtoRegex, "") + classGenerationConfig.suffix
 
-        val packageName = "${symbol.basePackagePath}.${
-            symbol.name.replace(dtoRegex, "").firstCharLowercase()
-        }.${classGenerationConfig.packageName}"
+        val packageName = dataClassGenerationPattern.generatePackageName(symbol, classGenerationConfig)
 
         val classToBuild = classBuilder(
             TypeSpec.classBuilder(className)

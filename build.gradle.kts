@@ -1,3 +1,4 @@
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardDataClassGenerationPattern
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardJsonSerializer
 
 plugins {
@@ -14,6 +15,8 @@ buildscript {
 }
 
 `clean-wizard` {
+    jsonSerializer = CleanWizardJsonSerializer.JACKSON
+    dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER
     dtoClassSuffix = "Dto"
     dtoClassPackageName = "dtos"
     dtoInterfaceMapperName = "DtoMapper"
@@ -25,5 +28,4 @@ buildscript {
     uiClassPackageName = "uis"
     domainToUiMapFunctionName = "toUI"
     uiToDomainMapFunctionName = "fromUI"
-    defaultJsonSerializer = CleanWizardJsonSerializer.JACKSON
 }

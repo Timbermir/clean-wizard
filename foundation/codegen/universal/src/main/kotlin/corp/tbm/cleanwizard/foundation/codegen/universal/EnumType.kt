@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal
+package corp.tbm.cleanwizard.foundation.codegen.universal
 
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.*
 import corp.tbm.cleanwizard.foundation.annotations.*

@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor
+package corp.tbm.cleanwizard.foundation.codegen.universal.processor
 
 sealed class ClassGenerationConfig(open val moduleName: String, open val suffix: String, open val packageName: String) {
 
@@ -87,7 +87,7 @@ sealed class ClassGenerationConfig(open val moduleName: String, open val suffix:
         private var processorOptions: Map<String, String> = mapOf()
 
         fun setProcessorOptions(processorOptions: Map<String, String>) {
-            this.processorOptions = processorOptions
+            Companion.processorOptions = processorOptions
         }
     }
 }

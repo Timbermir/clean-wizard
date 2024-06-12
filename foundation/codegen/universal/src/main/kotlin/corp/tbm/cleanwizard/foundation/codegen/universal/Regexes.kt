@@ -1,3 +1,3 @@
-package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal
+package corp.tbm.cleanwizard.foundation.codegen.universal
 
 val dtoRegex = Regex("(?i)dto(schema)?$")

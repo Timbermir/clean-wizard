@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation
+package corp.tbm.cleanwizard.buildLogic.convention.foundation
 
 open class CleanWizardProcessorConfig(
     var dataModuleName: String = "data",

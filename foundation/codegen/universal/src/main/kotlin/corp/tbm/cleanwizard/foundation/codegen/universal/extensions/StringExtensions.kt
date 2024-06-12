@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions
+package corp.tbm.cleanwizard.foundation.codegen.universal.extensions
 
 fun String.firstCharLowercase(): String {
     return replaceFirstChar { it.lowercase() }

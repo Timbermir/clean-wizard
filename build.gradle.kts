@@ -1,10 +1,10 @@
-import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.CleanWizardJsonSerializer
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardJsonSerializer
 
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.google.devtools.ksp) apply false
-    alias(libs.plugins.cleanwizard)
+    alias(libs.plugins.cleanwizard.core)
 }
 
 buildscript {

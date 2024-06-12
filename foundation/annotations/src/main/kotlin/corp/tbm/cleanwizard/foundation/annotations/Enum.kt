@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.foundation.annotations
+package corp.tbm.cleanwizard.foundation.annotations
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)

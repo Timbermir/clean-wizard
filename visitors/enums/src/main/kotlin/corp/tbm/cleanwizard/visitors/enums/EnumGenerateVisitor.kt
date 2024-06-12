@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.visitors.enums
+package corp.tbm.cleanwizard.visitors.enums
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger

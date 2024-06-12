@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks
+package corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
@@ -10,11 +10,11 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.ModelType
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharUppercase
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions
+import corp.tbm.cleanwizard.foundation.codegen.universal.ModelType
+import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()

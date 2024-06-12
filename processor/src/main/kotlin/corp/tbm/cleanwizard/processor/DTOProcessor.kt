@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.processor
+package corp.tbm.cleanwizard.processor
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
@@ -16,18 +16,19 @@ import com.squareup.kotlinpoet.ksp.writeTo
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 import corp.tbm.cleanwizard.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.exceptions.references.PropertyAlreadyMarkedWithEnumException
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
+import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
+import corp.tbm.cleanwizard.foundation.codegen.universal.exceptions.references.PropertyAlreadyMarkedWithEnumException
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.*
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ClassGenerationConfig
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.defaultJsonSerializer
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.domainOptions
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.dtoOptions
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.uiOptions
-import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ClassGenerationConfig
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.defaultJsonSerializer
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainOptions
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dtoOptions
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.uiOptions
+import corp.tbm.cleanwizard.visitors.enums.EnumGenerateVisitor
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.*
 import java.io.OutputStreamWriter
 
 const val PARAMETER_SEPARATOR = ", \n    "

@@ -37,11 +37,11 @@ kotlinx = ["kotlinx-collections-immutable", "kotlinx-datetime", "kotlinx-seriali
 foundation-codegen = ["kotlinx-serialization-json", "google-devtools-ksp", "squareup-kotlinpoet-ksp"]
 [plugins]
 # Custom Plugins
-cleanwizard = { id = "corp.tbm.cleanwizard", version = "1.0.0" }
-cleanarchitecturemapper-kotlin = { id = "corp.tbm.cleanarchitecturemapper.kotlin" }
-cleanarchitecturemapper-codegen-foundation = { id = "corp.tbm.cleanarchitecturemapper.codegen.foundation" }
-cleanarchitecturemapper-codegen-visitor = { id = "corp.tbm.cleanarchitecturemapper.codegen.visitor" }
-cleanarchitecturemapper-workload = { id = "corp.tbm.cleanarchitecturemapper.workload" }
+cleanwizard-core = { id = "corp.tbm.cleanwizard", version = "1.0.0" }
+cleanwizard-kotlin = { id = "corp.tbm.cleanarchitecturemapper.kotlin" }
+cleanwizard-codegen-foundation = { id = "corp.tbm.cleanarchitecturemapper.codegen.foundation" }
+cleanwizard-codegen-visitor = { id = "corp.tbm.cleanarchitecturemapper.codegen.visitor" }
+cleanwizard-workload = { id = "corp.tbm.cleanarchitecturemapper.workload" }
 # MavenPublish
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }
 # Kotlin

@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.foundation.codegen.kotlinpoet
+package corp.tbm.cleanwizard.foundation.codegen.kotlinpoet
 
 import com.squareup.kotlinpoet.KModifier
 

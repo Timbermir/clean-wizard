@@ -1,7 +1,7 @@
-package corp.tbm.cleanarchitecturemapper.buildLogic.convention.plugins
+package corp.tbm.cleanwizard.buildLogic.convention.plugins
 
-import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.CleanWizardProcessorConfig
-import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.ksp
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardProcessorConfig
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.ksp
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 

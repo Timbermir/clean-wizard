@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.cleanarchitecturemapper.workload)
+    alias(libs.plugins.cleanwizard.workload)
 }
 dependencies {
     implementation(projects.workloads.multiModule.data)

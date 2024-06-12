@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions
+package corp.tbm.cleanwizard.foundation.codegen.universal.extensions
 
 import com.google.devtools.ksp.processing.Resolver
 

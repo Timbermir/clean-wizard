@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions
+package corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions
 
 import com.google.devtools.ksp.gradle.KspExtension
 import org.gradle.accessors.dm.LibrariesForLibs

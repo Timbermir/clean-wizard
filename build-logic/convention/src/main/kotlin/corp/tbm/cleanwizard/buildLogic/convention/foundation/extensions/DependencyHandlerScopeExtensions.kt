@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions
+package corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions
 
 import org.gradle.kotlin.dsl.DependencyHandlerScope
 

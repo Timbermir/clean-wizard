@@ -1,8 +1,8 @@
 import com.google.devtools.ksp.gradle.KspTask
-import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.CleanWizardProcessorConfig
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardProcessorConfig
 
 plugins {
-    alias(libs.plugins.cleanarchitecturemapper.workload)
+    alias(libs.plugins.cleanwizard.workload)
 }
 dependencies {
     implementation(projects.workloads.multiModule.domain)

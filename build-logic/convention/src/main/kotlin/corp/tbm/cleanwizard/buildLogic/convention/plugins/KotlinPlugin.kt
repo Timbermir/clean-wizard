@@ -1,9 +1,9 @@
-package corp.tbm.cleanarchitecturemapper.buildLogic.convention.plugins
+package corp.tbm.cleanwizard.buildLogic.convention.plugins
 
-import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.applyPlugin
-import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.implementation
-import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.jvmTarget
-import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.extensions.libs
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.applyPlugin
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.implementation
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.jvmTarget
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies

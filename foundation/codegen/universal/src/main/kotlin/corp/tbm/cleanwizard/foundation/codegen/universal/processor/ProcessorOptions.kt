@@ -1,4 +1,4 @@
-package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor
+package corp.tbm.cleanwizard.foundation.codegen.universal.processor
 
 object ProcessorOptions {
 

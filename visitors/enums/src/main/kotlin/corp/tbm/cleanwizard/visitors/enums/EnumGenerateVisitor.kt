@@ -10,10 +10,10 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.writeTo
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.EnumType
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharUppercase
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.ksp.ks.name
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.takeIfNotEmptyOrReturnDefault
+import corp.tbm.cleanwizard.foundation.codegen.universal.EnumType
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.takeIfNotEmptyOrReturnDefault
 
 class EnumGenerateVisitor(
     private val codeGenerator: CodeGenerator,

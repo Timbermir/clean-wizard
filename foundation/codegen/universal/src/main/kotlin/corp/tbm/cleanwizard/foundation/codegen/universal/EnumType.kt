@@ -1,6 +1,7 @@
 package corp.tbm.cleanarchitecturemapper.foundation.codegen.universal
 
 import corp.tbm.cleanarchitecturemapper.foundation.annotations.*
+import corp.tbm.cleanwizard.foundation.annotations.*
 import kotlin.reflect.KClass
 
 enum class EnumType(

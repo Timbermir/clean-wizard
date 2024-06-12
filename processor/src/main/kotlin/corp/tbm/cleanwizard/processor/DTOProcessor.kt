@@ -13,9 +13,9 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.writeTo
-import corp.tbm.cleanarchitecturemapper.foundation.annotations.BackwardsMappingConfig
-import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
-import corp.tbm.cleanarchitecturemapper.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
+import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
+import corp.tbm.cleanwizard.foundation.annotations.DTO
+import corp.tbm.cleanwizard.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.exceptions.references.PropertyAlreadyMarkedWithEnumException
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.extensions.firstCharLowercase

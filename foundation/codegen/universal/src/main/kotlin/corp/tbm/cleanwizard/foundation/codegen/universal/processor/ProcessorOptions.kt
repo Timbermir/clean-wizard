@@ -2,6 +2,16 @@ package corp.tbm.cleanwizard.foundation.codegen.universal.processor
 
 object ProcessorOptions {
 
+    private var _dataClassGenerationPattern: DataClassGenerationPattern = DataClassGenerationPattern.LAYER
+
+    val dataClassGenerationPattern
+        get() = _dataClassGenerationPattern
+
+    private var _jsonSerializer = JsonSerializer.KOTLINX_SERIALIZATION
+
+    val jsonSerializer: JsonSerializer
+        get() = _jsonSerializer
+
     private var _dtoOptions = ClassGenerationConfig.DTO()
 
     val dtoOptions: ClassGenerationConfig.DTO
@@ -17,18 +27,16 @@ object ProcessorOptions {
     val uiOptions: ClassGenerationConfig.UI
         get() = _uiOptions
 
-    private var _defaultJsonSerializer = JsonSerializer.KOTLINX_SERIALIZATION
-
-    val defaultJsonSerializer: JsonSerializer
-        get() = _defaultJsonSerializer
-
     fun generateConfigs(processorOptions: Map<String, String>) {
+        _jsonSerializer = JsonSerializer.entries.first {
+            it.serializer == processorOptions["JSON_SERIALIZER"]
+        }
+        _dataClassGenerationPattern =
+            DataClassGenerationPattern.entries.first { it.name == processorOptions["DATA_CLASS_GENERATION_PATTERN"] }
+
         ClassGenerationConfig.setProcessorOptions(processorOptions)
         _dtoOptions = ClassGenerationConfig.DTO.constructConfig()
         _domainOptions = ClassGenerationConfig.Domain.constructConfig()
         _uiOptions = ClassGenerationConfig.UI.constructConfig()
-        _defaultJsonSerializer = JsonSerializer.entries.first {
-            it.serializer == processorOptions["DEFAULT_JSON_SERIALIZER"]
-        }
     }
 }

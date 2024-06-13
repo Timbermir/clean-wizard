@@ -31,7 +31,7 @@ internal inline fun Project.ksp(configuration: KspExtension.() -> Unit) {
 }
 
 inline val Project.cleanWizardProcessorConfig: CleanWizardProcessorConfig
-    get() = rootProject.extensions.findByType(CleanWizardProcessorConfig::class.java) ?: CleanWizardProcessorConfig()
+    get() = rootProject.extensions.getByType(CleanWizardProcessorConfig::class.java)
 
 internal inline val Project.jvmTarget
     get() = JvmTarget.values()

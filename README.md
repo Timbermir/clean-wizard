@@ -585,7 +585,7 @@ The project **requires JDK 19 to build classes and to run tests**.
 
 For local builds, **you can use an earlier or later version of JDK if you don't have that version installed**.
 Specify
-the version of this JDK with the ``jdk`` property
+the version of this JDK with the `jdk` property
 in [`project-config.versions.toml`](gradle/project-config.versions.toml).
 
 After that, `Gradle` will download all dependencies the project depends on.
@@ -593,7 +593,18 @@ Run the processor via [`Main.kt`](workload/src/main/kotlin/corp/tbm/cleanwizard/
 
 On Windows, you might need to add long paths setting to the repository:
 
-```git config core.longpaths true```
+```
+git config core.longpaths true
+```
+
+The errors related to inline properties usage in `build.gradle.kts` files can occur when IntelliJ IDEA cannot
+resolve `Target JVM Version` for Kotlin Compiler, causing it to fall back
+to the default 1.8.
+To resolve the errors, follow these steps
+
+1. Navigate to `Settings -> Build, Execution, Deployment -> Compiler -> Kotlin Compiler`
+2. Set the `Target JVM Version` to match the `jdk` property specified
+   in [`project-config.versions.toml`](gradle/project-config.versions.toml).
 
 ## License
 

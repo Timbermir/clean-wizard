@@ -608,6 +608,6 @@ To resolve the errors, follow these steps
 
 ## License
 
-**clean-architecture-mapper** is distributed under the terms of the **Apache License (Version 2.0)**.
+**clean-wizard** is distributed under the terms of the **Apache License (Version 2.0)**.
 See the [license](LICENSE.txt) for more
 information.

@@ -591,6 +591,10 @@ in [`project-config.versions.toml`](gradle/project-config.versions.toml).
 After that, `Gradle` will download all dependencies the project depends on.
 Run the processor via [`Main.kt`](workload/src/main/kotlin/corp/tbm/cleanwizard/workload/Main.kt)
 
+On Windows, you might need to add long paths setting to the repository:
+
+```git config core.longpaths true```
+
 ## License
 
 **clean-architecture-mapper** is distributed under the terms of the **Apache License (Version 2.0)**.

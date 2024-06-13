@@ -3,7 +3,7 @@ package corp.tbm.cleanwizard.foundation.codegen.universal.processor
 sealed class ClassGenerationConfig(open val moduleName: String, open val suffix: String, open val packageName: String) {
 
     data class DTO(
-        override val moduleName: String = "`data`",
+        override val moduleName: String = "data",
         override val suffix: String = "DTO",
         override val packageName: String = "dto",
         val dtoInterfaceMapperName: String = "DTOMapper",
@@ -22,7 +22,7 @@ sealed class ClassGenerationConfig(open val moduleName: String, open val suffix:
 
             fun constructConfig(): DTO {
                 return DTO(
-                    processorOptions[DATA_MODULE_NAME_KEY] ?: "`data`",
+                    processorOptions[DATA_MODULE_NAME_KEY] ?: "data",
                     processorOptions[DTO_CLASS_SUFFIX_KEY] ?: "DTO",
                     processorOptions[DTO_CLASS_PACKAGE_NAME_KEY] ?: "dto",
                     processorOptions[DTO_INTERFACE_MAPPER_NAME_KEY] ?: "DTOMapper",

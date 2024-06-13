@@ -16,5 +16,6 @@ open class CleanWizardProcessorConfig(
     var uiClassSuffix: String = "UI",
     var uiClassPackageName: String = "ui",
     var domainToUiMapFunctionName: String = "toUI",
-    var uiToDomainMapFunctionName: String = "toDomain"
+    var uiToDomainMapFunctionName: String = "toDomain",
+    var basePackagePath :String = "corp.tbm.cleanwizard"
 )

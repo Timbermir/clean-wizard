@@ -1,6 +1,9 @@
 package corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.asPackage
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.DataClassGenerationPattern
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dtoOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.uiOptions
@@ -12,18 +15,29 @@ inline val KSClassDeclaration.packagePath
     get() = packageName.asString()
 
 inline val KSClassDeclaration.basePackagePath: String
-    get() = when {
-        packagePath.contains(dtoOptions.moduleName) || packagePath.contains(domainOptions.moduleName) || packagePath.contains(
-            uiOptions.moduleName
-        ) -> {
-            packagePath.split(".").takeWhile {
-                it !in listOf(
-                    dtoOptions.moduleName,
-                    domainOptions.moduleName,
-                    uiOptions.moduleName
-                )
-            }.joinToString(".")
-        }
+    get() {
 
-        else -> packagePath.split(".").dropLastWhile { it.isEmpty() }.take(6).joinToString(".")
+        val splitPath = packagePath.asPackage.dropLastWhile { it.isEmpty() }
+
+        return when (dataClassGenerationPattern) {
+            DataClassGenerationPattern.LAYER -> {
+                splitPath.takeWhile {
+                    it !in listOf(
+                        dtoOptions.moduleName,
+                        domainOptions.moduleName,
+                        uiOptions.moduleName
+                    )
+                }
+//                if (splitPath.last() in listOf(
+//                        dtoOptions.moduleName,
+//                        domainOptions.moduleName,
+//                        uiOptions.moduleName
+//                    )
+//                ) splitPath else splitPath.dropLast(1)
+            }
+
+            DataClassGenerationPattern.TYPE -> {
+                splitPath.dropLastWhile { it.isEmpty() }
+            }
+        }.asPackage
     }

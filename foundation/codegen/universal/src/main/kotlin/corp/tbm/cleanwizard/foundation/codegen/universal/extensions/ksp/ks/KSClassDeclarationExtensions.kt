@@ -11,11 +11,11 @@ inline val KSClassDeclaration.name
 inline val KSClassDeclaration.packagePath
     get() = packageName.asString()
 
-inline val KSClassDeclaration.basePackagePath
-    get() = packagePath.split(".").takeIf {
-        it.last() in listOf(
+inline val KSClassDeclaration.basePackagePath: String
+    get() = packagePath.split(".").takeWhile {
+        it !in listOf(
             dtoOptions.moduleName,
             domainOptions.moduleName,
             uiOptions.moduleName
         )
-    }?.joinToString(".") ?: packagePath.split(".").take(6).joinToString(".")
+    }.joinToString(".")

@@ -14,3 +14,9 @@ infix fun String?.takeIfNotEmptyOrReturnDefault(default: String): String {
 
 inline val String.packageLastSegment
     get() = split(".").last()
+
+inline val List<String>.asPackage
+    get() = joinToString(".")
+
+inline val String.asPackage
+    get() = split(".")

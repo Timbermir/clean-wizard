@@ -138,9 +138,8 @@ class DTOProcessor(
             ) {
                 if (processingRound == 1) {
                     symbol.getDeclaredProperties().forEach { property ->
-                        val packageName = "${symbol.basePackagePath}.${
-                            symbol.name.replace(dtoRegex, "").firstCharLowercase()
-                        }.${domainOptions.packageName}"
+                        val enumPackageName =
+                            "${dataClassGenerationPattern.generatePackageName(symbol, domainOptions)}.enums"
 
                         val propertyAnnotations = property.annotations.filter { it.name.endsWith("Enum") }.toList()
 
@@ -152,7 +151,7 @@ class DTOProcessor(
                                 )
                             }
 
-                            property.accept(enumGenerateVisitor, "$packageName.enums")
+                            property.accept(enumGenerateVisitor, enumPackageName)
                         }
                     }
                     return symbols.filter { it.validate() }

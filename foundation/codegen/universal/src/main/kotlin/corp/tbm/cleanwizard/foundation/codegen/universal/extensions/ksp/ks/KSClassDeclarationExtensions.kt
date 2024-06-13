@@ -12,10 +12,18 @@ inline val KSClassDeclaration.packagePath
     get() = packageName.asString()
 
 inline val KSClassDeclaration.basePackagePath: String
-    get() = packagePath.split(".").takeWhile {
-        it !in listOf(
-            dtoOptions.moduleName,
-            domainOptions.moduleName,
+    get() = when {
+        packagePath.contains(dtoOptions.moduleName) || packagePath.contains(domainOptions.moduleName) || packagePath.contains(
             uiOptions.moduleName
-        )
-    }.joinToString(".")
+        ) -> {
+            packagePath.split(".").takeWhile {
+                it !in listOf(
+                    dtoOptions.moduleName,
+                    domainOptions.moduleName,
+                    uiOptions.moduleName
+                )
+            }.joinToString(".")
+        }
+
+        else -> packagePath.split(".").dropLastWhile { it.isEmpty() }.take(6).joinToString(".")
+    }

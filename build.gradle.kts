@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.google.devtools.ksp) apply false
     alias(libs.plugins.cleanwizard.core)
+    idea
 }
 
 buildscript {

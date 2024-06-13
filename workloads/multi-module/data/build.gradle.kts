@@ -1,5 +1,6 @@
 import com.google.devtools.ksp.gradle.KspTask
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.cleanWizardProcessorConfig
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.kspMainBuildDirectory
 
 plugins {
     alias(libs.plugins.cleanwizard.workload)
@@ -15,7 +16,7 @@ tasks.withType<KspTask>().configureEach {
 
 tasks.register<Copy>("copyGeneratedDomainClasses") {
 
-    from("build/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule") {
+    from(kspMainBuildDirectory) {
         exclude("**/${cleanWizardProcessorConfig.dataModuleName}/**")
         exclude("**/${cleanWizardProcessorConfig.presentationModuleName}/**")
     }
@@ -23,25 +24,25 @@ tasks.register<Copy>("copyGeneratedDomainClasses") {
     include("**/*.kt")
     includeEmptyDirs = false
 
-    into("${projects.workloads.multiModule.domain.dependencyProject.layout.buildDirectory.asFile.get().path}/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule")
+    into(projects.workloads.multiModule.domain.dependencyProject.kspMainBuildDirectory)
     finalizedBy("copyGeneratedUIClasses")
 }
 
 tasks.register<Copy>("copyGeneratedUIClasses") {
-    from("build/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule") {
+    from(kspMainBuildDirectory) {
         exclude("**/${cleanWizardProcessorConfig.dataModuleName}/**")
         exclude("**/${cleanWizardProcessorConfig.domainModuleName}/**")
     }
     include("**/*.kt")
     includeEmptyDirs = false
 
-    into("${projects.workloads.multiModule.presentation.dependencyProject.layout.buildDirectory.asFile.get().path}/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule")
+    into(projects.workloads.multiModule.presentation.dependencyProject.kspMainBuildDirectory)
     finalizedBy("cleanDomainAndPresentationClassesInData")
 }
 
 tasks.register<Delete>("cleanDomainAndPresentationClassesInData") {
 
-    val dataDir = file("build/generated/ksp/main/kotlin/corp/tbm/cleanwizard/workloads/multimodule")
+    val dataDir = file(kspMainBuildDirectory)
     val fileTree = fileTree(dataDir) {
         exclude("**/${cleanWizardProcessorConfig.dataModuleName}/**")
         include("**/*.kt")

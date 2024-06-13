@@ -9,6 +9,7 @@ import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.plugin.use.PluginDependency
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.io.File
 
 internal inline fun <reified T> Project.retrieveExtension(name: String): T {
     return extensions.getByName(name) as T
@@ -29,6 +30,12 @@ internal inline val Project.ksp: KspExtension
 internal inline fun Project.ksp(configuration: KspExtension.() -> Unit) {
     configuration(this.ksp)
 }
+
+inline val Project.kspMainBuildDirectory
+    get() = File(layout.buildDirectory.asFile.get().path, "generated/ksp/main/kotlin").path
+
+inline val Project.kspDebugBuildDirectory
+    get() = File(layout.buildDirectory.asFile.get().path, "generated/ksp/test/kotlin").path
 
 inline val Project.cleanWizardProcessorConfig: CleanWizardProcessorConfig
     get() = rootProject.extensions.getByType(CleanWizardProcessorConfig::class.java)

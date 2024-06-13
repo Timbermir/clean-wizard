@@ -1,6 +1,7 @@
 package corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions
 
 import com.google.devtools.ksp.gradle.KspExtension
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardProcessorConfig
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.accessors.dm.LibrariesForPluginConfig
 import org.gradle.accessors.dm.LibrariesForProjectConfig
@@ -28,6 +29,9 @@ internal inline val Project.ksp: KspExtension
 internal inline fun Project.ksp(configuration: KspExtension.() -> Unit) {
     configuration(this.ksp)
 }
+
+inline val Project.cleanWizardProcessorConfig: CleanWizardProcessorConfig
+    get() = rootProject.extensions.findByType(CleanWizardProcessorConfig::class.java) ?: CleanWizardProcessorConfig()
 
 internal inline val Project.jvmTarget
     get() = JvmTarget.values()

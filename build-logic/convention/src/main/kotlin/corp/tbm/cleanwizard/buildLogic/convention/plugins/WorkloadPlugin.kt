@@ -1,6 +1,9 @@
 package corp.tbm.cleanwizard.buildLogic.convention.plugins
 
-import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.*
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.alias
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.implementation
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.ksp
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure

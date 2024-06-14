@@ -173,5 +173,4 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
                 if (basePackagePath.startsWith(File.separator)) basePackagePath.substring(1) else basePackagePath
         }
     }
-
 }

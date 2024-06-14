@@ -1,7 +1,7 @@
 import com.google.devtools.ksp.gradle.KspTaskJvm
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.cleanWizardProcessorConfig
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.kspMainBuildDirectory
-var defaultPackagePath = ""
+
 plugins {
     alias(libs.plugins.cleanwizard.workload)
 }
@@ -10,75 +10,72 @@ dependencies {
     implementation(projects.workloads.multiModule.domain)
 }
 
+private var lastPackageSegmentWhereFirstSourceClassOccurs = ""
+
 tasks.withType<KspTaskJvm>().configureEach {
     finalizedBy("findLastPackageSegmentWhereFirstSourceClassOccurs")
 }
 
 tasks.register("findLastPackageSegmentWhereFirstSourceClassOccurs") {
     dependsOn("kspKotlin")
-    mustRunAfter("kspKotlin")
+
     sourceSets.main {
         allSource.srcDirs.forEach { dir ->
             findBasePackageInDir(dir)
         }
     }
+
     finalizedBy("copyGeneratedDomainClasses")
 }
 
 tasks.register<Copy>("copyGeneratedDomainClasses") {
 
-    mustRunAfter("kspKotlin","findLastPackageSegmentWhereFirstSourceClassOccurs")
-
-    from(kspMainBuildDirectory) {
+    copyToModule("findLastPackageSegmentWhereFirstSourceClassOccurs", {
         exclude("**/${cleanWizardProcessorConfig.dataModuleName}/**")
         exclude("**/${cleanWizardProcessorConfig.presentationModuleName}/**")
-    }
-
-    include("**/*.kt")
-    includeEmptyDirs = false
-
-    into(projects.workloads.multiModule.domain.dependencyProject.kspMainBuildDirectory)
-    finalizedBy("copyGeneratedUIClasses")
+    }, projects.workloads.multiModule.domain.dependencyProject, "copyGeneratedUIClasses")
 }
 
 tasks.register<Copy>("copyGeneratedUIClasses") {
-    mustRunAfter("copyGeneratedDomainClasses")
-    from(kspMainBuildDirectory) {
+    copyToModule("copyGeneratedDomainClasses", {
         exclude("**/${cleanWizardProcessorConfig.dataModuleName}/**")
         exclude("**/${cleanWizardProcessorConfig.domainModuleName}/**")
+    }, projects.workloads.multiModule.presentation.dependencyProject, "cleanDomainAndPresentationClassesInData")
+}
+
+private fun Copy.copyToModule(
+    taskToDependOn: String,
+    fromCopySpec: CopySpec.() -> Unit,
+    pathToCopyInto: Project,
+    taskToFinalizeBy: String
+) {
+    dependsOn(taskToDependOn)
+
+    from(kspMainBuildDirectory) {
+        fromCopySpec()
     }
+
     include("**/*.kt")
     includeEmptyDirs = false
 
-    into(projects.workloads.multiModule.presentation.dependencyProject.kspMainBuildDirectory)
-    finalizedBy("cleanDomainAndPresentationClassesInData")
+    into(pathToCopyInto.kspMainBuildDirectory)
+
+    finalizedBy(taskToFinalizeBy)
 }
 
 tasks.register<Delete>("cleanDomainAndPresentationClassesInData") {
-    mustRunAfter("copyGeneratedUIClasses")
+    dependsOn("copyGeneratedUIClasses")
 
-    doFirst {
+    val basePackage = File(
+        kspMainBuildDirectory, lastPackageSegmentWhereFirstSourceClassOccurs.split(".").joinToString("/")
+            .replace(cleanWizardProcessorConfig.dataModuleName, "")
+    ).path
 
-        val dataDir = file(kspMainBuildDirectory)
-        val fileTree = fileTree(dataDir) {
-            exclude("**/${cleanWizardProcessorConfig.dataModuleName}/**")
-            include("**/*.kt")
-        }
-
-        val basePackage =
-            "$kspMainBuildDirectory/${
-                defaultPackagePath.split(".").joinToString("/")
-                    .replace(cleanWizardProcessorConfig.dataModuleName, "")
-            }"
-
-        delete(fileTree)
-        delete("$basePackage/${cleanWizardProcessorConfig.domainModuleName}")
-        delete("$basePackage/${cleanWizardProcessorConfig.presentationModuleName}")
-
-    }
+    delete(File(basePackage, "/${cleanWizardProcessorConfig.domainModuleName}"))
+    delete(File(basePackage, "/${cleanWizardProcessorConfig.presentationModuleName}"))
 }
 
-fun findBasePackageInDir(dir: File) {
+private fun findBasePackageInDir(dir: File) {
 
     val findSubdirectories: (File) -> List<File> = { baseDir ->
         baseDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
@@ -108,9 +105,7 @@ fun findBasePackageInDir(dir: File) {
     }
 
     if (basePackagePath.isNotEmpty()) {
-        defaultPackagePath =
-            if (basePackagePath.startsWith(File.separator)) basePackagePath.substring(1) else basePackagePath
-        cleanWizardProcessorConfig.basePackagePath =
+        lastPackageSegmentWhereFirstSourceClassOccurs =
             if (basePackagePath.startsWith(File.separator)) basePackagePath.substring(1) else basePackagePath
     }
 }

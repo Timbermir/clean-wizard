@@ -14,13 +14,12 @@ class CleanWizardPlugin : Plugin<Project> {
             allprojects {
                 pluginManager.withPlugin("com.google.devtools.ksp") {
                     afterEvaluate {
+                        scanForMissingDependencies()
                         ksp {
                             cleanWizardProcessorConfig.apply {
-                                arg(
-                                    "DATA_CLASS_GENERATION_PATTERN",
-                                    dataClassGenerationPattern.name
-                                )
+                                arg("DATA_CLASS_GENERATION_PATTERN", dataClassGenerationPattern.name)
                                 arg("JSON_SERIALIZER", jsonSerializer.serializer)
+                                arg("DEPENDENCY_INJECTION_FRAMEWORK", dependencyInjectionFramework.name)
                                 arg("DATA_MODULE_NAME", dataModuleName)
                                 arg("DOMAIN_MODULE_NAME", domainModuleName)
                                 arg("PRESENTATION_MODULE_NAME", presentationModuleName)
@@ -40,6 +39,16 @@ class CleanWizardPlugin : Plugin<Project> {
                     }
                 }
             }
+        }
+    }
+
+    private fun Project.scanForMissingDependencies() {
+        val dependencies = project.configurations.flatMap { configuration ->
+            configuration.dependencies.map { dependency -> "${dependency.group}:${dependency.name}" }
+        }.toSet()
+
+        if (!dependencies.contains(cleanWizardProcessorConfig.jsonSerializer.dependency)) {
+            error("[${cleanWizardProcessorConfig.jsonSerializer.serializer}] serializer option is applied at the root, but no [${cleanWizardProcessorConfig.jsonSerializer.dependency}] dependency was found.")
         }
     }
 }

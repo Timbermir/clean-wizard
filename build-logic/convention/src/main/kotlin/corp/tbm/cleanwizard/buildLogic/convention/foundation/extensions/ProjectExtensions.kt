@@ -5,10 +5,14 @@ import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardProcesso
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.accessors.dm.LibrariesForPluginConfig
 import org.gradle.accessors.dm.LibrariesForProjectConfig
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
+import org.gradle.kotlin.dsl.configure
 import org.gradle.plugin.use.PluginDependency
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.io.File
 
 internal inline fun <reified T> Project.retrieveExtension(name: String): T {
@@ -44,6 +48,12 @@ internal inline val Project.jvmTarget
     get() = JvmTarget.values()
         .first { it.target.contains(projectConfig.versions.jdk.get()) }
 
-internal fun Project.applyPlugin(pluginDependency: Provider<PluginDependency>) {
+internal fun Project.alias(pluginDependency: Provider<PluginDependency>) {
     pluginManager.apply(pluginDependency.get().pluginId)
+}
+
+internal fun Project.sourceSets(configure: NamedDomainObjectContainer<KotlinSourceSet>.() -> Unit) {
+    configure<KotlinJvmProjectExtension> {
+        configure(sourceSets)
+    }
 }

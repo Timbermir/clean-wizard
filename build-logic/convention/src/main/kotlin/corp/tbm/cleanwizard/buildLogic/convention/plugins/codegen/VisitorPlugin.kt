@@ -1,6 +1,6 @@
 package corp.tbm.cleanwizard.buildLogic.convention.plugins.codegen
 
-import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.applyPlugin
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.alias
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.implementation
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.libs
 import org.gradle.api.Plugin
@@ -12,7 +12,7 @@ internal class VisitorPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
 
-            applyPlugin(libs.plugins.cleanwizard.codegen.foundation)
+            alias(libs.plugins.cleanwizard.codegen.foundation)
 
             dependencies {
                 implementation(project(":foundation:codegen:universal"))

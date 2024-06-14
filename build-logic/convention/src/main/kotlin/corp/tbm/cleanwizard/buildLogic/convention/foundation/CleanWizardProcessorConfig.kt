@@ -3,6 +3,7 @@ package corp.tbm.cleanwizard.buildLogic.convention.foundation
 open class CleanWizardProcessorConfig(
     var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER,
     var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KOTLINX_SERIALIZATION,
+    var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework = CleanWizardDependencyInjectionFramework.NONE,
     var dataModuleName: String = "data",
     var domainModuleName: String = "domain",
     var presentationModuleName: String = "presentation",

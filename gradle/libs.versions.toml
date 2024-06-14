@@ -38,6 +38,7 @@ foundation-codegen = ["kotlinx-serialization-json", "google-devtools-ksp", "squa
 [plugins]
 # Custom Plugins
 cleanwizard-core = { id = "corp.tbm.cleanwizard", version = "1.0.0" }
+cleanwizard-multimodule = { id = "corp.tbm.cleanwizard.multimodule" }
 cleanwizard-kotlin = { id = "corp.tbm.cleanwizard.kotlin" }
 cleanwizard-codegen-foundation = { id = "corp.tbm.cleanwizard.codegen.foundation" }
 cleanwizard-codegen-visitor = { id = "corp.tbm.cleanwizard.codegen.visitor" }

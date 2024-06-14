@@ -23,6 +23,11 @@ gradlePlugin {
                 implementationClass = pluginConfigVersions.cleanwizard.implementation.get()
             }
 
+            register(multimodule.pluginId) {
+                id = multimodule.pluginId
+                implementationClass = pluginConfigVersions.cleanwizard.multimodule.implementation.get()
+            }
+
             register(kotlin.pluginId) {
                 id = kotlin.pluginId
                 implementationClass = pluginConfigVersions.foundation.kotlin.implementation.get()

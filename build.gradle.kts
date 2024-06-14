@@ -18,7 +18,6 @@ buildscript {
 `clean-wizard` {
     jsonSerializer = CleanWizardJsonSerializer.JACKSON
     dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER
-    dataModuleName = "dataLayer"
     dtoClassSuffix = "Dto"
     dtoClassPackageName = "dtos"
     dtoInterfaceMapperName = "DtoMapper"

@@ -12,6 +12,12 @@ object ProcessorOptions {
     val jsonSerializer: JsonSerializer
         get() = _jsonSerializer
 
+    private var _dependencyInjectionFramework = DependencyInjectionFramework.NONE
+
+    val dependencyInjectionFramework
+        get() = _dependencyInjectionFramework
+
+
     private var _dtoOptions = ClassGenerationConfig.DTO()
 
     val dtoOptions: ClassGenerationConfig.DTO
@@ -28,11 +34,15 @@ object ProcessorOptions {
         get() = _uiOptions
 
     fun generateConfigs(processorOptions: Map<String, String>) {
+        _dependencyInjectionFramework =
+            DependencyInjectionFramework.entries.first { it.name == processorOptions["DEPENDENCY_INJECTION_FRAMEWORK"] }
+
+        _dataClassGenerationPattern =
+            DataClassGenerationPattern.entries.first { it.name == processorOptions["DATA_CLASS_GENERATION_PATTERN"] }
+
         _jsonSerializer = JsonSerializer.entries.first {
             it.serializer == processorOptions["JSON_SERIALIZER"]
         }
-        _dataClassGenerationPattern =
-            DataClassGenerationPattern.entries.first { it.name == processorOptions["DATA_CLASS_GENERATION_PATTERN"] }
 
         ClassGenerationConfig.setProcessorOptions(processorOptions)
         _dtoOptions = ClassGenerationConfig.DTO.constructConfig()

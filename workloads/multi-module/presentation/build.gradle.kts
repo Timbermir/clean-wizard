@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.cleanwizard.workload)
+    alias(libs.plugins.cleanwizard.kotlin)
 }
 dependencies {
     implementation(projects.workloads.multiModule.data)

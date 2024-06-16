@@ -4,11 +4,11 @@
 </div>
 
 <div align="center">
-<h1> A Kotlin Symbol Processor that generates data classes for Clean Architecture layers</h1>
+<h1> A Kotlin Symbol Processor that generates classes for Clean Architecture layers</h1>
 </div>
 
 **Clean Wizard is a [`KSP Processor`](https://kotlinlang.org/docs/ksp-overview.html)
-that processes annotations and generates data classes for
+that processes annotations and generates classes for
 [`Clean Architecture`](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) layers
 using [`Kotlinpoet`](https://square.github.io/kotlinpoet)**.
 
@@ -142,7 +142,7 @@ build/
           └── main/
               └── corp/
                   └── tbm/
-                      └── cleanarchitecturemapper/
+                      └── cleanwizard/
                           ├── computer/
                           │   ├── dto/
                           │   │   └── ComputerDTO.kt
@@ -169,11 +169,11 @@ build/
 **Don't worry, `top-level extension functions to map` are imported!**
 
 ```kotlin
-import corp.tbm.cleanarchitecturemapper.computer.model.ComputerModel
-import corp.tbm.cleanarchitecturemapper.cpu.ui.CpuUI
-import corp.tbm.cleanarchitecturemapper.cpu.ui.toUI
-import corp.tbm.cleanarchitecturemapper.motherboard.ui.MotherboardUI
-import corp.tbm.cleanarchitecturemapper.motherboard.ui.toUI
+import corp.tbm.cleanwizard.computer.model.ComputerModel
+import corp.tbm.cleanwizard.cpu.ui.CpuUI
+import corp.tbm.cleanwizard.cpu.ui.toUI
+import corp.tbm.cleanwizard.motherboard.ui.MotherboardUI
+import corp.tbm.cleanwizard.motherboard.ui.toUI
 import kotlin.Boolean
 
 public data class ComputerUI(
@@ -384,7 +384,7 @@ public enum class IsComputerWorking(
 
 You can see all the available enums
 available for 
-generation [here](foundation/annotations/src/main/kotlin/corp/tbm/cleanarchitecturemapper/foundation/annotations/Enum.kt)
+generation [here](foundation/annotations/src/main/kotlin/corp/tbm/cleanwizard/foundation/annotations/Enum.kt)
 
 2.0 Let's imagine that you want to change the suffix of the DTO classes from `DTO` to `Dto`.
 Using `ksp` extension's `arg("KEY", "value")` is not type-safe and map-based,
@@ -464,11 +464,11 @@ Ready-to-use block with all the fields needed
 ```
 
 You can see the list of available
-options [here](build-logic/convention/src/main/kotlin/corp/tbm/cleanarchitecturemapper/buildLogic/convention/foundation/CleanWizardProcessorConfig.kt)
+options [here](build-logic/convention/src/main/kotlin/corp/tbm/cleanwizard/buildLogic/convention/foundation/CleanWizardProcessorConfig.kt)
 
 ## Setup 🧩
 
-**Clean Architecture Mapper is available via [Maven Central](https://central.sonatype.com/)**
+**Clean Wizard is available via [Maven Central](https://central.sonatype.com/)**
 
 1. **Add the KSP Plugin**
 
@@ -508,8 +508,8 @@ plugins {
 
 ```gradle
 dependencies {
-    implementation 'io.github.timbermir:clean-architecture-mapper:1.0.0-snapshot'
-    ksp 'io.github.timbermir:clean-architecture-mapper:1.0.0-snapshot'
+    implementation 'io.github.timbermir:clean-wizard:1.0.0-snapshot'
+    ksp 'io.github.timbermir:clean-wizard:1.0.0-snapshot'
 }
 ```
 
@@ -520,8 +520,8 @@ dependencies {
 
 ```gradle
 dependencies {
-    implementation("io.github.timbermir:clean-architecture-mapper:1.0.0-snapshot")
-    ksp("io.github.timbermir:clean-architecture-mapper:1.0.0-snapshot")
+    implementation("io.github.timbermir:clean-wizard:1.0.0-snapshot")
+    ksp("io.github.timbermir:clean-wizard:1.0.0-snapshot")
 }
 ```
 
@@ -585,14 +585,29 @@ The project **requires JDK 19 to build classes and to run tests**.
 
 For local builds, **you can use an earlier or later version of JDK if you don't have that version installed**.
 Specify
-the version of this JDK with the ``jdk`` property
+the version of this JDK with the `jdk` property
 in [`project-config.versions.toml`](gradle/project-config.versions.toml).
 
 After that, `Gradle` will download all dependencies the project depends on.
-Run the processor via [`Main.kt`](workload/src/main/kotlin/corp/tbm/cleanarchitecturemapper/workload/Main.kt)
+Run the processor via [`Main.kt`](workload/src/main/kotlin/corp/tbm/cleanwizard/workload/Main.kt)
+
+On Windows, you might need to add long paths setting to the repository:
+
+```
+git config core.longpaths true
+```
+
+The errors related to inline properties usage in `build.gradle.kts` files can occur when IntelliJ IDEA cannot
+resolve `Target JVM Version` for Kotlin Compiler, causing it to fall back
+to the default 1.8.
+To resolve the errors, follow these steps
+
+1. Navigate to `Settings -> Build, Execution, Deployment -> Compiler -> Kotlin Compiler`
+2. Set the `Target JVM Version` to match the `jdk` property specified
+   in [`project-config.versions.toml`](gradle/project-config.versions.toml).
 
 ## License
 
-**clean-architecture-mapper** is distributed under the terms of the **Apache License (Version 2.0)**.
+**clean-wizard** is distributed under the terms of the **Apache License (Version 2.0)**.
 See the [license](LICENSE.txt) for more
 information.

@@ -23,7 +23,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "clean-architecture-mapper"
+rootProject.name = "clean-wizard"
 includeBuild("build-logic")
 include(
     "foundation:annotations",
@@ -34,8 +34,8 @@ include(
 include("clean-wizard")
 include("visitors:enums")
 include("processor")
+include("workloads:single-module")
 include(
-    "workloads:single-module",
     "workloads:multi-module:data",
     "workloads:multi-module:domain",
     "workloads:multi-module:presentation"

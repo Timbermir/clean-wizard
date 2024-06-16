@@ -1,3 +1,3 @@
 plugins {
-    alias(libs.plugins.cleanarchitecturemapper.workload)
+    alias(libs.plugins.cleanwizard.kotlin)
 }

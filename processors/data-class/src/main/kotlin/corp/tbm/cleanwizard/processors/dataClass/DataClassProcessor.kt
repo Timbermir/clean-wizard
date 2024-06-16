@@ -36,7 +36,7 @@ import java.io.OutputStreamWriter
 const val PARAMETER_SEPARATOR = ", \n    "
 const val PARAMETER_PREFIX = "\n    "
 
-class DTOProcessor(
+class DataClassProcessor(
     private val codeGenerator: CodeGenerator,
     processorOptions: Map<String, String>,
     private val logger: KSPLogger
@@ -491,8 +491,8 @@ class DTOProcessor(
     }
 }
 
-internal class DTOProcessorProvider : SymbolProcessorProvider {
+internal class DataClassProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return DTOProcessor(environment.codeGenerator, environment.options, environment.logger)
+        return DataClassProcessor(environment.codeGenerator, environment.options, environment.logger)
     }
 }

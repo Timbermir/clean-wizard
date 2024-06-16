@@ -1,8 +1,8 @@
 package corp.tbm.cleanwizard.buildLogic.convention.plugins
 
-import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardProcessorConfig
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.cleanWizardProcessorConfig
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.ksp
+import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardProcessorConfig
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -20,20 +20,23 @@ class CleanWizardPlugin : Plugin<Project> {
                                 arg("DATA_CLASS_GENERATION_PATTERN", dataClassGenerationPattern.name)
                                 arg("JSON_SERIALIZER", jsonSerializer.serializer)
                                 arg("DEPENDENCY_INJECTION_FRAMEWORK", dependencyInjectionFramework.name)
-                                arg("DATA_MODULE_NAME", dataModuleName)
-                                arg("DOMAIN_MODULE_NAME", domainModuleName)
-                                arg("PRESENTATION_MODULE_NAME", presentationModuleName)
-                                arg("DTO_CLASS_SUFFIX", dtoClassSuffix)
-                                arg("DTO_CLASS_PACKAGE_NAME", dtoClassPackageName)
-                                arg("DTO_INTERFACE_MAPPER_NAME", dtoInterfaceMapperName)
-                                arg("DTO_TO_DOMAIN_MAP_FUNCTION_NAME", dtoToDomainMapFunctionName)
-                                arg("DOMAIN_TO_DTO_MAP_FUNCTION_NAME", domainToDtoMapFunctionName)
-                                arg("DOMAIN_CLASS_SUFFIX", domainClassSuffix)
-                                arg("DOMAIN_CLASS_PACKAGE_NAME", domainClassPackageName)
-                                arg("UI_CLASS_SUFFIX", uiClassSuffix)
-                                arg("UI_CLASS_PACKAGE_NAME", uiClassPackageName)
-                                arg("DOMAIN_TO_UI_MAP_FUNCTION_NAME", domainToUiMapFunctionName)
-                                arg("UI_TO_DOMAIN_MAP_FUNCTION_NAME", uiToDomainMapFunctionName)
+                                arg("DATA_MODULE_NAME", dtoConfig.moduleName)
+                                arg("DTO_CLASS_SUFFIX", dtoConfig.classSuffix)
+                                arg("DTO_CLASS_PACKAGE_NAME", dtoConfig.packageName)
+                                arg("DTO_INTERFACE_MAPPER_NAME", dtoConfig.interfaceMapperName)
+                                arg("DTO_TO_DOMAIN_MAP_FUNCTION_NAME", dtoConfig.toDomainMapFunctionName)
+                                arg("DOMAIN_MODULE_NAME", domainConfig.moduleName)
+                                arg("DOMAIN_CLASS_SUFFIX", domainConfig.classSuffix)
+                                arg("DOMAIN_CLASS_PACKAGE_NAME", domainConfig.packageName)
+                                arg("DOMAIN_TO_DTO_MAP_FUNCTION_NAME", domainConfig.toDTOMapFunctionName)
+                                arg("DOMAIN_TO_UI_MAP_FUNCTION_NAME", domainConfig.toUIMapFunctionName)
+                                arg("PRESENTATION_MODULE_NAME", presentationConfig.moduleName)
+                                arg("UI_CLASS_SUFFIX", presentationConfig.classSuffix)
+                                arg("UI_CLASS_PACKAGE_NAME", presentationConfig.packageName)
+                                arg("UI_TO_DOMAIN_MAP_FUNCTION_NAME", presentationConfig.toDomainMapFunctionName)
+                                arg("USE_CASE_SUFFIX", useCaseConfig.suffix)
+                                arg("USE_CASE_USE_OPERATOR_INVOKE", useCaseConfig.useOperatorInvoke.toString())
+                                arg("USE_CASE_CREATE_WRAPPER", useCaseConfig.createWrapper.toString())
                             }
                         }
                     }

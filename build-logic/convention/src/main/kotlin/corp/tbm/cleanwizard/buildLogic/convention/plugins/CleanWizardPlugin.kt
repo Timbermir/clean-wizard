@@ -7,6 +7,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 class CleanWizardPlugin : Plugin<Project> {
+
     override fun apply(target: Project) {
         with(target) {
             extensions.create("clean-wizard", CleanWizardProcessorConfig::class.java)
@@ -14,7 +15,6 @@ class CleanWizardPlugin : Plugin<Project> {
             allprojects {
                 pluginManager.withPlugin("com.google.devtools.ksp") {
                     afterEvaluate {
-                        scanForMissingDependencies()
                         ksp {
                             cleanWizardProcessorConfig.apply {
                                 arg("DATA_CLASS_GENERATION_PATTERN", dataClassGenerationPattern.name)
@@ -39,16 +39,6 @@ class CleanWizardPlugin : Plugin<Project> {
                     }
                 }
             }
-        }
-    }
-
-    private fun Project.scanForMissingDependencies() {
-        val dependencies = project.configurations.flatMap { configuration ->
-            configuration.dependencies.map { dependency -> "${dependency.group}:${dependency.name}" }
-        }.toSet()
-
-        if (!dependencies.contains(cleanWizardProcessorConfig.jsonSerializer.dependency)) {
-            error("[${cleanWizardProcessorConfig.jsonSerializer.serializer}] serializer option is applied at the root, but no [${cleanWizardProcessorConfig.jsonSerializer.dependency}] dependency was found.")
         }
     }
 }

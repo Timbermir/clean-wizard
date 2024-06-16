@@ -13,7 +13,7 @@ open class CleanWizardProcessorConfig(
     internal var useCaseConfig: CleanWizardUseCaseProcessorConfig = CleanWizardUseCaseProcessorConfig()
 ) {
 
-    fun dto(configuration: CleanWizardDataClassGenerationProcessorConfig.DTO.() -> Unit) {
+    fun data(configuration: CleanWizardDataClassGenerationProcessorConfig.DTO.() -> Unit) {
         dtoConfig.apply(configuration)
     }
 

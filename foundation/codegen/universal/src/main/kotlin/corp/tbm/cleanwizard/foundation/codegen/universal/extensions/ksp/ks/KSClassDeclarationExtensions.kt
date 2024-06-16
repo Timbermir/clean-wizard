@@ -16,11 +16,10 @@ inline val KSClassDeclaration.packagePath
 
 inline val KSClassDeclaration.basePackagePath: String
     get() {
-
         val splitPath = packagePath.asPackage.dropLastWhile { it.isEmpty() }
 
         return when (dataClassGenerationPattern) {
-            DataClassGenerationPattern.LAYER -> {
+            DataClassGenerationPattern.LAYER ->
                 splitPath.takeWhile {
                     it !in listOf(
                         dtoOptions.moduleName,
@@ -28,16 +27,8 @@ inline val KSClassDeclaration.basePackagePath: String
                         uiOptions.moduleName
                     )
                 }
-//                if (splitPath.last() in listOf(
-//                        dtoOptions.moduleName,
-//                        domainOptions.moduleName,
-//                        uiOptions.moduleName
-//                    )
-//                ) splitPath else splitPath.dropLast(1)
-            }
 
-            DataClassGenerationPattern.TYPE -> {
+            DataClassGenerationPattern.TYPE ->
                 splitPath.dropLastWhile { it.isEmpty() }
-            }
         }.asPackage
     }

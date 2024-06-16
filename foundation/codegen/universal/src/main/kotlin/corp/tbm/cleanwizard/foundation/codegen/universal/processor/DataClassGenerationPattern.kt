@@ -25,7 +25,7 @@ enum class DataClassGenerationPattern {
         }
 
         override fun findRightModelType(packageName: String): ModelType {
-            return ModelType.entries.first { modelType -> packageName.packageLastSegment == modelType.moduleName }
+            return ModelType.entries.first { modelType -> packageName.packageLastSegment == modelType.moduleName || packageName.packageLastSegment == modelType.packageName }
         }
 
         override fun getQualifiedPackageName(packageName: MutableList<String>, type: KSType): String {

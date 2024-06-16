@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.processor
+package corp.tbm.cleanwizard.processors.dataClass
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
@@ -201,8 +201,8 @@ class DTOProcessor(
                                     "return %T(${
                                         properties.map { it.name }
                                             .joinToString(
-                                                separator = PARAMETER_SEPARATOR,
-                                                prefix = PARAMETER_PREFIX
+                                                separator = corp.tbm.cleanwizard.processors.dataClass.PARAMETER_SEPARATOR,
+                                                prefix = corp.tbm.cleanwizard.processors.dataClass.PARAMETER_PREFIX
                                             ) { parameter ->
                                                 if (properties.filter { it.name == parameter }
                                                         .any { it.type.resolve().isMappable })

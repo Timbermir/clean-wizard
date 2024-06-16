@@ -25,5 +25,5 @@ buildscript {
     uiClassPackageName = "uis"
     domainToUiMapFunctionName = "toUI"
     uiToDomainMapFunctionName = "fromUI"
-    defaultJsonSerializer = CleanWizardJsonSerializer.JACKSON
+    defaultJsonSerializer = CleanWizardJsonSerializer.GSON
 }

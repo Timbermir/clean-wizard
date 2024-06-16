@@ -5,6 +5,7 @@ import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
@@ -29,6 +30,7 @@ import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.P
 import corp.tbm.cleanarchitecturemapper.foundation.codegen.universal.processor.ProcessorOptions.uiOptions
 import corp.tbm.cleanarchitecturemapper.visitors.enums.EnumGenerateVisitor
 import java.io.OutputStreamWriter
+import kotlin.reflect.KClass
 
 const val PARAMETER_SEPARATOR = ", \n    "
 const val PARAMETER_PREFIX = "\n    "
@@ -297,11 +299,19 @@ class DTOProcessor(
                     }
                     this
                 }, propertyBuilder = { _, _, property ->
-                    addAnnotation(
-                        AnnotationSpec.builder(
-                            defaultJsonSerializer.annotation
-                        ).addMember("${defaultJsonSerializer.nameProperty} = %S", property.name).build()
-                    )
+                    if (!property.hasAnnotation(defaultJsonSerializer.annotation)) {
+                        addAnnotation(
+                            AnnotationSpec.builder(
+                                defaultJsonSerializer.annotation
+                            ).addMember("${defaultJsonSerializer.nameProperty} = %S", property.name).build()
+                        )
+                    } else {
+                        val existingAnnotation = property.annotations
+                            .find { it.shortName.asString() == defaultJsonSerializer.annotation.simpleName }
+                        existingAnnotation?.let { ann ->
+                            addAnnotation(ann.toAnnotationSpec())
+                        }
+                    }
                     this
                 })
 
@@ -471,6 +481,30 @@ class DTOProcessor(
             }
         } catch (_: FileAlreadyExistsException) {
         }
+    }
+
+    private fun KSPropertyDeclaration.hasAnnotation(
+        annotation: KClass<out Annotation>
+    ): Boolean {
+        return annotations.any { ann ->
+            val resolvedName = ann.annotationType.resolve().declaration.qualifiedName?.asString()
+            resolvedName == annotation.qualifiedName
+        }
+    }
+
+    private fun KSAnnotation.toAnnotationSpec(): AnnotationSpec {
+        val builder = AnnotationSpec.builder(
+            ClassName.bestGuess(this.annotationType.resolve().declaration.qualifiedName!!.asString())
+        )
+        this.arguments.forEach { arg ->
+            if (arg.name?.asString() != "alternate" || (arg.value as? List<*>)?.isEmpty() == false) {
+                builder.addMember(
+                    "${arg.name?.asString()} = ${if (arg.value is String) "%S" else "%L"}",
+                    arg.value.toString()
+                )
+            }
+        }
+        return builder.build()
     }
 }
 

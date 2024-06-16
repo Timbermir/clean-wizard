@@ -1,7 +1,7 @@
 package corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions
 
 import com.google.devtools.ksp.gradle.KspExtension
-import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardProcessorConfig
+import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardProcessorConfig
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.accessors.dm.LibrariesForPluginConfig
 import org.gradle.accessors.dm.LibrariesForProjectConfig

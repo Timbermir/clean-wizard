@@ -30,7 +30,7 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
                 implementation(libs.bundles.kotlinx)
                 implementation(project(":foundation:annotations"))
                 implementation(project(":clean-wizard"))
-                ksp(project(":processor"))
+                ksp(project(":processors:data-class"))
             }
 
             gradle.projectsEvaluated {

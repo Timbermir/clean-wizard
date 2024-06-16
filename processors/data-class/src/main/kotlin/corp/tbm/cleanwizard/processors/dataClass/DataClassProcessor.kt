@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.processor
+package corp.tbm.cleanwizard.processors.dataClass
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
@@ -36,7 +36,7 @@ import java.io.OutputStreamWriter
 const val PARAMETER_SEPARATOR = ", \n    "
 const val PARAMETER_PREFIX = "\n    "
 
-class DTOProcessor(
+class DataClassProcessor(
     private val codeGenerator: CodeGenerator,
     processorOptions: Map<String, String>,
     private val logger: KSPLogger
@@ -201,8 +201,8 @@ class DTOProcessor(
                                     "return %T(${
                                         properties.map { it.name }
                                             .joinToString(
-                                                separator = PARAMETER_SEPARATOR,
-                                                prefix = PARAMETER_PREFIX
+                                                separator = corp.tbm.cleanwizard.processors.dataClass.PARAMETER_SEPARATOR,
+                                                prefix = corp.tbm.cleanwizard.processors.dataClass.PARAMETER_PREFIX
                                             ) { parameter ->
                                                 if (properties.filter { it.name == parameter }
                                                         .any { it.type.resolve().isMappable })
@@ -491,8 +491,8 @@ class DTOProcessor(
     }
 }
 
-internal class DTOProcessorProvider : SymbolProcessorProvider {
+internal class DataClassProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return DTOProcessor(environment.codeGenerator, environment.options, environment.logger)
+        return DataClassProcessor(environment.codeGenerator, environment.options, environment.logger)
     }
 }

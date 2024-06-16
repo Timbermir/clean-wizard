@@ -21,7 +21,7 @@ internal class WorkloadPlugin : Plugin<Project> {
                 if (name != "clean-wizard") {
                     implementation(project(":clean-wizard"))
                 }
-                ksp(project(":processor"))
+                ksp(project(":processors:data-class"))
             }
 
             configure<KotlinJvmProjectExtension> {

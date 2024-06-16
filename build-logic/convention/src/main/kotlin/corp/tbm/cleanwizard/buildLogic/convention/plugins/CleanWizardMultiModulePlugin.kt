@@ -1,8 +1,8 @@
 package corp.tbm.cleanwizard.buildLogic.convention.plugins
 
 import com.google.devtools.ksp.gradle.KspTaskJvm
-import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardCodegenExtension
-import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardDependencyInjectionFramework
+import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardCodegenExtension
+import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -72,8 +72,8 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
                 this,
                 "kspKotlin",
                 {
-                    exclude("**/${cleanWizardProcessorConfig.dataModuleName}/**")
-                    exclude("**/${cleanWizardProcessorConfig.presentationModuleName}/**")
+                    exclude("**/${cleanWizardProcessorConfig.dtoConfig.moduleName}/**")
+                    exclude("**/${cleanWizardProcessorConfig.presentationConfig.moduleName}/**")
                 },
                 project(codegenExtension.domainProject),
                 "copyGeneratedUIClasses"
@@ -85,8 +85,8 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
                 this,
                 "copyGeneratedDomainClasses",
                 {
-                    exclude("**/${cleanWizardProcessorConfig.dataModuleName}/**")
-                    exclude("**/${cleanWizardProcessorConfig.domainModuleName}/**")
+                    exclude("**/${cleanWizardProcessorConfig.dtoConfig.moduleName}/**")
+                    exclude("**/${cleanWizardProcessorConfig.domainConfig.moduleName}/**")
                 },
                 project(codegenExtension.presentationProject),
                 "cleanDomainAndPresentationClassesInData"
@@ -99,11 +99,11 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
             val basePackage = File(
                 kspMainBuildDirectory,
                 lastPackageSegmentWhereFirstSourceClassOccurs.split(".").joinToString("/")
-                    .replace(cleanWizardProcessorConfig.dataModuleName, "")
+                    .replace(cleanWizardProcessorConfig.dtoConfig.moduleName, "")
             ).path
 
-            delete(File(basePackage, "/${cleanWizardProcessorConfig.domainModuleName}"))
-            delete(File(basePackage, "/${cleanWizardProcessorConfig.presentationModuleName}"))
+            delete(File(basePackage, "/${cleanWizardProcessorConfig.domainConfig.moduleName}"))
+            delete(File(basePackage, "/${cleanWizardProcessorConfig.presentationConfig.moduleName}"))
         }
     }
 

@@ -23,6 +23,7 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLow
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.*
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ClassGenerationConfig
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.DataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainOptions
@@ -80,6 +81,14 @@ class DTOProcessor(
                     }
             }\n)"
         }
+
+    private val generateDomainClassName: ClassName.() -> ClassName = {
+        if (dataClassGenerationPattern == DataClassGenerationPattern.LAYER)
+            ClassName(
+                "${packageName}.${domainOptions.packageName}",
+                simpleName
+            ) else ClassName(packageName, simpleName)
+    }
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -167,7 +176,14 @@ class DTOProcessor(
                 classBuilder = { packageName, className, properties ->
 
                     val domainClassName =
-                        dataClassGenerationPattern.classNameReplacement(packageName, className, ModelType.DTO)
+                        generateDomainClassName(
+                            dataClassGenerationPattern.classNameReplacement(
+                                packageName,
+                                className,
+                                ModelType.DTO
+                            )
+                        )
+
                     if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
                         addSuperinterface(
                             ClassName("corp.tbm.cleanwizard", dtoOptions.dtoInterfaceMapperName)
@@ -202,7 +218,13 @@ class DTOProcessor(
                 fileSpecBuilder = { packageName, className, properties ->
                     val dtoAnnotation = symbol.getAnnotationsByType(DTO::class).first()
                     val domainClassName =
-                        dataClassGenerationPattern.classNameReplacement(packageName, className, ModelType.DTO)
+                        generateDomainClassName(
+                            dataClassGenerationPattern.classNameReplacement(
+                                packageName,
+                                className,
+                                ModelType.DTO
+                            )
+                        )
                     when {
 
                         !dtoAnnotation.toDomainAsTopLevel -> {
@@ -301,7 +323,13 @@ class DTOProcessor(
                 uiOptions,
                 fileSpecBuilder = { packageName, className, properties ->
                     val domainClassName =
-                        dataClassGenerationPattern.classNameReplacement(packageName, className, ModelType.UI)
+                        generateDomainClassName(
+                            dataClassGenerationPattern.classNameReplacement(
+                                packageName,
+                                className,
+                                ModelType.UI
+                            )
+                        )
                     addFunction(
                         generateTopLevelMappingFunctions(
                             uiOptions.domainToUiMapFunctionName, properties, domainClassName,
@@ -397,7 +425,12 @@ class DTOProcessor(
 
         val className = symbol.name.replace(dtoRegex, "") + classGenerationConfig.suffix
 
-        val packageName = dataClassGenerationPattern.generatePackageName(symbol, classGenerationConfig)
+        val packageName = "${
+            dataClassGenerationPattern.generatePackageName(
+                symbol,
+                classGenerationConfig
+            )
+        }${if (dataClassGenerationPattern == DataClassGenerationPattern.LAYER && classGenerationConfig is ClassGenerationConfig.Domain) ".${classGenerationConfig.packageName}" else ""}"
 
         val classToBuild = classBuilder(
             TypeSpec.classBuilder(className)

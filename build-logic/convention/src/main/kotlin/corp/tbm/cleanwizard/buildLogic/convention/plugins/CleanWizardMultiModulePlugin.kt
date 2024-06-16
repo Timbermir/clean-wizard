@@ -2,16 +2,14 @@ package corp.tbm.cleanwizard.buildLogic.convention.plugins
 
 import com.google.devtools.ksp.gradle.KspTaskJvm
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardCodegenExtension
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.CopySpec
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Delete
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.project
-import org.gradle.kotlin.dsl.register
-import org.gradle.kotlin.dsl.withType
+import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 
@@ -27,11 +25,16 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
             val codegenExtension =
                 extensions.create("clean-wizard-codegen", CleanWizardCodegenExtension::class.java)
 
+
             dependencies {
                 implementation(libs.bundles.kotlinx)
                 implementation(project(":foundation:annotations"))
                 implementation(project(":clean-wizard"))
                 ksp(project(":processor"))
+            }
+
+            gradle.projectsEvaluated {
+                scanForMissingDependencies(this@with.extensions.getByType<CleanWizardCodegenExtension>())
             }
 
             configureGradleTasks(codegenExtension)
@@ -159,6 +162,32 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
         if (basePackagePath.isNotEmpty()) {
             lastPackageSegmentWhereFirstSourceClassOccurs =
                 if (basePackagePath.startsWith(File.separator)) basePackagePath.substring(1) else basePackagePath
+        }
+    }
+
+    private fun Project.scanForMissingDependencies(codegenExtension: CleanWizardCodegenExtension) {
+
+        val dataDependencies = configurations.flatMap { configuration ->
+            configuration.dependencies.map { dependency -> "${dependency.group}:${dependency.name}" }
+        }.toSet()
+
+        val domainProject = project(codegenExtension.domainProject)
+        val domainDependencies = project(codegenExtension.domainProject).configurations.flatMap { configuration ->
+            configuration.dependencies.map { dependency -> "${dependency.group}:${dependency.name}" }
+        }.toSet()
+
+        val missingDependencies =
+            cleanWizardProcessorConfig.dependencyInjectionFramework.dependencies.filter { it !in domainDependencies }
+
+        when {
+
+            !dataDependencies.contains(cleanWizardProcessorConfig.jsonSerializer.dependency) -> {
+                error("[${cleanWizardProcessorConfig.jsonSerializer.serializer}] serializer option is applied at the root, but no [${cleanWizardProcessorConfig.jsonSerializer.dependency}] dependency was found.")
+            }
+
+            missingDependencies.isNotEmpty() && cleanWizardProcessorConfig.dependencyInjectionFramework != CleanWizardDependencyInjectionFramework.NONE -> {
+                error("${cleanWizardProcessorConfig.dependencyInjectionFramework.name} dependency injection framework option is applied at the root, but module `${domainProject.path}` doesn't have $missingDependencies dependencies.")
+            }
         }
     }
 }

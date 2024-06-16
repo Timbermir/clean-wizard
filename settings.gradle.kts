@@ -23,7 +23,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "clean-wizard"
 includeBuild("build-logic")
 include(
     "foundation:annotations",
@@ -33,7 +32,10 @@ include(
 )
 include("clean-wizard")
 include("visitors:enums")
-include("processor")
+include(
+    ":processors:data-class",
+    ":processors:use-case"
+)
 include("workloads:single-module")
 include(
     "workloads:multi-module:data",

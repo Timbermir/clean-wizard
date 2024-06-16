@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.buildLogic.convention.foundation
+package corp.tbm.cleanwizard.buildLogic.convention.processorConfig
 
 enum class CleanWizardDataClassGenerationPattern {
     LAYER,

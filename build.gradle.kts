@@ -1,5 +1,5 @@
-import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardDataClassGenerationPattern
-import corp.tbm.cleanwizard.buildLogic.convention.foundation.CleanWizardJsonSerializer
+import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardDataClassGenerationPattern
+import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardJsonSerializer
 
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
@@ -16,17 +16,27 @@ buildscript {
 }
 
 `clean-wizard` {
+
     jsonSerializer = CleanWizardJsonSerializer.JACKSON
     dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER
-    dtoClassSuffix = "Dto"
-    dtoClassPackageName = "dtos"
-    dtoInterfaceMapperName = "DtoMapper"
-    dtoToDomainMapFunctionName = "toModel"
-    domainToDtoMapFunctionName = "fromDomain"
-    domainClassSuffix = "Domain"
-    domainClassPackageName = "models"
-    uiClassSuffix = "Ui"
-    uiClassPackageName = "uis"
-    domainToUiMapFunctionName = "toUI"
-    uiToDomainMapFunctionName = "fromUI"
+
+    data {
+        classSuffix = "Dto"
+        packageName = "dtos"
+        interfaceMapperName = "DtoMapper"
+        toDomainMapFunctionName = "toModel"
+    }
+
+    presentation {
+        classSuffix = "Ui"
+        packageName = "uis"
+        toDomainMapFunctionName = "fromUI"
+    }
+
+    domain {
+        classSuffix = "Domain"
+        packageName = "models"
+        toDTOMapFunctionName = "fromDomain"
+        toUIMapFunctionName = "toUI"
+    }
 }

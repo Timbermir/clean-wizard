@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.buildLogic.convention.foundation
+package corp.tbm.cleanwizard.buildLogic.convention.processorConfig
 
 enum class CleanWizardJsonSerializer(val serializer: String, val dependency: String) {
     KOTLINX_SERIALIZATION("kotlinx-serialization", "org.jetbrains.kotlinx:kotlinx-serialization-json"),

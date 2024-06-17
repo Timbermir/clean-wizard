@@ -1,9 +1,13 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     `kotlin-dsl`
     alias(libs.plugins.google.devtools.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
+    implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.google.devtools.ksp)
     compileOnly(files(ksp.javaClass.superclass.protectionDomain.codeSource.location))
@@ -53,3 +57,11 @@ gradlePlugin {
 
 internal val Provider<PluginDependency>.pluginId
     get() = get().pluginId
+
+tasks.withType<KotlinCompile>().configureEach {
+    this.compilerOptions {
+        languageVersion =
+            org.jetbrains.kotlin.gradle.dsl.KotlinVersion.values()
+                .first { it.version == projectConfig.versions.kotlin.get() }
+    }
+}

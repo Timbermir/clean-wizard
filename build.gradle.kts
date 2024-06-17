@@ -1,5 +1,9 @@
+import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.cleanWizardProcessorConfig
+import corp.tbm.cleanwizard.buildLogic.convention.plugins.CleanWizardPlugin
 import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardDataClassGenerationPattern
+import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardJsonSerializer
+import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardUseCaseProcessorFunctionType
 
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
@@ -18,6 +22,7 @@ buildscript {
 `clean-wizard` {
 
     jsonSerializer = CleanWizardJsonSerializer.JACKSON
+    dependencyInjectionFramework = CleanWizardDependencyInjectionFramework.KOIN
     dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER
 
     data {
@@ -38,5 +43,11 @@ buildscript {
         packageName = "models"
         toDTOMapFunctionName = "fromDomain"
         toUIMapFunctionName = "toUI"
+    }
+
+    useCase {
+        packageName = "usecase"
+        useCaseProcessorFunctionType = CleanWizardUseCaseProcessorFunctionType.CustomFunctionName("execute")
+        suffix = "useCase"
     }
 }

@@ -23,6 +23,7 @@ dependencyResolutionManagement {
     }
 }
 
+rootProject.name = "clean-wizard"
 includeBuild("build-logic")
 include(
     "foundation:annotations",

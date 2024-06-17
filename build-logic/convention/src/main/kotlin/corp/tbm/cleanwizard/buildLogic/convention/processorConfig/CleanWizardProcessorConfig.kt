@@ -6,7 +6,8 @@ import corp.tbm.cleanwizard.buildLogic.convention.foundation.dsl.CleanWizardProc
 open class CleanWizardProcessorConfig(
     var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER,
     var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KOTLINX_SERIALIZATION,
-    internal var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework = CleanWizardDependencyInjectionFramework.NONE,
+    var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework = CleanWizardDependencyInjectionFramework.NONE,
+    var diFramework: DIFramework = DIFramework.Koin(false),
     internal var dtoConfig: CleanWizardDataClassGenerationProcessorConfig.DTO = CleanWizardDataClassGenerationProcessorConfig.DTO(),
     internal var domainConfig: CleanWizardDataClassGenerationProcessorConfig.Domain = CleanWizardDataClassGenerationProcessorConfig.Domain(),
     internal var presentationConfig: CleanWizardDataClassGenerationProcessorConfig.Presentation = CleanWizardDataClassGenerationProcessorConfig.Presentation(),

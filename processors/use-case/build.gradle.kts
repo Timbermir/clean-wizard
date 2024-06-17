@@ -2,7 +2,9 @@ plugins {
     alias(libs.plugins.cleanwizard.codegen.visitor)
     alias(libs.plugins.vanniktech.maven.publish)
 }
-
 dependencies {
-    implementation(projects.visitors.enums)
+    implementation(libs.koin.core)
+    implementation(libs.javax.inject)
+    implementation(libs.koin.annotations)
+    implementation("build-logic:convention")
 }

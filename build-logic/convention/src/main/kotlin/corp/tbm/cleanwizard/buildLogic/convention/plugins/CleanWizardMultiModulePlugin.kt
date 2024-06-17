@@ -25,7 +25,6 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
             val codegenExtension =
                 extensions.create("clean-wizard-codegen", CleanWizardCodegenExtension::class.java)
 
-
             dependencies {
                 implementation(libs.bundles.kotlinx)
                 implementation(project(":foundation:annotations"))
@@ -53,7 +52,7 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
 
     private fun Project.configureGradleTasks(codegenExtension: CleanWizardCodegenExtension) {
         tasks.named("compileKotlin") {
-            dependsOn(project(":workloads:multi-module:data").tasks.named("copyGeneratedUIClasses"))
+            dependsOn(tasks.named("copyGeneratedUIClasses"))
         }
 
         tasks.withType<KotlinCompile>().configureEach {

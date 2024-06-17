@@ -34,15 +34,15 @@ object ProcessorOptions {
         get() = _uiOptions
 
     fun generateConfigs(processorOptions: Map<String, String>) {
-        _dependencyInjectionFramework =
-            DependencyInjectionFramework.entries.first { it.name == processorOptions["DEPENDENCY_INJECTION_FRAMEWORK"] }
+//        _dependencyInjectionFramework =
+//            DependencyInjectionFramework.entries.first { it.name == processorOptions["DEPENDENCY_INJECTION_FRAMEWORK"] }
 
-        _dataClassGenerationPattern =
-            DataClassGenerationPattern.entries.first { it.name == processorOptions["DATA_CLASS_GENERATION_PATTERN"] }
+//        _dataClassGenerationPattern =
+//            DataClassGenerationPattern.entries.first { it.name == processorOptions["DATA_CLASS_GENERATION_PATTERN"] }
 
-        _jsonSerializer = JsonSerializer.entries.first {
-            it.serializer == processorOptions["JSON_SERIALIZER"]
-        }
+//        _jsonSerializer = JsonSerializer.entries.first {
+//            it.serializer == processorOptions["JSON_SERIALIZER"]
+//        }
 
         ClassGenerationConfig.setProcessorOptions(processorOptions)
         _dtoOptions = ClassGenerationConfig.DTO.constructConfig()

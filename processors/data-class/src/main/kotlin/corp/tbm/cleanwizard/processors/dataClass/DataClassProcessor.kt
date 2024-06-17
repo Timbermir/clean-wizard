@@ -201,8 +201,8 @@ class DataClassProcessor(
                                     "return %T(${
                                         properties.map { it.name }
                                             .joinToString(
-                                                separator = corp.tbm.cleanwizard.processors.dataClass.PARAMETER_SEPARATOR,
-                                                prefix = corp.tbm.cleanwizard.processors.dataClass.PARAMETER_PREFIX
+                                                separator = PARAMETER_SEPARATOR,
+                                                prefix = PARAMETER_PREFIX
                                             ) { parameter ->
                                                 if (properties.filter { it.name == parameter }
                                                         .any { it.type.resolve().isMappable })

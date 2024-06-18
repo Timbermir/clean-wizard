@@ -1,5 +1,11 @@
 package corp.tbm.cleanwizard.foundation.codegen.universal.processor
 
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.getFile
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.readJsonFromFile
+
 object ProcessorOptions {
 
     private var _dataClassGenerationPattern: DataClassGenerationPattern = DataClassGenerationPattern.LAYER
@@ -7,46 +13,39 @@ object ProcessorOptions {
     val dataClassGenerationPattern
         get() = _dataClassGenerationPattern
 
-    private var _jsonSerializer = JsonSerializer.KOTLINX_SERIALIZATION
+    private var _jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
 
-    val jsonSerializer: JsonSerializer
+    val jsonSerializer: CleanWizardJsonSerializer
         get() = _jsonSerializer
 
-    private var _dependencyInjectionFramework = DependencyInjectionFramework.NONE
+    private var _dependencyInjectionFramework: CleanWizardDependencyInjectionFramework =
+        CleanWizardDependencyInjectionFramework.None
 
-    val dependencyInjectionFramework
+    val dependencyInjectionFramework: CleanWizardDependencyInjectionFramework
         get() = _dependencyInjectionFramework
 
+    private var _dtoOptions = CleanWizardLayerConfig.Data()
 
-    private var _dtoOptions = ClassGenerationConfig.DTO()
-
-    val dtoOptions: ClassGenerationConfig.DTO
+    val dataConfig: CleanWizardLayerConfig.Data
         get() = _dtoOptions
 
-    private var _domainOptions = ClassGenerationConfig.Domain()
+    private var _domainOptions = CleanWizardLayerConfig.Domain()
 
-    val domainOptions: ClassGenerationConfig.Domain
+    val domainConfig: CleanWizardLayerConfig.Domain
         get() = _domainOptions
 
-    private var _uiOptions = ClassGenerationConfig.UI()
+    private var _uiOptions = CleanWizardLayerConfig.Presentation()
 
-    val uiOptions: ClassGenerationConfig.UI
+    val presentationConfig: CleanWizardLayerConfig.Presentation
         get() = _uiOptions
 
-    fun generateConfigs(processorOptions: Map<String, String>) {
-//        _dependencyInjectionFramework =
-//            DependencyInjectionFramework.entries.first { it.name == processorOptions["DEPENDENCY_INJECTION_FRAMEWORK"] }
-
-//        _dataClassGenerationPattern =
-//            DataClassGenerationPattern.entries.first { it.name == processorOptions["DATA_CLASS_GENERATION_PATTERN"] }
-
-//        _jsonSerializer = JsonSerializer.entries.first {
-//            it.serializer == processorOptions["JSON_SERIALIZER"]
-//        }
-
-        ClassGenerationConfig.setProcessorOptions(processorOptions)
-        _dtoOptions = ClassGenerationConfig.DTO.constructConfig()
-        _domainOptions = ClassGenerationConfig.Domain.constructConfig()
-        _uiOptions = ClassGenerationConfig.UI.constructConfig()
+    fun generateConfigs(processorOptions: Map<String, String>) = with(processorOptions) {
+        _dataClassGenerationPattern =
+            DataClassGenerationPattern.entries.first { it.name == processorOptions["DATA_CLASS_GENERATION_PATTERN"] }
+        _jsonSerializer = getFile("JSON_SERIALIZER").readJsonFromFile()
+        _dependencyInjectionFramework = getFile("DEPENDENCY_INJECTION_FRAMEWORK").readJsonFromFile()
+        _dtoOptions = getFile("DATA_CONFIG").readJsonFromFile()
+        _domainOptions = getFile("DOMAIN_CONFIG").readJsonFromFile()
+        _uiOptions = getFile("PRESENTATION_CONFIG").readJsonFromFile()
     }
 }

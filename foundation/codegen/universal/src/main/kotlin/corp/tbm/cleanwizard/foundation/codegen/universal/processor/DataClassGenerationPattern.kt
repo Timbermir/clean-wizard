@@ -4,6 +4,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.toClassName
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
 import corp.tbm.cleanwizard.foundation.codegen.universal.ModelType
 import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
@@ -12,16 +13,16 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isCla
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isListMappable
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.packageLastSegment
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainOptions
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainConfig
 
 enum class DataClassGenerationPattern {
     LAYER {
 
         override fun generatePackageName(
             symbol: KSClassDeclaration,
-            classGenerationConfig: ClassGenerationConfig
+            layerConfig: CleanWizardLayerConfig
         ): String {
-            return "${symbol.basePackagePath}.${classGenerationConfig.moduleName}"
+            return "${symbol.basePackagePath}.${layerConfig.moduleName}"
         }
 
         override fun findRightModelType(packageName: String): ModelType {
@@ -40,26 +41,26 @@ enum class DataClassGenerationPattern {
             if (modelType == ModelType.MODEL)
                 throw IllegalArgumentException("Not allowed to do so")
             return ClassName(
-                packageName.replace(modelType.moduleName, domainOptions.moduleName),
-                className.replace(modelType.suffix, domainOptions.suffix)
+                packageName.replace(modelType.moduleName, domainConfig.moduleName),
+                className.replace(modelType.suffix, domainConfig.classSuffix)
             )
         }
 
         override fun packageNameReplacement(packageName: String, modelType: ModelType): String {
             if (modelType == ModelType.MODEL)
                 throw IllegalArgumentException("Not allowed to do so")
-            return packageName.replace(modelType.moduleName, domainOptions.moduleName)
+            return packageName.replace(modelType.moduleName, domainConfig.moduleName)
         }
     },
     TYPE {
 
         override fun generatePackageName(
             symbol: KSClassDeclaration,
-            classGenerationConfig: ClassGenerationConfig
+            layerConfig: CleanWizardLayerConfig
         ): String {
             return "${symbol.basePackagePath}.${
                 symbol.name.replace(dtoRegex, "").firstCharLowercase()
-            }.${classGenerationConfig.packageName}"
+            }.${layerConfig.packageName}"
         }
 
         override fun findRightModelType(packageName: String): ModelType {
@@ -90,19 +91,19 @@ enum class DataClassGenerationPattern {
             if (modelType == ModelType.MODEL)
                 throw IllegalArgumentException("Not allowed to do so")
             return ClassName(
-                packageName.replace(modelType.packageName, domainOptions.packageName),
-                className.replace(modelType.suffix, domainOptions.suffix)
+                packageName.replace(modelType.packageName, domainConfig.packageName),
+                className.replace(modelType.suffix, domainConfig.classSuffix)
             )
         }
 
         override fun packageNameReplacement(packageName: String, modelType: ModelType): String {
             if (modelType == ModelType.MODEL)
                 throw IllegalArgumentException("Not allowed to do so")
-            return packageName.replace(modelType.packageName, domainOptions.packageName)
+            return packageName.replace(modelType.packageName, domainConfig.packageName)
         }
     };
 
-    abstract fun generatePackageName(symbol: KSClassDeclaration, classGenerationConfig: ClassGenerationConfig): String
+    abstract fun generatePackageName(symbol: KSClassDeclaration, layerConfig: CleanWizardLayerConfig): String
     abstract fun findRightModelType(packageName: String): ModelType
     abstract fun getQualifiedPackageName(packageName: MutableList<String>, type: KSType): String
     abstract fun classNameReplacement(

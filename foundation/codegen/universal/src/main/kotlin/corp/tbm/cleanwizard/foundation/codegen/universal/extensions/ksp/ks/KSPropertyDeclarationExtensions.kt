@@ -13,7 +13,7 @@ import com.squareup.kotlinpoet.ksp.toTypeName
 import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainOptions
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainConfig
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()
@@ -66,7 +66,7 @@ fun KSPropertyDeclaration.determineParameterType(
                     .toList().first()
 
             val enumPackageName =
-                "${dataClassGenerationPattern.generatePackageName(symbol, domainOptions)}.enums"
+                "${dataClassGenerationPattern.generatePackageName(symbol, domainConfig)}.enums"
 
             val declarations = resolver.getDeclarationsFromPackage(
                 enumPackageName

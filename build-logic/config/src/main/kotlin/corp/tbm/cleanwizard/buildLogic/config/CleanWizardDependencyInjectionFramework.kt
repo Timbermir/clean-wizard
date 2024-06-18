@@ -1,36 +1,26 @@
-package corp.tbm.cleanwizard.buildLogic.convention.processorConfig
+package corp.tbm.cleanwizard.buildLogic.config
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonClassDiscriminator
-
-enum class CleanWizardDependencyInjectionFramework(val dependencies: List<String>) {
-    NONE(listOf()),
-    KOIN(listOf("io.insert-koin:koin-core")),
-    KOIN_ANNOTATIONS(listOf("io.insert-koin:koin-core", "io-insert-koin:koin-annotations")),
-    DAGGER(listOf("javax.inject:javax.inject"));
-}
 
 @Serializable
-sealed class DIFramework(@SerialName("deps") val dependencies: List<String>) {
+sealed class CleanWizardDependencyInjectionFramework(val dependencies: List<String>) {
 
     @Serializable
-    @SerialName("None")
-    @JsonClassDiscriminator("type")
-    data object None : DIFramework(listOf())
+    @SerialName("none")
+    data object None : CleanWizardDependencyInjectionFramework(listOf())
 
     @Serializable
-    @SerialName("Koin")
-    @JsonClassDiscriminator("type")
-    data class Koin(val useConstructorDSL: Boolean = true) : DIFramework(listOf("io.insert-koin:koin-core"))
+    @SerialName("koin")
+    data class Koin(val useConstructorDSL: Boolean = true) :
+        CleanWizardDependencyInjectionFramework(listOf("io.insert-koin:koin-core"))
 
     @Serializable
-    @SerialName("KoinAnnotations")
-    @JsonClassDiscriminator("type")
-    class KoinAnnotations : DIFramework(listOf("io.insert-koin:koin-core", "io-insert-koin:koin-annotations"))
+    @SerialName("koin-annotations")
+    data object KoinAnnotations :
+        CleanWizardDependencyInjectionFramework(listOf("io.insert-koin:koin-core", "io-insert-koin:koin-annotations"))
 
     @Serializable
-    @SerialName("Dagger")
-    @JsonClassDiscriminator("type")
-    data object Dagger : DIFramework(listOf("javax.inject:javax.inject"))
+    @SerialName("dagger")
+    data object Dagger : CleanWizardDependencyInjectionFramework(listOf("javax.inject:javax.inject"))
 }

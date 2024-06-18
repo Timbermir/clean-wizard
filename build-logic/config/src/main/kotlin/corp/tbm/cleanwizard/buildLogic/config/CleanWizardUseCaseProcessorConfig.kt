@@ -1,12 +1,12 @@
-package corp.tbm.cleanwizard.buildLogic.convention.processorConfig
+package corp.tbm.cleanwizard.buildLogic.config
 
-import corp.tbm.cleanwizard.buildLogic.convention.foundation.dsl.CleanWizardProcessorConfigDslMarker
+import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDslMarker
 import kotlinx.serialization.Serializable
 
 @Serializable
-@CleanWizardProcessorConfigDslMarker
+@CleanWizardConfigDslMarker
 data class CleanWizardUseCaseProcessorConfig(
-    var suffix: String = "UseCase",
+    var classSuffix: String = "UseCase",
     var packageName: String = "useCases",
     var useCaseProcessorFunctionType: CleanWizardUseCaseProcessorFunctionType = CleanWizardUseCaseProcessorFunctionType.Operator,
     var createWrapper: Boolean = false

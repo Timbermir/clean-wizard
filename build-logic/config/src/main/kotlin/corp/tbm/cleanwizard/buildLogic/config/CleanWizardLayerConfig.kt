@@ -6,34 +6,51 @@ import kotlinx.serialization.Serializable
 
 @CleanWizardConfigDslMarker
 @Serializable
-sealed class CleanWizardDataClassGenerationProcessorConfig(
-    open var moduleName: String,
-    open var classSuffix: String,
-    open var packageName: String
+sealed class CleanWizardLayerConfig(
+    @SerialName("moduleName") open var moduleName: String,
+    @SerialName("classSuffix") open var classSuffix: String,
+    @SerialName("packageName") open var packageName: String
 ) {
-    @SerialName("DTO")
-    data class DTO(
-        override var moduleName: String = "data",
-        override var classSuffix: String = "DTO",
-        override var packageName: String = "dto",
+
+    @Serializable
+    @SerialName("Data")
+    data class Data(
+        @SerialName("dataModuleName") override var moduleName: String = "data",
+        @SerialName("dataClassSuffix") override var classSuffix: String = "DTO",
+        @SerialName("dataPackageName") override var packageName: String = "dto",
         var interfaceMapperName: String = "DTOMapper",
         var toDomainMapFunctionName: String = "toDomain",
-    ) : CleanWizardDataClassGenerationProcessorConfig(moduleName, classSuffix, packageName)
+    ) : CleanWizardLayerConfig(moduleName, classSuffix, packageName)
 
+    @Serializable
     @SerialName("Domain")
     data class Domain(
-        override var moduleName: String = "domain",
-        override var classSuffix: String = "Model",
-        override var packageName: String = "model",
+        @SerialName("domainModuleName") override var moduleName: String = "domain",
+        @SerialName("domainClassSuffix") override var classSuffix: String = "Model",
+        @SerialName("domainPackageName") override var packageName: String = "model",
         var toDTOMapFunctionName: String = "toDTO",
         var toUIMapFunctionName: String = "toUI",
-    ) : CleanWizardDataClassGenerationProcessorConfig(moduleName, classSuffix, packageName)
+        var useCaseConfig: CleanWizardUseCaseProcessorConfig = CleanWizardUseCaseProcessorConfig()
+    ) : CleanWizardLayerConfig(moduleName, classSuffix, packageName) {
 
+        fun useCase(configuration: CleanWizardUseCaseProcessorConfig.() -> Unit) {
+            useCaseConfig.apply(configuration)
+        }
+    }
+
+    @Serializable
     @SerialName("Presentation")
     data class Presentation(
-        override var moduleName: String = "presentation",
-        override var classSuffix: String = "UI",
-        override var packageName: String = "ui",
+        @SerialName("presentationModuleName") override var moduleName: String = "presentation",
+        @SerialName("presentationClassSuffix") override var classSuffix: String = "UI",
+        @SerialName("presentationPackageName") override var packageName: String = "ui",
         var toDomainMapFunctionName: String = "toDomain",
-    ) : CleanWizardDataClassGenerationProcessorConfig(moduleName, classSuffix, packageName)
+    ) : CleanWizardLayerConfig(moduleName, classSuffix, packageName)
 }
+
+@Serializable
+data class CleanWizardLayerConfigWrapper(
+    var dataConfig: CleanWizardLayerConfig.Data = CleanWizardLayerConfig.Data(),
+    var domainConfig: CleanWizardLayerConfig.Domain = CleanWizardLayerConfig.Domain(),
+    var presentationConfig: CleanWizardLayerConfig.Presentation = CleanWizardLayerConfig.Presentation()
+)

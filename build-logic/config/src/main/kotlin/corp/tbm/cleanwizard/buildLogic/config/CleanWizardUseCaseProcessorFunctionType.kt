@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.buildLogic.convention.processorConfig
+package corp.tbm.cleanwizard.buildLogic.config
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -16,6 +16,6 @@ sealed class CleanWizardUseCaseProcessorFunctionType {
 
     @Serializable
     @SerialName("CustomFunctionName")
-    class CustomFunctionName(@SerialName("functionName") val functionName: String) :
+    data class CustomFunctionName(val functionName: String) :
         CleanWizardUseCaseProcessorFunctionType()
 }

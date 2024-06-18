@@ -1,3 +1,4 @@
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
 dependencyResolutionManagement {
 
@@ -25,4 +26,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "build-logic"
 include(":convention")
-include(":clean-wizard:foundation:codegen:universal")
+include(":config")

@@ -1,6 +1,3 @@
-import org.gradle.kotlin.dsl.accessors.warnAboutDiscontinuedJsonProjectSchema
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     `kotlin-dsl`
     alias(libs.plugins.google.devtools.ksp)
@@ -10,14 +7,20 @@ plugins {
 dependencies {
     implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.kotlin.gradle.plugin)
+    implementation(projects.config)
     compileOnly(libs.google.devtools.ksp)
-    compileOnly(projects.cleanWizard)
     compileOnly(files(ksp.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(projectConfig.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(pluginConfig.javaClass.superclass.protectionDomain.codeSource.location))
 }
 
+sourceSets {
+    main {
+        kotlin.srcDirs("src/main/kotlin")
+        kotlin.srcDirs(projects.config.dependencyProject.sourceSets.getByName("internal").allSource)
+    }
+}
 gradlePlugin {
     plugins {
         libs.plugins.cleanwizard.apply {
@@ -59,11 +62,3 @@ gradlePlugin {
 
 internal val Provider<PluginDependency>.pluginId
     get() = get().pluginId
-
-tasks.withType<KotlinCompile>().configureEach {
-    this.compilerOptions {
-        languageVersion =
-            org.jetbrains.kotlin.gradle.dsl.KotlinVersion.values()
-                .first { it.version == projectConfig.versions.kotlin.get() }
-    }
-}

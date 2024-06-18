@@ -13,7 +13,7 @@ import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 
-class CleanWizardMultiModulePlugin : Plugin<Project> {
+internal class CleanWizardMultiModulePlugin : Plugin<Project> {
 
     private var lastPackageSegmentWhereFirstSourceClassOccurs = ""
     override fun apply(target: Project) {

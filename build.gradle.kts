@@ -1,5 +1,3 @@
-import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.cleanWizardProcessorConfig
-import corp.tbm.cleanwizard.buildLogic.convention.plugins.CleanWizardPlugin
 import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardDataClassGenerationPattern
 import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardJsonSerializer

@@ -1,7 +1,5 @@
 package corp.tbm.cleanwizard.processors.useCase
 
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -14,11 +12,9 @@ import corp.tbm.cleanwizard.foundation.annotations.Repository
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.getAnnotatedSymbols
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.basePackagePath
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isListSubclass
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.log
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.packageLastSegment
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.DependencyInjectionFramework
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern

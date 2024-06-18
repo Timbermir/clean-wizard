@@ -1,5 +1,6 @@
 package corp.tbm.cleanwizard.processors.useCase
 
+import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardUseCaseProcessorFunctionType
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -13,8 +14,9 @@ object UseCaseProcessorOptions {
     val packageName: String
         get() = _packageName
 
-    private var _useCaseProcessorFunctionType: UseCaseProcessorFunctionType = UseCaseProcessorFunctionType.Operator
-    val useCaseProcessorFunctionType: UseCaseProcessorFunctionType
+    private var _useCaseProcessorFunctionType: CleanWizardUseCaseProcessorFunctionType =
+        CleanWizardUseCaseProcessorFunctionType.Operator
+    val useCaseProcessorFunctionType: CleanWizardUseCaseProcessorFunctionType
         get() = _useCaseProcessorFunctionType
 
     private var _createWrapper = false
@@ -25,7 +27,7 @@ object UseCaseProcessorOptions {
         _suffix = processorOptions["USE_CASE_SUFFIX"] ?: "UseCase"
         _packageName = processorOptions["USE_CASE_PACKAGE_NAME"] ?: "useCases"
         _useCaseProcessorFunctionType =
-            Json.decodeFromString<UseCaseProcessorFunctionType>(File(processorOptions["USE_CASE_FUNCTION_TYPE"]).readText())
+            Json.decodeFromString<CleanWizardUseCaseProcessorFunctionType>(File(processorOptions["USE_CASE_FUNCTION_TYPE"]).readText())
         _createWrapper = processorOptions["USE_CASE_CREATE_WRAPPER"]?.toBooleanStrictOrNull() ?: false
     }
 }

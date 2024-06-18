@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.accessors.warnAboutDiscontinuedJsonProjectSchema
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -10,6 +11,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.google.devtools.ksp)
+    compileOnly(projects.cleanWizard)
     compileOnly(files(ksp.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(projectConfig.javaClass.superclass.protectionDomain.codeSource.location))

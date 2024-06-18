@@ -14,7 +14,7 @@ val json = Json {
     encodeDefaults = true
 }
 
-class CleanWizardPlugin : Plugin<Project> {
+internal class CleanWizardPlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
         with(target) {
@@ -22,6 +22,7 @@ class CleanWizardPlugin : Plugin<Project> {
             allprojects {
                 pluginManager.withPlugin("com.google.devtools.ksp") {
                     afterEvaluate {
+                        println(this.path)
                         ksp {
                             cleanWizardProcessorConfig.apply {
                                 val diFrameworkTempFile = File.createTempFile("di-framework", ".json")

@@ -1,4 +1,0 @@
-package corp.tbm.cleanwizard.buildLogic.convention.foundation.dsl
-
-@DslMarker
-internal annotation class CleanWizardProcessorConfigDslMarker

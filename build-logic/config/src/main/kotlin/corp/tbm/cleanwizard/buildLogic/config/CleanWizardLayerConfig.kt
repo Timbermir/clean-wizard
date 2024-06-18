@@ -1,13 +1,17 @@
-package corp.tbm.cleanwizard.buildLogic.convention.processorConfig
+package corp.tbm.cleanwizard.buildLogic.config
 
-import corp.tbm.cleanwizard.buildLogic.convention.foundation.dsl.CleanWizardProcessorConfigDslMarker
+import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDslMarker
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@CleanWizardProcessorConfigDslMarker
+@CleanWizardConfigDslMarker
+@Serializable
 sealed class CleanWizardDataClassGenerationProcessorConfig(
     open var moduleName: String,
     open var classSuffix: String,
     open var packageName: String
 ) {
+    @SerialName("DTO")
     data class DTO(
         override var moduleName: String = "data",
         override var classSuffix: String = "DTO",
@@ -16,6 +20,7 @@ sealed class CleanWizardDataClassGenerationProcessorConfig(
         var toDomainMapFunctionName: String = "toDomain",
     ) : CleanWizardDataClassGenerationProcessorConfig(moduleName, classSuffix, packageName)
 
+    @SerialName("Domain")
     data class Domain(
         override var moduleName: String = "domain",
         override var classSuffix: String = "Model",
@@ -24,6 +29,7 @@ sealed class CleanWizardDataClassGenerationProcessorConfig(
         var toUIMapFunctionName: String = "toUI",
     ) : CleanWizardDataClassGenerationProcessorConfig(moduleName, classSuffix, packageName)
 
+    @SerialName("Presentation")
     data class Presentation(
         override var moduleName: String = "presentation",
         override var classSuffix: String = "UI",

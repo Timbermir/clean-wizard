@@ -10,8 +10,3 @@ dependencies {
     domainProject = projects.workloads.multiModule.domain.dependencyProject.path
     presentationProject = projects.workloads.multiModule.presentation.dependencyProject.path
 }
-ksp {
-    arguments.forEach {
-        println(it)
-    }
-}

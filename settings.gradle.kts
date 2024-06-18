@@ -5,6 +5,9 @@ pluginManagement {
         mavenCentral()
     }
 }
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
+}
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
@@ -23,7 +26,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "clean-wizard"
+rootProject.name = "clean-wizard-root"
 includeBuild("build-logic")
 include(
     "foundation:annotations",
@@ -34,8 +37,8 @@ include(
 include("clean-wizard")
 include("visitors:enums")
 include(
-    ":processors:data-class",
-    ":processors:use-case"
+    "processors:data-class",
+    "processors:use-case"
 )
 include("workloads:single-module")
 include(

@@ -1,11 +1,21 @@
 package corp.tbm.cleanwizard.foundation.codegen.universal
 
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainConfig
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataConfig
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.presentationConfig
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
 
 enum class ModelType(val moduleName: String, val suffix: String, val packageName: String) {
-    DTO(dataConfig.moduleName, dataConfig.classSuffix, dataConfig.packageName),
-    MODEL(domainConfig.moduleName, domainConfig.classSuffix, domainConfig.packageName),
-    UI(presentationConfig.moduleName, presentationConfig.classSuffix, presentationConfig.packageName);
+    DTO(
+        layerConfigs.data.moduleName,
+        layerConfigs.data.classSuffix,
+        layerConfigs.data.packageName
+    ),
+    MODEL(
+        layerConfigs.domain.moduleName,
+        layerConfigs.domain.classSuffix,
+        layerConfigs.domain.packageName
+    ),
+    UI(
+        layerConfigs.presentation.moduleName,
+        layerConfigs.presentation.classSuffix,
+        layerConfigs.presentation.packageName
+    );
 }

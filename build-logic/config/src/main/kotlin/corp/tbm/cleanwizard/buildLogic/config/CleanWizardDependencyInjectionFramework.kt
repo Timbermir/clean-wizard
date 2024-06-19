@@ -30,7 +30,6 @@ sealed class CleanWizardDependencyInjectionFramework(val dependencies: List<Stri
             )
         )
 
-
     @Serializable
     @SerialName("dagger")
     data object Dagger : CleanWizardDependencyInjectionFramework(listOf("javax.inject:javax.inject"))

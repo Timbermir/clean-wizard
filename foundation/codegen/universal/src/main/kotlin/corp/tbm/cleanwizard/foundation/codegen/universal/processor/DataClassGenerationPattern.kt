@@ -13,7 +13,7 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isCla
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isListMappable
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.packageLastSegment
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainConfig
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
 
 enum class DataClassGenerationPattern {
     LAYER {
@@ -41,15 +41,15 @@ enum class DataClassGenerationPattern {
             if (modelType == ModelType.MODEL)
                 throw IllegalArgumentException("Not allowed to do so")
             return ClassName(
-                packageName.replace(modelType.moduleName, domainConfig.moduleName),
-                className.replace(modelType.suffix, domainConfig.classSuffix)
+                packageName.replace(modelType.moduleName, layerConfigs.domain.moduleName),
+                className.replace(modelType.suffix, layerConfigs.domain.classSuffix)
             )
         }
 
         override fun packageNameReplacement(packageName: String, modelType: ModelType): String {
             if (modelType == ModelType.MODEL)
                 throw IllegalArgumentException("Not allowed to do so")
-            return packageName.replace(modelType.moduleName, domainConfig.moduleName)
+            return packageName.replace(modelType.moduleName, layerConfigs.domain.moduleName)
         }
     },
     TYPE {
@@ -91,15 +91,15 @@ enum class DataClassGenerationPattern {
             if (modelType == ModelType.MODEL)
                 throw IllegalArgumentException("Not allowed to do so")
             return ClassName(
-                packageName.replace(modelType.packageName, domainConfig.packageName),
-                className.replace(modelType.suffix, domainConfig.classSuffix)
+                packageName.replace(modelType.packageName, layerConfigs.domain.packageName),
+                className.replace(modelType.suffix, layerConfigs.domain.classSuffix)
             )
         }
 
         override fun packageNameReplacement(packageName: String, modelType: ModelType): String {
             if (modelType == ModelType.MODEL)
                 throw IllegalArgumentException("Not allowed to do so")
-            return packageName.replace(modelType.packageName, domainConfig.packageName)
+            return packageName.replace(modelType.packageName, layerConfigs.domain.packageName)
         }
     };
 

@@ -9,7 +9,7 @@ inline val KSType.isListSubclass
 inline val KSType.isClassMappable
     get() = declaration.qualifiedName?.asString()
         ?.contains("DTOSchema") == true || declaration.qualifiedName?.asString()
-        ?.contains(ProcessorOptions.presentationConfig.classSuffix) == true
+        ?.contains(ProcessorOptions.layerConfigs.presentation.classSuffix) == true
 
 inline val KSType.isListMappable
     get() = isListSubclass && arguments.first().type?.resolve()?.isClassMappable == true

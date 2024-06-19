@@ -114,7 +114,7 @@ class DataClassProcessor(
                     addType(
                         interfaceBuilder.build()
                     ).addFunction(
-                        FunSpec.builder(layerConfigs.data.interfaceMapperName).addTypeVariable(typeVariable)
+                        FunSpec.builder(layerConfigs.data.toDomainMapFunctionName).addTypeVariable(typeVariable)
                             .receiver(
                                 List::class.asClassName()
                                     .parameterizedBy(

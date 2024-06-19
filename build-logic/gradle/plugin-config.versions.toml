@@ -4,4 +4,3 @@ cleanwizard-multimodule-implementation = "corp.tbm.cleanwizard.buildLogic.conven
 foundation-kotlin-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.KotlinPlugin"
 foundation-codegen-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.codegen.CodegenPlugin"
 visitor-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.codegen.VisitorPlugin"
-workload-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.WorkloadPlugin"

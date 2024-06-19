@@ -3,6 +3,7 @@
 vanniktech-maven-publish = "0.28.0"
 # Kotlin
 kotlin = "2.0.0"
+kotlin-dsl = "4.4.0"
 # KotlinX
 kotlinx-collections-immutable = "0.3.7"
 kotlinx-datetime = "0.6.0"
@@ -14,8 +15,6 @@ google-gson = "2.11.0"
 # Squareup
 squareup-kotlinpoet = "1.17.0"
 squareup-moshi = "1.15.1"
-# FasterXML
-fasterxml-jackson = "2.17.1"
 # Koin
 koin = "3.5.6"
 koin-annotations = "1.3.1"
@@ -33,8 +32,6 @@ google-gson = { group = "com.google.code.gson", name = "gson", version.ref = "go
 # Squareup
 squareup-kotlinpoet-ksp = { group = "com.squareup", name = "kotlinpoet-ksp", version.ref = "squareup-kotlinpoet" }
 squareup-moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "squareup-moshi" }
-# FasterXML
-fasterxml-jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "fasterxml-jackson" }
 # Koin
 koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
 koin-annotations = { group = "io.insert-koin", name = "koin-annotations", version.ref = "koin-annotations" }
@@ -50,10 +47,10 @@ cleanwizard-multimodule = { id = "corp.tbm.cleanwizard.multimodule" }
 cleanwizard-kotlin = { id = "corp.tbm.cleanwizard.kotlin" }
 cleanwizard-codegen-foundation = { id = "corp.tbm.cleanwizard.codegen.foundation" }
 cleanwizard-codegen-visitor = { id = "corp.tbm.cleanwizard.codegen.visitor" }
-cleanwizard-workload = { id = "corp.tbm.cleanwizard.workload" }
 # MavenPublish
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }
 # Kotlin
+kotlin-dsl = { id = "org.gradle.kotlin.kotlin-dsl", version.ref = "kotlin-dsl" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 # KSP

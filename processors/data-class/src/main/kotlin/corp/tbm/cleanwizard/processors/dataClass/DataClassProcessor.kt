@@ -18,7 +18,6 @@ import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 import corp.tbm.cleanwizard.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
-import corp.tbm.cleanwizard.foundation.codegen.universal.ModelType
 import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanwizard.foundation.codegen.universal.exceptions.references.PropertyAlreadyMarkedWithEnumException
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
@@ -180,7 +179,7 @@ class DataClassProcessor(
                             dataClassGenerationPattern.classNameReplacement(
                                 packageName,
                                 className,
-                                ModelType.DTO
+                                layerConfigs.data
                             )
                         )
 
@@ -222,7 +221,7 @@ class DataClassProcessor(
                             dataClassGenerationPattern.classNameReplacement(
                                 packageName,
                                 className,
-                                ModelType.DTO
+                                layerConfigs.data
                             )
                         )
                     when {
@@ -335,7 +334,7 @@ class DataClassProcessor(
                             dataClassGenerationPattern.classNameReplacement(
                                 packageName,
                                 className,
-                                ModelType.UI
+                                layerConfigs.presentation
                             )
                         )
                     addFunction(
@@ -344,7 +343,10 @@ class DataClassProcessor(
                             ClassName(packageName, className),
                             statementFormat = statementListFormatMapping(
                                 layerConfigs.domain.toUIMapFunctionName,
-                                dataClassGenerationPattern.packageNameReplacement(packageName, ModelType.UI),
+                                dataClassGenerationPattern.packageNameReplacement(
+                                    packageName,
+                                    layerConfigs.presentation
+                                ),
                                 properties
                             )
                         )

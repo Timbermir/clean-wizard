@@ -5,7 +5,6 @@ import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
-import corp.tbm.cleanwizard.foundation.codegen.universal.ModelType
 import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.basePackagePath
@@ -25,8 +24,8 @@ enum class DataClassGenerationPattern {
             return "${symbol.basePackagePath}.${layerConfig.moduleName}"
         }
 
-        override fun findRightModelType(packageName: String): ModelType {
-            return ModelType.entries.first { modelType -> packageName.packageLastSegment == modelType.moduleName || packageName.packageLastSegment == modelType.packageName }
+        override fun findLayerConfig(packageName: String): CleanWizardLayerConfig {
+            return layerConfigs.first { modelType -> packageName.packageLastSegment == modelType.moduleName || packageName.packageLastSegment == modelType.packageName }
         }
 
         override fun getQualifiedPackageName(packageName: MutableList<String>, type: KSType): String {
@@ -36,20 +35,20 @@ enum class DataClassGenerationPattern {
         override fun classNameReplacement(
             packageName: String,
             className: String,
-            modelType: ModelType,
+            layerConfig: CleanWizardLayerConfig
         ): ClassName {
-            if (modelType == ModelType.MODEL)
+            if (layerConfig is CleanWizardLayerConfig.Domain)
                 throw IllegalArgumentException("Not allowed to do so")
             return ClassName(
-                packageName.replace(modelType.moduleName, layerConfigs.domain.moduleName),
-                className.replace(modelType.suffix, layerConfigs.domain.classSuffix)
+                packageName.replace(layerConfig.moduleName, layerConfigs.domain.moduleName),
+                className.replace(layerConfig.classSuffix, layerConfigs.domain.classSuffix)
             )
         }
 
-        override fun packageNameReplacement(packageName: String, modelType: ModelType): String {
-            if (modelType == ModelType.MODEL)
+        override fun packageNameReplacement(packageName: String, layerConfig: CleanWizardLayerConfig): String {
+            if (layerConfig is CleanWizardLayerConfig.Domain)
                 throw IllegalArgumentException("Not allowed to do so")
-            return packageName.replace(modelType.moduleName, layerConfigs.domain.moduleName)
+            return packageName.replace(layerConfig.moduleName, layerConfigs.domain.moduleName)
         }
     },
     TYPE {
@@ -63,8 +62,8 @@ enum class DataClassGenerationPattern {
             }.${layerConfig.packageName}"
         }
 
-        override fun findRightModelType(packageName: String): ModelType {
-            return ModelType.entries.first { modelType -> packageName.packageLastSegment == modelType.packageName }
+        override fun findLayerConfig(packageName: String): CleanWizardLayerConfig {
+            return layerConfigs.first { layerConfig -> packageName.packageLastSegment == layerConfig.packageName }
         }
 
         override fun getQualifiedPackageName(packageName: MutableList<String>, type: KSType): String {
@@ -86,31 +85,31 @@ enum class DataClassGenerationPattern {
         override fun classNameReplacement(
             packageName: String,
             className: String,
-            modelType: ModelType,
+            layerConfig: CleanWizardLayerConfig,
         ): ClassName {
-            if (modelType == ModelType.MODEL)
+            if (layerConfig is CleanWizardLayerConfig.Domain)
                 throw IllegalArgumentException("Not allowed to do so")
             return ClassName(
-                packageName.replace(modelType.packageName, layerConfigs.domain.packageName),
-                className.replace(modelType.suffix, layerConfigs.domain.classSuffix)
+                packageName.replace(layerConfig.packageName, layerConfigs.domain.packageName),
+                className.replace(layerConfig.classSuffix, layerConfigs.domain.classSuffix)
             )
         }
 
-        override fun packageNameReplacement(packageName: String, modelType: ModelType): String {
-            if (modelType == ModelType.MODEL)
+        override fun packageNameReplacement(packageName: String, layerConfig: CleanWizardLayerConfig): String {
+            if (layerConfig is CleanWizardLayerConfig.Domain)
                 throw IllegalArgumentException("Not allowed to do so")
-            return packageName.replace(modelType.packageName, layerConfigs.domain.packageName)
+            return packageName.replace(layerConfig.packageName, layerConfigs.domain.packageName)
         }
     };
 
     abstract fun generatePackageName(symbol: KSClassDeclaration, layerConfig: CleanWizardLayerConfig): String
-    abstract fun findRightModelType(packageName: String): ModelType
+    abstract fun findLayerConfig(packageName: String): CleanWizardLayerConfig
     abstract fun getQualifiedPackageName(packageName: MutableList<String>, type: KSType): String
     abstract fun classNameReplacement(
         packageName: String,
         className: String,
-        modelType: ModelType
+        layerConfig: CleanWizardLayerConfig
     ): ClassName
 
-    abstract fun packageNameReplacement(packageName: String, modelType: ModelType): String
+    abstract fun packageNameReplacement(packageName: String, layerConfig: CleanWizardLayerConfig): String
 }

@@ -1,9 +1,12 @@
 plugins {
-    `kotlin-dsl`
+    alias(libs.plugins.kotlin.dsl)
     alias(libs.plugins.google.devtools.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
+    implementation(libs.kotlinx.serialization.json)
+    implementation(projects.config)
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.google.devtools.ksp)
     compileOnly(files(ksp.javaClass.superclass.protectionDomain.codeSource.location))
@@ -12,16 +15,29 @@ dependencies {
     compileOnly(files(pluginConfig.javaClass.superclass.protectionDomain.codeSource.location))
 }
 
+sourceSets {
+    main {
+        kotlin.srcDirs("src/main/kotlin")
+        kotlin.srcDirs(projects.config.dependencyProject.sourceSets.getByName("internal").allSource)
+    }
+}
+
 gradlePlugin {
     plugins {
-        libs.plugins.cleanarchitecturemapper.apply {
+        libs.plugins.cleanwizard.apply {
 
             val pluginConfigVersions = pluginConfig.versions
 
-            register(libs.plugins.cleanwizard.pluginId) {
-                id = libs.plugins.cleanwizard.pluginId
+            register(core.pluginId) {
+                id = core.pluginId
                 implementationClass = pluginConfigVersions.cleanwizard.implementation.get()
             }
+
+            register(multimodule.pluginId) {
+                id = multimodule.pluginId
+                implementationClass = pluginConfigVersions.cleanwizard.multimodule.implementation.get()
+            }
+
             register(kotlin.pluginId) {
                 id = kotlin.pluginId
                 implementationClass = pluginConfigVersions.foundation.kotlin.implementation.get()
@@ -35,11 +51,6 @@ gradlePlugin {
             register(codegen.visitor.pluginId) {
                 id = codegen.visitor.pluginId
                 implementationClass = pluginConfigVersions.visitor.implementation.get()
-            }
-
-            register(workload.pluginId) {
-                id = workload.pluginId
-                implementationClass = pluginConfigVersions.workload.implementation.get()
             }
         }
     }

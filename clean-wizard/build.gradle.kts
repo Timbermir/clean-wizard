@@ -1,3 +1,8 @@
 plugins {
-    alias(libs.plugins.cleanarchitecturemapper.workload)
+    alias(libs.plugins.cleanwizard.kotlin)
+    alias(libs.plugins.google.devtools.ksp)
+}
+
+dependencies {
+    ksp(projects.processors.dataClass)
 }

@@ -1,8 +1,8 @@
 package corp.tbm.cleanwizard
 
-import com.google.gson.annotations.SerializedName
-import corp.tbm.cleanarchitecturemapper.foundation.annotations.BackwardsMappingConfig
-import corp.tbm.cleanarchitecturemapper.foundation.annotations.DTO
+import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
+import corp.tbm.cleanwizard.foundation.annotations.DTO
+
 
 fun main() {
 
@@ -10,7 +10,6 @@ fun main() {
 
 @DTO(backwardsMappingConfig = BackwardsMappingConfig.FULL_MAPPING)
 data class ComplexDTOSchema(
-    @SerializedName("kissMe")
     val userId: String,
     val userName: String,
     val email: String,

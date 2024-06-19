@@ -1,10 +1,13 @@
-import corp.tbm.cleanarchitecturemapper.buildLogic.convention.foundation.CleanWizardJsonSerializer
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDataClassGenerationPattern
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
 
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.google.devtools.ksp) apply false
-    alias(libs.plugins.cleanwizard)
+    alias(libs.plugins.cleanwizard.core)
+    idea
 }
 
 buildscript {
@@ -14,16 +17,38 @@ buildscript {
 }
 
 `clean-wizard` {
-    dtoClassSuffix = "Dto"
-    dtoClassPackageName = "dtos"
-    dtoInterfaceMapperName = "DtoMapper"
-    dtoToDomainMapFunctionName = "toModel"
-    domainToDtoMapFunctionName = "fromDomain"
-    domainClassSuffix = "Domain"
-    domainClassPackageName = "models"
-    uiClassSuffix = "Ui"
-    uiClassPackageName = "uis"
-    domainToUiMapFunctionName = "toUI"
-    uiToDomainMapFunctionName = "fromUI"
-    defaultJsonSerializer = CleanWizardJsonSerializer.GSON
+
+    jsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
+    dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.TYPE
+
+    dependencyInjection {
+        koinAnnotations {
+            automaticallyCreateModule = true
+        }
+    }
+
+    data {
+        classSuffix = "Dto"
+        packageName = "dtos"
+        interfaceMapperName = "DtoMapper"
+        toDomainMapFunctionName = "toModel"
+    }
+
+    presentation {
+        classSuffix = "Ui"
+        packageName = "uis"
+        toDomainMapFunctionName = "fromUI"
+    }
+
+    domain {
+        classSuffix = "Domain"
+        packageName = "models"
+        toDTOMapFunctionName = "fromDomain"
+        toUIMapFunctionName = "toUI"
+        useCase {
+            packageName = "usecase"
+            useCaseFunctionType = CleanWizardUseCaseFunctionType.CustomFunctionName("execute")
+            classSuffix = "useCase"
+        }
+    }
 }

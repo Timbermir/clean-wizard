@@ -1,0 +1,5 @@
+package corp.tbm.cleanwizard.foundation.codegen.universal.exceptions.references
+
+import corp.tbm.cleanwizard.foundation.codegen.universal.exceptions.CleanWizardFieldAlreadyMarkedWithEnumException
+
+typealias PropertyAlreadyMarkedWithEnumException = CleanWizardFieldAlreadyMarkedWithEnumException

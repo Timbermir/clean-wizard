@@ -34,8 +34,6 @@ internal class CleanWizardPlugin : Plugin<Project> {
                                     "LAYER_CONFIGS",
                                     json.createTempFileWithEncodedString(layerConfigs).absolutePath
                                 )
-                                println(dependencyInjectionFramework)
-                                println(dependencyInjectionFramework.dependencies)
                             }
                         }
                     }

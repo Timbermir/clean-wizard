@@ -513,16 +513,19 @@ class DataClassProcessor(
         val builder = AnnotationSpec.builder(
             ClassName.bestGuess(this.annotationType.resolve().declaration.qualifiedName!!.asString())
         )
-        this.arguments.forEach { arg ->
-            if (arg.name?.asString() != "alternate" || (arg.value as? List<*>)?.isEmpty() == false) {
+        this.arguments
+            .filterNot {
+                it.name?.asString() == "ignore" || (it.name?.asString() == "alternate" && (it.value as? List<*>)?.isEmpty() == true)
+            }
+            .forEach { arg ->
                 builder.addMember(
                     "${arg.name?.asString()} = ${if (arg.value is String) "%S" else "%L"}",
                     arg.value.toString()
                 )
             }
-        }
         return builder.build()
     }
+
 }
 
 internal class DataClassProcessorProvider : SymbolProcessorProvider {

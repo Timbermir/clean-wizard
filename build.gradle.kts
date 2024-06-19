@@ -18,7 +18,7 @@ buildscript {
 
 `clean-wizard` {
 
-    jsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
+    jsonSerializer = CleanWizardJsonSerializer.Moshi
     dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.TYPE
 
     dependencyInjection {

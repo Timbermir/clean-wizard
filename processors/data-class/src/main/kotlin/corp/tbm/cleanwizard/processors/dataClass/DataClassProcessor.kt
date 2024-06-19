@@ -26,10 +26,8 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.*
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.DataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainConfig
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataConfig
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.jsonSerializer
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.presentationConfig
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
 import corp.tbm.cleanwizard.visitors.enums.EnumGenerateVisitor
 import java.io.OutputStreamWriter
 
@@ -85,7 +83,7 @@ class DataClassProcessor(
     private val generateDomainClassName: ClassName.() -> ClassName = {
         if (dataClassGenerationPattern == DataClassGenerationPattern.LAYER)
             ClassName(
-                "${packageName}.${domainConfig.packageName}",
+                "${packageName}.${layerConfigs.domain.packageName}",
                 simpleName
             ) else ClassName(packageName, simpleName)
     }
@@ -96,39 +94,39 @@ class DataClassProcessor(
 
         if (resolver.getModuleName().asString() == "clean-wizard")
             try {
-                val typeVariable = TypeVariableName(domainConfig.classSuffix)
+                val typeVariable = TypeVariableName(layerConfigs.domain.classSuffix)
                 val interfaceBuilder = TypeSpec.interfaceBuilder(
                     ClassName(
-                        "corp.tbm.cleanwizard.${dataConfig.interfaceMapperName}",
-                        dataConfig.interfaceMapperName
+                        "corp.tbm.cleanwizard.${layerConfigs.data.interfaceMapperName}",
+                        layerConfigs.data.interfaceMapperName
                     )
                 ).addTypeVariable(typeVariable)
                     .addFunction(
-                        FunSpec.builder(dataConfig.toDomainMapFunctionName).addModifiers(KModifier.ABSTRACT)
+                        FunSpec.builder(layerConfigs.data.toDomainMapFunctionName).addModifiers(KModifier.ABSTRACT)
                             .returns(
                                 typeVariable
                             ).build()
                     )
                 val fileSpec = FileSpec.builder(
                     "corp.tbm.cleanwizard",
-                    dataConfig.interfaceMapperName
+                    layerConfigs.data.interfaceMapperName
                 ).apply {
                     addType(
                         interfaceBuilder.build()
                     ).addFunction(
-                        FunSpec.builder(dataConfig.interfaceMapperName).addTypeVariable(typeVariable)
+                        FunSpec.builder(layerConfigs.data.interfaceMapperName).addTypeVariable(typeVariable)
                             .receiver(
                                 List::class.asClassName()
                                     .parameterizedBy(
                                         ClassName(
                                             "corp.tbm.cleanwizard",
-                                            dataConfig.interfaceMapperName
+                                            layerConfigs.data.interfaceMapperName
                                         ).plusParameter(typeVariable)
                                     )
                             )
                             .returns(List::class.asClassName().plusParameter(typeVariable))
                             .addStatement(
-                                "return map { dto -> dto.${dataConfig.toDomainMapFunctionName}() }"
+                                "return map { dto -> dto.${layerConfigs.data.toDomainMapFunctionName}() }"
                             ).build()
                     )
                         .build()
@@ -148,7 +146,7 @@ class DataClassProcessor(
                 if (processingRound == 1) {
                     symbol.getDeclaredProperties().forEach { property ->
                         val enumPackageName =
-                            "${dataClassGenerationPattern.generatePackageName(symbol, domainConfig)}.enums"
+                            "${dataClassGenerationPattern.generatePackageName(symbol, layerConfigs.domain)}.enums"
 
                         val propertyAnnotations = property.annotations.filter { it.name.endsWith("Enum") }.toList()
 
@@ -167,12 +165,12 @@ class DataClassProcessor(
                 }
             }
 
-            generateClass(resolver, symbol, domainConfig)
+            generateClass(resolver, symbol, layerConfigs.domain)
 
             generateClass(
                 resolver,
                 symbol,
-                dataConfig,
+                layerConfigs.data,
                 classBuilder = { packageName, className, properties ->
 
                     val domainClassName =
@@ -186,13 +184,13 @@ class DataClassProcessor(
 
                     if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
                         addSuperinterface(
-                            ClassName("corp.tbm.cleanwizard", dataConfig.interfaceMapperName)
+                            ClassName("corp.tbm.cleanwizard", layerConfigs.data.interfaceMapperName)
                                 .parameterizedBy(
                                     domainClassName
                                 )
                         )
                         addFunction(
-                            FunSpec.builder(dataConfig.toDomainMapFunctionName)
+                            FunSpec.builder(layerConfigs.data.toDomainMapFunctionName)
                                 .addModifiers(KModifier.OVERRIDE)
                                 .returns(
                                     domainClassName
@@ -206,7 +204,7 @@ class DataClassProcessor(
                                             ) { parameter ->
                                                 if (properties.filter { it.name == parameter }
                                                         .any { it.type.resolve().isMappable })
-                                                    "$parameter.${dataConfig.toDomainMapFunctionName}()" else parameter
+                                                    "$parameter.${layerConfigs.data.toDomainMapFunctionName}()" else parameter
                                             }
                                     }\n)",
                                     domainClassName
@@ -230,12 +228,12 @@ class DataClassProcessor(
                         !dtoAnnotation.toDomainAsTopLevel -> {
                             addImport(
                                 "corp.tbm.cleanwizard",
-                                ".${dataConfig.toDomainMapFunctionName}"
+                                ".${layerConfigs.data.toDomainMapFunctionName}"
                             )
                         }
 
                         dtoAnnotation.toDomainAsTopLevel -> {
-                            val mappingFunctionName = dataConfig.toDomainMapFunctionName
+                            val mappingFunctionName = layerConfigs.data.toDomainMapFunctionName
                             addFunction(
                                 generateTopLevelMappingFunctions(
                                     mappingFunctionName,
@@ -262,14 +260,14 @@ class DataClassProcessor(
                                     property.type.resolve().isClassMappable -> {
                                         addImport(
                                             property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                            ".${dataConfig.toDomainMapFunctionName}"
+                                            ".${layerConfigs.data.toDomainMapFunctionName}"
                                         )
                                     }
 
                                     property.type.resolve().isListMappable -> {
                                         addImport(
                                             property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                            ".${dataConfig.toDomainMapFunctionName}"
+                                            ".${layerConfigs.data.toDomainMapFunctionName}"
                                         )
                                     }
                                 }
@@ -279,7 +277,7 @@ class DataClassProcessor(
                     if (dtoAnnotation.backwardsMappingConfig == BackwardsMappingConfig.DOMAIN_TO_DATA ||
                         dtoAnnotation.backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
                     ) {
-                        val backWardMappingFunctionName = domainConfig.toDTOMapFunctionName
+                        val backWardMappingFunctionName = layerConfigs.domain.toDTOMapFunctionName
                         properties.forEach { property ->
                             if (property.type.resolve().isMappable) {
                                 addImport(
@@ -301,7 +299,7 @@ class DataClassProcessor(
                                 ),
                                 statementFormat = statementListFormatMapping(
                                     backWardMappingFunctionName,
-                                    packageName.replace(dataConfig.packageName, domainConfig.packageName),
+                                    packageName.replace(layerConfigs.data.packageName, layerConfigs.domain.packageName),
                                     properties
                                 )
                             )
@@ -320,7 +318,7 @@ class DataClassProcessor(
             generateClass(
                 resolver,
                 symbol,
-                presentationConfig,
+                layerConfigs.presentation,
                 fileSpecBuilder = { packageName, className, properties ->
                     val domainClassName =
                         generateDomainClassName(
@@ -332,10 +330,10 @@ class DataClassProcessor(
                         )
                     addFunction(
                         generateTopLevelMappingFunctions(
-                            domainConfig.toUIMapFunctionName, properties, domainClassName,
+                            layerConfigs.domain.toUIMapFunctionName, properties, domainClassName,
                             ClassName(packageName, className),
                             statementFormat = statementListFormatMapping(
-                                domainConfig.toUIMapFunctionName,
+                                layerConfigs.domain.toUIMapFunctionName,
                                 dataClassGenerationPattern.packageNameReplacement(packageName, ModelType.UI),
                                 properties
                             )
@@ -345,13 +343,13 @@ class DataClassProcessor(
                         if (property.type.resolve().isMappable)
                             addImport(
                                 property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                ".${domainConfig.toUIMapFunctionName}"
+                                ".${layerConfigs.domain.toUIMapFunctionName}"
                             )
                     }
                     if (symbol.getAnnotationsByType(DTO::class)
                             .first().backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
                     ) {
-                        val backWardMappingFunctionName = domainConfig.toUIMapFunctionName
+                        val backWardMappingFunctionName = layerConfigs.domain.toUIMapFunctionName
                         properties.forEach { property ->
                             if (property.type.resolve().isMappable) {
                                 addImport(

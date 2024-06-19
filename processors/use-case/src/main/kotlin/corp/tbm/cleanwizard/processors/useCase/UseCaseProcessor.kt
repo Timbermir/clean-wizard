@@ -9,17 +9,18 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseProcessorFunctionType
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
 import corp.tbm.cleanwizard.foundation.annotations.Repository
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.getAnnotatedSymbols
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isListSubclass
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.log
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dependencyInjectionFramework
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainConfig
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
 import java.io.OutputStreamWriter
 import javax.inject.Inject
 
@@ -36,6 +37,7 @@ class UseCaseProcessor(
 
     init {
         ProcessorOptions.generateConfigs(processorOptions)
+        logger.log(layerConfigs)
     }
 
     private lateinit var mResolver: Resolver
@@ -62,14 +64,14 @@ class UseCaseProcessor(
 
             if (allTypesResolved) {
                 val className =
-                    "${declaredFunction.name.firstCharUppercase()}${domainConfig.useCaseConfig.classSuffix.firstCharUppercase()}"
+                    "${declaredFunction.name.firstCharUppercase()}${layerConfigs.domain.useCaseConfig.classSuffix.firstCharUppercase()}"
                 val packageName =
                     "${
                         dataClassGenerationPattern.generatePackageName(
                             symbol,
-                            domainConfig
+                            layerConfigs.domain
                         )
-                    }.${domainConfig.useCaseConfig.packageName}"
+                    }.${layerConfigs.domain.useCaseConfig.packageName}"
 
                 val repositoryName = symbol.name.firstCharLowercase()
                 val constructor = FunSpec.constructorBuilder()
@@ -94,16 +96,16 @@ class UseCaseProcessor(
 
                 val function =
                     FunSpec.builder(
-                        when (val functionType = domainConfig.useCaseConfig.useCaseProcessorFunctionType) {
-                            is CleanWizardUseCaseProcessorFunctionType.Operator -> {
+                        when (val functionType = layerConfigs.domain.useCaseConfig.useCaseFunctionType) {
+                            is CleanWizardUseCaseFunctionType.Operator -> {
                                 "invoke"
                             }
 
-                            is CleanWizardUseCaseProcessorFunctionType.InheritRepositoryFunctionName -> {
+                            is CleanWizardUseCaseFunctionType.InheritRepositoryFunctionName -> {
                                 declaredFunction.name
                             }
 
-                            is CleanWizardUseCaseProcessorFunctionType.CustomFunctionName -> {
+                            is CleanWizardUseCaseFunctionType.CustomFunctionName -> {
                                 functionType.functionName
                             }
                         }
@@ -119,7 +121,7 @@ class UseCaseProcessor(
                             }\n)"
                         )
 
-                if (domainConfig.useCaseConfig.useCaseProcessorFunctionType is CleanWizardUseCaseProcessorFunctionType.Operator)
+                if (layerConfigs.domain.useCaseConfig.useCaseFunctionType is CleanWizardUseCaseFunctionType.Operator)
                     function.addModifiers(KModifier.OPERATOR)
 
                 val classToBuild = TypeSpec.classBuilder(className).primaryConstructor(

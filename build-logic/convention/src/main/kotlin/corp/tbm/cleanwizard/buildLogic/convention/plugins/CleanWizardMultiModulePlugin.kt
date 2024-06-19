@@ -170,6 +170,10 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
             configuration.dependencies.map { dependency -> "${dependency.group}:${dependency.name}" }
         }.toSet()
 
+
+        dataDependencies.forEach {
+            println(it)
+        }
         if (codegenExtension.domainProject.isEmpty())
             error("You have to specify path for your domain module")
         if (codegenExtension.presentationProject.isEmpty())
@@ -185,11 +189,11 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
         when {
 
             !dataDependencies.contains(cleanWizardExtension.jsonSerializer.dependency) -> {
-                error("[${cleanWizardExtension.jsonSerializer::class.java.name}] serializer option is applied at the root, but no [${cleanWizardExtension.jsonSerializer.dependency}] dependency was found.")
+                error("[${cleanWizardExtension.jsonSerializer::class.java.simpleName}] serializer is applied at the root, but no [${cleanWizardExtension.jsonSerializer.dependency}] dependency was found.")
             }
 
             missingDependencies.isNotEmpty() && cleanWizardExtension.dependencyInjectionFramework != CleanWizardDependencyInjectionFramework.None -> {
-                error("${cleanWizardExtension.dependencyInjectionFramework::class.java.name} dependency injection framework option is applied at the root, but module `${domainProject.path}` doesn't have $missingDependencies dependencies.")
+                error("${cleanWizardExtension.dependencyInjectionFramework::class.java.simpleName} dependency injection framework is applied at the root, but module with path `${domainProject.path}` doesn't have $missingDependencies dependencies.")
             }
         }
     }

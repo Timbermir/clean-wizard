@@ -35,6 +35,7 @@ squareup-moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "
 # Koin
 koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
 koin-annotations = { group = "io.insert-koin", name = "koin-annotations", version.ref = "koin-annotations" }
+koin-annotations-ksp = { group = "io.insert-koin", name = "koin-ksp-compiler", version.ref = "koin-annotations" }
 # JavaX
 javax-inject = { group = "javax.inject", name = "javax.inject", version = "1" }
 [bundles]

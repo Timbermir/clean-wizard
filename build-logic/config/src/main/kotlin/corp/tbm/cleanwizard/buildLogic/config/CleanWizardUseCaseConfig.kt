@@ -1,10 +1,10 @@
 package corp.tbm.cleanwizard.buildLogic.config
 
-import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDslMarker
+import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDsl
 import kotlinx.serialization.Serializable
 
 @Serializable
-@CleanWizardConfigDslMarker
+@CleanWizardConfigDsl
 data class CleanWizardUseCaseProcessorConfig(
     var classSuffix: String = "UseCase",
     var packageName: String = "useCases",

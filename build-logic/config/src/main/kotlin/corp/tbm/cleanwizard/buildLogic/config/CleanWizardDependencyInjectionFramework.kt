@@ -22,7 +22,13 @@ sealed class CleanWizardDependencyInjectionFramework(val dependencies: List<Stri
     @Serializable
     @SerialName("koin-annotations")
     class KoinAnnotations(var automaticallyCreateModule: Boolean = false) :
-        CleanWizardDependencyInjectionFramework(listOf("io.insert-koin:koin-core", "io.insert-koin:koin-annotations"))
+        CleanWizardDependencyInjectionFramework(
+            listOf(
+                "io.insert-koin:koin-core",
+                "io.insert-koin:koin-annotations",
+                "io.insert-koin:koin-ksp-compiler"
+            )
+        )
 
 
     @Serializable

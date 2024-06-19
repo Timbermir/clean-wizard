@@ -8,4 +8,5 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.koin.annotations)
     ksp(projects.processors.useCase)
+    ksp(libs.koin.annotations.ksp)
 }

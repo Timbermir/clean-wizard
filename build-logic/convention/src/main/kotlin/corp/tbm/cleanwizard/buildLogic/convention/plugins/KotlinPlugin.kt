@@ -19,13 +19,6 @@ internal class KotlinPlugin : Plugin<Project> {
                 implementation(libs.bundles.kotlinx)
                 implementation(libs.google.gson)
                 implementation(libs.squareup.moshi)
-                implementation(libs.fasterxml.jackson.databind)
-            }
-
-            tasks.withType<KotlinCompile>().configureEach {
-                compilerOptions {
-                    jvmTarget.set(this@with.jvmTarget)
-                }
             }
 
             sourceSets {
@@ -35,6 +28,12 @@ internal class KotlinPlugin : Plugin<Project> {
 
                 getByName("test") {
                     kotlin.srcDir("build/generated/ksp/test/kotlin")
+                }
+            }
+
+            tasks.withType<KotlinCompile>().configureEach {
+                compilerOptions {
+                    jvmTarget.set(this@with.jvmTarget)
                 }
             }
         }

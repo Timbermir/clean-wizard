@@ -4,18 +4,18 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class CleanWizardUseCaseProcessorFunctionType {
+sealed class CleanWizardUseCaseFunctionType {
 
     @Serializable
     @SerialName("Operator")
-    data object Operator : CleanWizardUseCaseProcessorFunctionType()
+    data object Operator : CleanWizardUseCaseFunctionType()
 
     @Serializable
     @SerialName("InheritRepositoryFunctionName")
-    data object InheritRepositoryFunctionName : CleanWizardUseCaseProcessorFunctionType()
+    data object InheritRepositoryFunctionName : CleanWizardUseCaseFunctionType()
 
     @Serializable
     @SerialName("CustomFunctionName")
     data class CustomFunctionName(val functionName: String) :
-        CleanWizardUseCaseProcessorFunctionType()
+        CleanWizardUseCaseFunctionType()
 }

@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @CleanWizardConfigDsl
-data class CleanWizardUseCaseProcessorConfig(
+data class CleanWizardUseCaseConfig(
     var classSuffix: String = "UseCase",
     var packageName: String = "useCases",
-    var useCaseProcessorFunctionType: CleanWizardUseCaseProcessorFunctionType = CleanWizardUseCaseProcessorFunctionType.Operator,
+    var useCaseFunctionType: CleanWizardUseCaseFunctionType = CleanWizardUseCaseFunctionType.Operator,
     var createWrapper: Boolean = false
 )

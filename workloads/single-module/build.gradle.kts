@@ -4,6 +4,8 @@ plugins {
 }
 
 dependencies {
+    implementation(projects.foundation.annotations)
     implementation(projects.cleanWizard)
     ksp(projects.processors.dataClass)
+    ksp(projects.processors.useCase)
 }

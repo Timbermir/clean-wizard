@@ -1,9 +1,11 @@
 package corp.tbm.cleanwizard.buildLogic.config
 
+import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDsl
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+@CleanWizardConfigDsl
 sealed class CleanWizardDependencyInjectionFramework(val dependencies: List<String>) {
 
     @Serializable
@@ -12,13 +14,16 @@ sealed class CleanWizardDependencyInjectionFramework(val dependencies: List<Stri
 
     @Serializable
     @SerialName("koin")
-    data class Koin(val useConstructorDSL: Boolean = true) :
-        CleanWizardDependencyInjectionFramework(listOf("io.insert-koin:koin-core"))
+    class Koin(
+        var automaticallyCreateModule: Boolean = true,
+        var useConstructorDSL: Boolean = true,
+    ) : CleanWizardDependencyInjectionFramework(listOf("io.insert-koin:koin-core"))
 
     @Serializable
     @SerialName("koin-annotations")
-    data object KoinAnnotations :
-        CleanWizardDependencyInjectionFramework(listOf("io.insert-koin:koin-core", "io-insert-koin:koin-annotations"))
+    class KoinAnnotations(var automaticallyCreateModule: Boolean = false) :
+        CleanWizardDependencyInjectionFramework(listOf("io.insert-koin:koin-core", "io.insert-koin:koin-annotations"))
+
 
     @Serializable
     @SerialName("dagger")

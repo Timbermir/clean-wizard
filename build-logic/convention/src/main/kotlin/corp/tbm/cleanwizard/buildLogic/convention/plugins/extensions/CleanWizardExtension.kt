@@ -1,29 +1,53 @@
 package corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions
 
 import corp.tbm.cleanwizard.buildLogic.config.*
+import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDsl
 
+@CleanWizardConfigDsl
 open class CleanWizardExtension(
     var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER,
     var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization,
-    var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework = CleanWizardDependencyInjectionFramework.None,
-    internal var cleanWizardLayerConfigWrapper: CleanWizardLayerConfigWrapper = CleanWizardLayerConfigWrapper(),
-    internal var dataConfig: CleanWizardLayerConfig.Data = CleanWizardLayerConfig.Data(),
-    internal var domainConfig: CleanWizardLayerConfig.Domain = CleanWizardLayerConfig.Domain(),
-    internal var presentationConfig: CleanWizardLayerConfig.Presentation = CleanWizardLayerConfig.Presentation()
+    internal var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework = CleanWizardDependencyInjectionFramework.None,
+    internal var layerConfigs: CleanWizardLayerConfigWrapper = CleanWizardLayerConfigWrapper(),
 ) {
 
-    fun data(configuration: CleanWizardLayerConfig.Data.() -> Unit) {
-        cleanWizardLayerConfigWrapper.dataConfig.apply(configuration)
-        dataConfig.apply(configuration)
+    fun data(block: CleanWizardLayerConfig.Data.() -> Unit) {
+        layerConfigs.data.apply(block)
     }
 
-    fun domain(configuration: CleanWizardLayerConfig.Domain.() -> Unit) {
-        cleanWizardLayerConfigWrapper.domainConfig.apply(configuration)
-        domainConfig.apply(configuration)
+    fun domain(block: CleanWizardLayerConfig.Domain.() -> Unit) {
+        layerConfigs.domain.apply(block)
     }
 
-    fun presentation(configuration: CleanWizardLayerConfig.Presentation.() -> Unit) {
-        cleanWizardLayerConfigWrapper.presentationConfig.apply(configuration)
-        presentationConfig.apply(configuration)
+    fun presentation(block: CleanWizardLayerConfig.Presentation.() -> Unit) {
+        layerConfigs.presentation.apply(block)
+    }
+
+    fun dependencyInjection(
+        block: CleanWizardDependencyInjectionFrameworkBuilder.() -> Unit
+    ) {
+        dependencyInjectionFramework = CleanWizardDependencyInjectionFrameworkBuilder.apply(block).build()
+    }
+}
+
+@CleanWizardConfigDsl
+object CleanWizardDependencyInjectionFrameworkBuilder {
+
+    private var framework: CleanWizardDependencyInjectionFramework = CleanWizardDependencyInjectionFramework.None
+
+    fun koin(block: CleanWizardDependencyInjectionFramework.Koin.() -> Unit) {
+        framework = CleanWizardDependencyInjectionFramework.Koin().apply(block)
+    }
+
+    fun koinAnnotations(block: CleanWizardDependencyInjectionFramework.KoinAnnotations.() -> Unit) {
+        framework = CleanWizardDependencyInjectionFramework.KoinAnnotations().apply(block)
+    }
+
+    fun dagger() {
+        framework = CleanWizardDependencyInjectionFramework.Dagger
+    }
+
+    internal fun build(): CleanWizardDependencyInjectionFramework {
+        return framework
     }
 }

@@ -27,13 +27,13 @@ fun KSPropertyDeclaration.getParameterName(packageName: String): String {
             resolvedType.toClassName().simpleName.replace(
                 dtoRegex,
                 ""
-            ) + dataClassGenerationPattern.findRightModelType(packageName).suffix
+            ) + dataClassGenerationPattern.findLayerConfig(packageName).classSuffix
 
         resolvedType.isListMappable -> {
             resolvedType.arguments.first().type?.resolve()?.toClassName()?.simpleName?.replace(
                 dtoRegex,
                 ""
-            ) + dataClassGenerationPattern.findRightModelType(packageName).suffix
+            ) + dataClassGenerationPattern.findLayerConfig(packageName).classSuffix
         }
 
         else -> name

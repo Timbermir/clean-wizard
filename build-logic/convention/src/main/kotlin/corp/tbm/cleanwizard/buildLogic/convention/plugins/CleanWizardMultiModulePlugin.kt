@@ -71,8 +71,8 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
                 this,
                 "kspKotlin",
                 {
-                    exclude("**/${cleanWizardExtension.dataConfig.moduleName}/**")
-                    exclude("**/${cleanWizardExtension.presentationConfig.moduleName}/**")
+                    exclude("**/${cleanWizardExtension.layerConfigs.data.moduleName}/**")
+                    exclude("**/${cleanWizardExtension.layerConfigs.presentation.moduleName}/**")
                 },
                 project(codegenExtension.domainProject),
                 "copyGeneratedUIClasses"
@@ -84,8 +84,8 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
                 this,
                 "copyGeneratedDomainClasses",
                 {
-                    exclude("**/${cleanWizardExtension.dataConfig.moduleName}/**")
-                    exclude("**/${cleanWizardExtension.domainConfig.moduleName}/**")
+                    exclude("**/${cleanWizardExtension.layerConfigs.data.moduleName}/**")
+                    exclude("**/${cleanWizardExtension.layerConfigs.domain.moduleName}/**")
                 },
                 project(codegenExtension.presentationProject),
                 "cleanDomainAndPresentationClassesInData"
@@ -98,11 +98,11 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
             val basePackage = File(
                 kspMainBuildDirectory,
                 lastPackageSegmentWhereFirstSourceClassOccurs.split(".").joinToString("/")
-                    .replace(cleanWizardExtension.dataConfig.moduleName, "")
+                    .replace(cleanWizardExtension.layerConfigs.data.moduleName, "")
             ).path
 
-            delete(File(basePackage, "/${cleanWizardExtension.domainConfig.moduleName}"))
-            delete(File(basePackage, "/${cleanWizardExtension.presentationConfig.moduleName}"))
+            delete(File(basePackage, "/${cleanWizardExtension.layerConfigs.domain.moduleName}"))
+            delete(File(basePackage, "/${cleanWizardExtension.layerConfigs.presentation.moduleName}"))
         }
     }
 

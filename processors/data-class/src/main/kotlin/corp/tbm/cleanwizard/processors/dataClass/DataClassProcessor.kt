@@ -361,7 +361,7 @@ class DataClassProcessor(
                     if (symbol.getAnnotationsByType(DTO::class)
                             .first().backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
                     ) {
-                        val backWardMappingFunctionName = layerConfigs.domain.toUIMapFunctionName
+                        val backWardMappingFunctionName = layerConfigs.presentation.toDomainMapFunctionName
                         properties.forEach { property ->
                             if (property.type.resolve().isMappable) {
                                 addImport(

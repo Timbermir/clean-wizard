@@ -30,10 +30,10 @@ sealed class CleanWizardLayerConfig(
         @SerialName("domainPackageName") override var packageName: String = "model",
         var toDTOMapFunctionName: String = "toDTO",
         var toUIMapFunctionName: String = "toUI",
-        var useCaseConfig: CleanWizardUseCaseProcessorConfig = CleanWizardUseCaseProcessorConfig()
+        var useCaseConfig: CleanWizardUseCaseConfig = CleanWizardUseCaseConfig()
     ) : CleanWizardLayerConfig(moduleName, classSuffix, packageName) {
 
-        fun useCase(block: CleanWizardUseCaseProcessorConfig.() -> Unit) {
+        fun useCase(block: CleanWizardUseCaseConfig.() -> Unit) {
             useCaseConfig.apply(block)
         }
     }

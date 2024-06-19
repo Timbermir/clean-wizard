@@ -45,13 +45,13 @@ internal inline fun Project.ksp(configuration: KspExtension.() -> Unit) {
     configuration(this.ksp)
 }
 
-inline val Project.kspMainBuildDirectory: String
+internal inline val Project.kspMainBuildDirectory: String
     get() = File(layout.buildDirectory.asFile.get().path, "generated/ksp/main/kotlin").path
 
-inline val Project.kspTestBuildDirectory: String
+internal inline val Project.kspTestBuildDirectory: String
     get() = File(layout.buildDirectory.asFile.get().path, "generated/ksp/test/kotlin").path
 
-inline val Project.cleanWizardExtension: CleanWizardExtension
+internal inline val Project.cleanWizardExtension: CleanWizardExtension
     get() = rootProject.extensions.getByType(CleanWizardExtension::class.java)
 
 internal inline val Project.jvmTarget

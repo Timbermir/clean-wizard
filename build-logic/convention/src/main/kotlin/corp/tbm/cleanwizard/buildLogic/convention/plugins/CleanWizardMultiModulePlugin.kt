@@ -1,9 +1,9 @@
 package corp.tbm.cleanwizard.buildLogic.convention.plugins
 
 import com.google.devtools.ksp.gradle.KspTaskJvm
-import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardCodegenExtension
-import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardDependencyInjectionFramework
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.*
+import corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions.CleanWizardCodegenExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.CopySpec
@@ -13,7 +13,7 @@ import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 
-class CleanWizardMultiModulePlugin : Plugin<Project> {
+internal class CleanWizardMultiModulePlugin : Plugin<Project> {
 
     private var lastPackageSegmentWhereFirstSourceClassOccurs = ""
     override fun apply(target: Project) {
@@ -24,7 +24,6 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
 
             val codegenExtension =
                 extensions.create("clean-wizard-codegen", CleanWizardCodegenExtension::class.java)
-
 
             dependencies {
                 implementation(libs.bundles.kotlinx)
@@ -53,7 +52,7 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
 
     private fun Project.configureGradleTasks(codegenExtension: CleanWizardCodegenExtension) {
         tasks.named("compileKotlin") {
-            dependsOn(project(":workloads:multi-module:data").tasks.named("copyGeneratedUIClasses"))
+            dependsOn(tasks.named("copyGeneratedUIClasses"))
         }
 
         tasks.withType<KotlinCompile>().configureEach {
@@ -72,8 +71,8 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
                 this,
                 "kspKotlin",
                 {
-                    exclude("**/${cleanWizardProcessorConfig.dtoConfig.moduleName}/**")
-                    exclude("**/${cleanWizardProcessorConfig.presentationConfig.moduleName}/**")
+                    exclude("**/${cleanWizardExtension.layerConfigs.data.moduleName}/**")
+                    exclude("**/${cleanWizardExtension.layerConfigs.presentation.moduleName}/**")
                 },
                 project(codegenExtension.domainProject),
                 "copyGeneratedUIClasses"
@@ -85,8 +84,8 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
                 this,
                 "copyGeneratedDomainClasses",
                 {
-                    exclude("**/${cleanWizardProcessorConfig.dtoConfig.moduleName}/**")
-                    exclude("**/${cleanWizardProcessorConfig.domainConfig.moduleName}/**")
+                    exclude("**/${cleanWizardExtension.layerConfigs.data.moduleName}/**")
+                    exclude("**/${cleanWizardExtension.layerConfigs.domain.moduleName}/**")
                 },
                 project(codegenExtension.presentationProject),
                 "cleanDomainAndPresentationClassesInData"
@@ -99,11 +98,11 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
             val basePackage = File(
                 kspMainBuildDirectory,
                 lastPackageSegmentWhereFirstSourceClassOccurs.split(".").joinToString("/")
-                    .replace(cleanWizardProcessorConfig.dtoConfig.moduleName, "")
+                    .replace(cleanWizardExtension.layerConfigs.data.moduleName, "")
             ).path
 
-            delete(File(basePackage, "/${cleanWizardProcessorConfig.domainConfig.moduleName}"))
-            delete(File(basePackage, "/${cleanWizardProcessorConfig.presentationConfig.moduleName}"))
+            delete(File(basePackage, "/${cleanWizardExtension.layerConfigs.domain.moduleName}"))
+            delete(File(basePackage, "/${cleanWizardExtension.layerConfigs.presentation.moduleName}"))
         }
     }
 
@@ -171,22 +170,26 @@ class CleanWizardMultiModulePlugin : Plugin<Project> {
             configuration.dependencies.map { dependency -> "${dependency.group}:${dependency.name}" }
         }.toSet()
 
+        if (codegenExtension.domainProject.isEmpty())
+            error("You have to specify path for your domain module")
+        if (codegenExtension.presentationProject.isEmpty())
+            error("You have to specify path for your presentation module")
         val domainProject = project(codegenExtension.domainProject)
         val domainDependencies = project(codegenExtension.domainProject).configurations.flatMap { configuration ->
             configuration.dependencies.map { dependency -> "${dependency.group}:${dependency.name}" }
         }.toSet()
 
         val missingDependencies =
-            cleanWizardProcessorConfig.dependencyInjectionFramework.dependencies.filter { it !in domainDependencies }
+            cleanWizardExtension.dependencyInjectionFramework.dependencies.filter { it !in domainDependencies }
 
         when {
 
-            !dataDependencies.contains(cleanWizardProcessorConfig.jsonSerializer.dependency) -> {
-                error("[${cleanWizardProcessorConfig.jsonSerializer.serializer}] serializer option is applied at the root, but no [${cleanWizardProcessorConfig.jsonSerializer.dependency}] dependency was found.")
+            !dataDependencies.contains(cleanWizardExtension.jsonSerializer.dependency) -> {
+                error("[${cleanWizardExtension.jsonSerializer::class.java.name}] serializer option is applied at the root, but no [${cleanWizardExtension.jsonSerializer.dependency}] dependency was found.")
             }
 
-            missingDependencies.isNotEmpty() && cleanWizardProcessorConfig.dependencyInjectionFramework != CleanWizardDependencyInjectionFramework.NONE -> {
-                error("${cleanWizardProcessorConfig.dependencyInjectionFramework.name} dependency injection framework option is applied at the root, but module `${domainProject.path}` doesn't have $missingDependencies dependencies.")
+            missingDependencies.isNotEmpty() && cleanWizardExtension.dependencyInjectionFramework != CleanWizardDependencyInjectionFramework.None -> {
+                error("${cleanWizardExtension.dependencyInjectionFramework::class.java.name} dependency injection framework option is applied at the root, but module `${domainProject.path}` doesn't have $missingDependencies dependencies.")
             }
         }
     }

@@ -4,5 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.visitors.enums)
+    implementation(libs.koin.core)
+    implementation(libs.javax.inject)
+    implementation(libs.koin.annotations)
 }

@@ -18,6 +18,7 @@ internal class CodegenPlugin : Plugin<Project> {
 
             dependencies {
                 implementation(project(":foundation:annotations"))
+                implementation("build-logic:config")
                 implementation(libs.bundles.foundation.codegen)
             }
         }

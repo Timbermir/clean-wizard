@@ -1,10 +1,13 @@
 plugins {
     `kotlin-dsl`
     alias(libs.plugins.google.devtools.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
+    implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.kotlin.gradle.plugin)
+    implementation(projects.config)
     compileOnly(libs.google.devtools.ksp)
     compileOnly(files(ksp.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
@@ -12,6 +15,12 @@ dependencies {
     compileOnly(files(pluginConfig.javaClass.superclass.protectionDomain.codeSource.location))
 }
 
+sourceSets {
+    main {
+        kotlin.srcDirs("src/main/kotlin")
+        kotlin.srcDirs(projects.config.dependencyProject.sourceSets.getByName("internal").allSource)
+    }
+}
 gradlePlugin {
     plugins {
         libs.plugins.cleanwizard.apply {

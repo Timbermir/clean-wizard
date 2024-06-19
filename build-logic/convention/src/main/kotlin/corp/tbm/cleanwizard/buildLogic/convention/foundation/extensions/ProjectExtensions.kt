@@ -1,7 +1,7 @@
 package corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions
 
 import com.google.devtools.ksp.gradle.KspExtension
-import corp.tbm.cleanwizard.buildLogic.convention.processorConfig.CleanWizardProcessorConfig
+import corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions.CleanWizardExtension
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.accessors.dm.LibrariesForPluginConfig
 import org.gradle.accessors.dm.LibrariesForProjectConfig
@@ -14,6 +14,16 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.io.File
+
+internal fun Project.alias(pluginDependency: Provider<PluginDependency>) {
+    pluginManager.apply(pluginDependency.get().pluginId)
+}
+
+internal fun Project.sourceSets(configure: NamedDomainObjectContainer<KotlinSourceSet>.() -> Unit) {
+    configure<KotlinJvmProjectExtension> {
+        configure(sourceSets)
+    }
+}
 
 internal inline fun <reified T> Project.retrieveExtension(name: String): T {
     return extensions.getByName(name) as T
@@ -35,25 +45,15 @@ internal inline fun Project.ksp(configuration: KspExtension.() -> Unit) {
     configuration(this.ksp)
 }
 
-inline val Project.kspMainBuildDirectory
+internal inline val Project.kspMainBuildDirectory: String
     get() = File(layout.buildDirectory.asFile.get().path, "generated/ksp/main/kotlin").path
 
-inline val Project.kspDebugBuildDirectory
+internal inline val Project.kspTestBuildDirectory: String
     get() = File(layout.buildDirectory.asFile.get().path, "generated/ksp/test/kotlin").path
 
-inline val Project.cleanWizardProcessorConfig: CleanWizardProcessorConfig
-    get() = rootProject.extensions.getByType(CleanWizardProcessorConfig::class.java)
+internal inline val Project.cleanWizardExtension: CleanWizardExtension
+    get() = rootProject.extensions.getByType(CleanWizardExtension::class.java)
 
 internal inline val Project.jvmTarget
     get() = JvmTarget.values()
         .first { it.target.contains(projectConfig.versions.jdk.get()) }
-
-internal fun Project.alias(pluginDependency: Provider<PluginDependency>) {
-    pluginManager.apply(pluginDependency.get().pluginId)
-}
-
-internal fun Project.sourceSets(configure: NamedDomainObjectContainer<KotlinSourceSet>.() -> Unit) {
-    configure<KotlinJvmProjectExtension> {
-        configure(sourceSets)
-    }
-}

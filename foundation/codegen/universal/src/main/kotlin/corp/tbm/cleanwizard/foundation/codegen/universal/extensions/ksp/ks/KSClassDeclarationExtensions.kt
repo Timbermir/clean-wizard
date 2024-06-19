@@ -4,9 +4,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.asPackage
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.DataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.domainOptions
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dtoOptions
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.uiOptions
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
 
 inline val KSClassDeclaration.name
     get() = simpleName.asString()
@@ -22,9 +20,9 @@ inline val KSClassDeclaration.basePackagePath: String
             DataClassGenerationPattern.LAYER ->
                 splitPath.takeWhile {
                     it !in listOf(
-                        dtoOptions.moduleName,
-                        domainOptions.moduleName,
-                        uiOptions.moduleName
+                        layerConfigs.data.moduleName,
+                        layerConfigs.domain.moduleName,
+                        layerConfigs.presentation.moduleName
                     )
                 }
 

@@ -1,4 +1,5 @@
 [versions]
+kotlin = "2.0"
 jdk = "19"
 group = "io.github.timbermir"
 artifact = "clean-wizard"

@@ -1,10 +1,10 @@
 package corp.tbm.cleanwizard.buildLogic.config
 
-import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDslMarker
+import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDsl
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@CleanWizardConfigDslMarker
+@CleanWizardConfigDsl
 @Serializable
 sealed class CleanWizardLayerConfig(
     @SerialName("moduleName") open var moduleName: String,
@@ -33,8 +33,8 @@ sealed class CleanWizardLayerConfig(
         var useCaseConfig: CleanWizardUseCaseProcessorConfig = CleanWizardUseCaseProcessorConfig()
     ) : CleanWizardLayerConfig(moduleName, classSuffix, packageName) {
 
-        fun useCase(configuration: CleanWizardUseCaseProcessorConfig.() -> Unit) {
-            useCaseConfig.apply(configuration)
+        fun useCase(block: CleanWizardUseCaseProcessorConfig.() -> Unit) {
+            useCaseConfig.apply(block)
         }
     }
 
@@ -47,10 +47,3 @@ sealed class CleanWizardLayerConfig(
         var toDomainMapFunctionName: String = "toDomain",
     ) : CleanWizardLayerConfig(moduleName, classSuffix, packageName)
 }
-
-@Serializable
-data class CleanWizardLayerConfigWrapper(
-    var dataConfig: CleanWizardLayerConfig.Data = CleanWizardLayerConfig.Data(),
-    var domainConfig: CleanWizardLayerConfig.Domain = CleanWizardLayerConfig.Domain(),
-    var presentationConfig: CleanWizardLayerConfig.Presentation = CleanWizardLayerConfig.Presentation()
-)

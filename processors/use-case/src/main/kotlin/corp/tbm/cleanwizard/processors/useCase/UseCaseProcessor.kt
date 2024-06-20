@@ -1,3 +1,5 @@
+@file:OptIn(KspExperimental::class)
+
 package corp.tbm.cleanwizard.processors.useCase
 
 import com.google.devtools.ksp.KspExperimental
@@ -8,19 +10,29 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
 import corp.tbm.cleanwizard.foundation.annotations.Repository
+import corp.tbm.cleanwizard.foundation.annotations.UseCase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.getAnnotatedSymbols
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.kotlinpoet.writeNewFile
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.basePackagePath
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isListSubclass
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.log
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.packageLastSegment
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dependencyInjectionFramework
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
+import kotlinx.collections.immutable.toImmutableSet
+import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Factory
+import org.koin.core.annotation.Module
 import java.io.OutputStreamWriter
 import javax.inject.Inject
 
@@ -37,15 +49,34 @@ class UseCaseProcessor(
         ProcessorOptions.generateConfigs(processorOptions)
     }
 
+    private var hasKoinAnnotationsModuleBeenGenerated = false
+
     private lateinit var mResolver: Resolver
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         mResolver = resolver
         val symbols = resolver.getAnnotatedSymbols<KSClassDeclaration>(Repository::class.qualifiedName!!)
 
-        val deferredSymbols = symbols.filterNot(::generateUseCase)
+        symbols.onEach(::generateUseCase)
 
-        return deferredSymbols
+        val diFramework = dependencyInjectionFramework
+
+        if (diFramework is CleanWizardDependencyInjectionFramework.KoinAnnotations && diFramework.automaticallyCreateModule && !hasKoinAnnotationsModuleBeenGenerated) {
+            generateKoinAnnotationsModule(symbols.firstOrNull(), diFramework)
+            hasKoinAnnotationsModuleBeenGenerated = true
+        }
+        logger.log(mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!))
+
+        if (diFramework is CleanWizardDependencyInjectionFramework.Koin) {
+            val generatedUseCases = mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!)
+            logger.log("tried to generate" + generatedUseCases + "      " + symbols.firstOrNull())
+            generateKoinModule(
+                generatedUseCases,
+                diFramework
+            )
+        }
+
+        return emptyList()
     }
 
     @OptIn(KspExperimental::class)
@@ -71,29 +102,39 @@ class UseCaseProcessor(
                 }.${layerConfigs.domain.useCaseConfig.packageName}"
 
             val repositoryName = symbol.name.firstCharLowercase()
+
             val constructor = FunSpec.constructorBuilder()
                 .addParameter(repositoryName, symbol.toClassName())
-            if (dependencyInjectionFramework is CleanWizardDependencyInjectionFramework.Dagger)
-                constructor.addAnnotation(Inject::class)
 
-            val functionParameters = declaredFunction.parameters.map {
+            val functionParameters = declaredFunction.parameters.map { parameter ->
+                val resolvedType = parameter.type.resolve()
+
                 ParameterSpec.builder(
-                    it.name?.asString().toString(), when (it.type.resolve().isListSubclass) {
+                    parameter.name?.asString().toString(), when (resolvedType.isListSubclass) {
                         false -> {
-                            it.type.resolve().toTypeName()
+                            resolvedType.toTypeName()
                         }
 
                         true -> {
                             List::class.asClassName()
-                                .parameterizedBy(it.type.resolve().arguments.first().toTypeName())
+                                .parameterizedBy(resolvedType.arguments.first().toTypeName())
                         }
                     }
-                ).build()
+                ).also {
+                    if (resolvedType.isMarkedNullable)
+                        it.defaultValue("%S", null)
+                }.build()
             }
+
+            val functionModifiers = declaredFunction.modifiers.mapNotNull { it.toKModifier() }.toMutableSet().also {
+                if (layerConfigs.domain.useCaseConfig.useCaseFunctionType is CleanWizardUseCaseFunctionType.Operator)
+                    it.add(KModifier.OPERATOR)
+            }.toImmutableSet()
 
             val function =
                 FunSpec.builder(
                     when (val functionType = layerConfigs.domain.useCaseConfig.useCaseFunctionType) {
+
                         is CleanWizardUseCaseFunctionType.Operator -> {
                             "invoke"
                         }
@@ -107,6 +148,7 @@ class UseCaseProcessor(
                         }
                     }
                 )
+                    .addModifiers(functionModifiers)
                     .returns(declaredFunction.returnType?.toTypeName()!!)
                     .addParameters(functionParameters)
                     .addStatement(
@@ -118,8 +160,8 @@ class UseCaseProcessor(
                         }\n)"
                     )
 
-            if (layerConfigs.domain.useCaseConfig.useCaseFunctionType is CleanWizardUseCaseFunctionType.Operator)
-                function.addModifiers(KModifier.OPERATOR)
+            if (dependencyInjectionFramework is CleanWizardDependencyInjectionFramework.Dagger)
+                constructor.addAnnotation(Inject::class)
 
             val classToBuild = TypeSpec.classBuilder(className).primaryConstructor(
                 constructor.build()
@@ -131,7 +173,11 @@ class UseCaseProcessor(
                     .build()
             ).addFunction(
                 function.build()
-            )
+            ).addAnnotation(UseCase::class)
+
+            if (dependencyInjectionFramework is CleanWizardDependencyInjectionFramework.KoinAnnotations) {
+                classToBuild.addAnnotation(Factory::class)
+            }
 
             val fileSpec =
                 FileSpec.builder(packageName, className)
@@ -155,47 +201,89 @@ class UseCaseProcessor(
         return true
     }
 
-//    private fun generateKoinModule() {
-//        val generatedUseCases =
-//            mResolver.getDeclarationsFromPackage("corp.tbm.cleanwizard.workloads.multimodule.domain.usecase").toList()
-//                .map { it.closestClassDeclaration() }
-//
-//        if (generatedUseCases.isNotEmpty()) {
-//            val packageName = generatedUseCases.firstOrNull()?.basePackagePath
-//            val className = generatedUseCases.firstOrNull()?.basePackagePath?.packageLastSegment.toString()
-//            val fileSpec =
-//                FileSpec.scriptBuilder(className, packageName.toString()).addImport("org.koin.dsl", "module").addCode(
-//                    """
-//            val ${className}DomainModule = module {
-//            ${
-//                        generatedUseCases.map { it.name }.joinToString("factoryOf(") {
-//                            "factoryOf(::$it)"
-//                        }
-//
-//
-//                    }
-//            }
-//
-//        """.trimIndent()
-//                ).build()
-//            try {
-//                val file = codeGenerator.createNewFile(
-//                    Dependencies(
-//                        false,
-//                        *mResolver.getDeclarationsFromPackage("corp.tbm.cleanwizard.workloads.multimodule.domain.usecase")
-//                            .map { it.containingFile!! }.toList().toTypedArray()
-//                    ),
-//                    packageName.toString(),
-//                    className
-//                )
-//                OutputStreamWriter(file).use { writer ->
-//
-//                    fileSpec.writeTo(writer)
-//                }
-//            } catch (_: FileAlreadyExistsException) {
-//            }
-//        }
-//    }
+    private fun generateKoinAnnotationsModule(
+        symbol: KSClassDeclaration?,
+        koinAnnotationsConfig: CleanWizardDependencyInjectionFramework.KoinAnnotations
+    ) {
+        symbol?.let {
+
+            val packageName = dataClassGenerationPattern.generatePackageName(
+                symbol,
+                layerConfigs.domain
+            )
+
+            val className =
+                "${symbol.basePackagePath.packageLastSegment.firstCharUppercase()}${layerConfigs.domain.moduleName.firstCharUppercase()}Module"
+
+            val classBuilder =
+                TypeSpec.classBuilder(className).addAnnotation(Module::class)
+                    .addAnnotation(
+                        AnnotationSpec.builder(ComponentScan::class).also {
+                            if (koinAnnotationsConfig.specifyUseCasePackageForComponentScan)
+                                it.addMember(
+                                    "value = %S",
+                                    "$packageName.${layerConfigs.domain.useCaseConfig.packageName}"
+                                )
+                        }
+                            .build()
+                    )
+
+            try {
+                FileSpec.builder(packageName, className)
+                    .addType(classBuilder.build())
+                    .build().writeNewFile(codeGenerator)
+
+            } catch (fileAlreadyExistsException: FileAlreadyExistsException) {
+
+            }
+        }
+    }
+
+    private fun generateKoinModule(
+        generatedUseCases: List<KSClassDeclaration>,
+        koinConfig: CleanWizardDependencyInjectionFramework.Koin
+    ) {
+        val symbolName = generatedUseCases.firstOrNull()
+
+        symbolName?.let { symbol ->
+
+            val packageName = dataClassGenerationPattern.generatePackageName(
+                symbol,
+                layerConfigs.domain
+            )
+
+            val className =
+                "${symbol.basePackagePath.packageLastSegment.firstCharUppercase()}${layerConfigs.domain.moduleName.firstCharUppercase()}Module"
+            val fileSpec = FileSpec.builder(packageName, className).addImport("org.koin.dsl", "module")
+                .addProperty(
+                    PropertySpec.builder(className, org.koin.core.module.Module::class.asTypeName())
+                        .initializer(
+                            """module {
+               ${
+                                generatedUseCases.joinToString(
+                                    prefix = "\n",
+                                    postfix = "",
+                                    separator = "\n",
+                                ) { useCaseName ->
+                                    val prefix = "factory"
+                                    if (koinConfig.useConstructorDSL) {
+                                        "${prefix}Of(::$useCaseName)"
+                                    } else {
+                                        "$prefix { $useCaseName(get()) }"
+                                    }
+                                }
+                            }
+}   """.trimIndent()
+                        ).build()
+                )
+            if (koinConfig.useConstructorDSL)
+                fileSpec.addImport("org.koin.core.module.dsl", "factoryOf")
+            generatedUseCases.forEach {
+                fileSpec.addImport(it.toClassName(), "")
+            }
+            fileSpec.build().writeNewFile(codeGenerator)
+        }
+    }
 }
 
 internal class UseCaseProcessorProvider : SymbolProcessorProvider {

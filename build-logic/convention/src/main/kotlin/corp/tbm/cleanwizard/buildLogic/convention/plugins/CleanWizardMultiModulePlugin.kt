@@ -57,33 +57,10 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
             val domainProject = project(codegenExtension.domainProject)
 
             presentationProject.tasks.withType<KotlinCompile>().configureEach {
-
                 mustRunAfter("${this@configureGradleTasks.path}:copyGeneratedUIClasses")
             }
 
-            domainProject.afterEvaluate {
-                domainProject.tasks.withType<KspTask>().configureEach {
-
-                    mustRunAfter("${this@configureGradleTasks.path}:copyGeneratedDomainClasses")
-                }
-            }
-
-            domainProject.tasks.withType<KotlinCompile>().configureEach {
-                mustRunAfter("${this@configureGradleTasks.path}:copyGeneratedDomainClasses")
-            }
-        }
-
-        tasks.withType<KotlinCompile>().configureEach {
-            compilerOptions {
-                jvmTarget.set(this@configureGradleTasks.jvmTarget)
-            }
-        }
-
-        afterEvaluate {
-            tasks.named("kspKotlin") {
-                finalizedBy("copyGeneratedDomainClasses")
-            }
-            tasks.register<Copy>("copyGeneratedDomainClasses") {
+            val copyGeneratedDomainClasses = tasks.register<Copy>("copyGeneratedDomainClasses") {
                 copyToModule(
                     this,
                     {
@@ -92,11 +69,13 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
                     },
                     project(codegenExtension.domainProject),
                 )
-                finalizedBy("copyGeneratedUIClasses")
             }
 
+//            domainProject.tasks.withType<KspTask>().configureEach {
+//                mustRunAfter(copyGeneratedDomainClasses)
+//            }
+
             tasks.register<Copy>("copyGeneratedUIClasses") {
-                mustRunAfter("kspKotlin")
                 copyToModule(
                     this,
                     {
@@ -120,6 +99,16 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
                 delete(File(basePackage, "/${cleanWizardExtension.layerConfigs.presentation.moduleName}"))
             }
 
+            tasks.withType<KspTask>().configureEach {
+                finalizedBy(copyGeneratedDomainClasses, "copyGeneratedUIClasses")
+            }
+        }
+
+
+        tasks.withType<KotlinCompile>().configureEach {
+            compilerOptions {
+                jvmTarget.set(this@configureGradleTasks.jvmTarget)
+            }
         }
     }
 

@@ -79,14 +79,7 @@ class UseCaseProcessor(
         return emptyList()
     }
 
-    @OptIn(KspExperimental::class)
     private fun generateUseCase(symbol: KSClassDeclaration): Boolean {
-//        if (mResolver.getDeclarationsFromPackage("corp.tbm.cleanwizard.workloads.multimodule.domain.models").toList()
-//                .isEmpty()
-//        ) {
-//            return false
-//        }
-
         symbol.getDeclaredFunctions().forEach { declaredFunction ->
             if (declaredFunction.parameters.any { it.type.resolve().isError })
                 return false

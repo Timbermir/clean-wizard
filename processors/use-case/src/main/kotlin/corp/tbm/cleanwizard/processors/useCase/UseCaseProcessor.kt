@@ -29,6 +29,7 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOpti
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dependencyInjectionFramework
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
 import kotlinx.collections.immutable.toImmutableSet
+import org.kodein.di.DI
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
@@ -46,8 +47,6 @@ class UseCaseProcessor(
     init {
         ProcessorOptions.generateConfigs(processorOptions)
     }
-
-    private var hasKoinAnnotationsModuleBeenGenerated = false
 
     private lateinit var mResolver: Resolver
 
@@ -73,6 +72,12 @@ class UseCaseProcessor(
                     )
                 }
             }
+        }
+        if (diFramework is CleanWizardDependencyInjectionFramework.Kodein) {
+            generateKodeinModule(
+                mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!),
+                diFramework
+            )
         }
 
         return emptyList()
@@ -226,30 +231,131 @@ class UseCaseProcessor(
 
             val className =
                 "${symbol.basePackagePath.packageLastSegment.firstCharUppercase()}${layerConfigs.domain.moduleName.firstCharUppercase()}Module"
+
             val fileSpec = FileSpec.builder(packageName, className).addImport("org.koin.dsl", "module")
                 .addProperty(
-                    PropertySpec.builder(className, org.koin.core.module.Module::class.asTypeName())
-                        .initializer(
-                            """module {
-               ${
-                                generatedUseCases.joinToString(
-                                    prefix = "\n",
-                                    postfix = "",
-                                    separator = "\n",
-                                ) { useCaseName ->
-                                    val prefix = "factory"
-                                    if (koinConfig.useConstructorDSL) {
-                                        "${prefix}Of(::$useCaseName)"
-                                    } else {
-                                        "$prefix { $useCaseName(get()) }"
-                                    }
+                    PropertySpec.builder(
+                        className.firstCharLowercase(),
+                        org.koin.core.module.Module::class.asTypeName()
+                    ).initializer(
+                        """module {
+                            ${
+                            generatedUseCases.joinToString(
+                                prefix = "\n",
+                                separator = "\n",
+                            ) { useCaseName ->
+                                val prefix = "factory"
+                                if (koinConfig.useConstructorDSL) {
+                                    "${prefix}Of(::$useCaseName)"
+                                } else {
+                                    "$prefix { $useCaseName(get()) }"
                                 }
                             }
-}   """.trimIndent()
-                        ).build()
+                        }
+}""".trimIndent()
+                    ).build()
                 )
             if (koinConfig.useConstructorDSL)
                 fileSpec.addImport("org.koin.core.module.dsl", "factoryOf")
+
+            generatedUseCases.forEach {
+                fileSpec.addImport(it.toClassName(), "")
+            }
+
+            fileSpec.build().writeNewFile(codeGenerator)
+        }
+    }
+
+    private fun generateKodeinModule(
+        generatedUseCases: List<KSClassDeclaration>,
+        kodeinConfig: CleanWizardDependencyInjectionFramework.Kodein
+    ) {
+        val symbolName = generatedUseCases.firstOrNull()
+
+        symbolName?.let { symbol ->
+
+            val packageName = dataClassGenerationPattern.generatePackageName(
+                symbol,
+                layerConfigs.domain
+            )
+
+            val className =
+                "${symbol.basePackagePath.packageLastSegment.firstCharUppercase()}${layerConfigs.domain.moduleName.firstCharUppercase()}Module"
+
+            val fileSpec = FileSpec.builder(packageName, className).addImport("org.kodein.di", "DI")
+            val propertySpec = PropertySpec.builder(
+                className.firstCharLowercase(),
+                DI.Module::class.asTypeName()
+            ).initializer(
+                """DI.Module("$className") {
+                            ${
+                    generatedUseCases.joinToString(
+                        prefix = "\n",
+                        separator = "\n",
+                    ) { useCaseName ->
+                        val repositoryName =
+                            symbol.primaryConstructor?.parameters?.first()?.name?.asString().toString()
+                        val prefix = "bind"
+
+                        val functionToUse = when (kodeinConfig.useFactory) {
+                            true ->
+                                "factory"
+
+                            false ->
+                                "provider"
+                        }
+
+                        val providerThing: () -> String =
+                            {
+                                "{ ${
+                                    when (functionToUse) {
+                                        "factory" ->
+                                            "$repositoryName: ${repositoryName.firstCharUppercase()} -> $useCaseName($repositoryName)"
+
+                                        else ->
+                                            "$useCaseName(instance())"
+                                    }
+                                } }"
+                            }
+                        
+                        val functionName = when (kodeinConfig.useSimpleFunctions) {
+                            true -> {
+                                fileSpec.addImport(
+                                    "org.kodein.di",
+                                    if (functionToUse == "factory") "bindFactory" else "bindProvider"
+                                )
+                                when (functionToUse) {
+                                    "factory" -> {
+                                        "$prefix${functionToUse.firstCharUppercase()} ${providerThing()}"
+                                    }
+
+                                    else -> {
+                                        "$prefix${functionToUse.firstCharUppercase()} ${providerThing()}"
+                                    }
+                                }
+                            }
+
+                            false -> {
+                                fileSpec.addImport("org.kodein.di", "bind")
+                                fileSpec.addImport(
+                                    "org.kodein.di",
+                                    if (functionToUse == "factory") {
+                                        "factory"
+                                    } else {
+                                        fileSpec.addImport("org.kodein.di", "instance")
+                                        "provider"
+                                    }
+                                )
+                                "$prefix<$useCaseName>() with $functionToUse ${providerThing()}"
+                            }
+                        }
+                        functionName
+                    }
+                }
+}""".trimIndent()
+            )
+
+            fileSpec.addProperty(propertySpec.build())
 
             generatedUseCases.forEach {
                 fileSpec.addImport(it.toClassName(), "")

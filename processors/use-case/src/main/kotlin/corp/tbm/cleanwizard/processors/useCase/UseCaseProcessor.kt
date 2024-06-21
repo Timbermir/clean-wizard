@@ -23,7 +23,6 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnot
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.basePackagePath
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isListSubclass
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.log
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.packageLastSegment
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
@@ -33,7 +32,6 @@ import kotlinx.collections.immutable.toImmutableSet
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
-import java.io.OutputStreamWriter
 import javax.inject.Inject
 
 const val PARAMETER_SEPARATOR = ", \n    "
@@ -61,19 +59,20 @@ class UseCaseProcessor(
 
         val diFramework = dependencyInjectionFramework
 
-        if (diFramework is CleanWizardDependencyInjectionFramework.KoinAnnotations && diFramework.automaticallyCreateModule && !hasKoinAnnotationsModuleBeenGenerated) {
-            generateKoinAnnotationsModule(symbols.firstOrNull(), diFramework)
-            hasKoinAnnotationsModuleBeenGenerated = true
-        }
-        logger.log(mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!))
-
         if (diFramework is CleanWizardDependencyInjectionFramework.Koin) {
-            val generatedUseCases = mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!)
-            logger.log("tried to generate" + generatedUseCases + "      " + symbols.firstOrNull())
-            generateKoinModule(
-                generatedUseCases,
-                diFramework
-            )
+
+            when (diFramework) {
+                is CleanWizardDependencyInjectionFramework.Koin.Annotations -> {
+                    generateKoinAnnotationsModule(symbols.firstOrNull(), diFramework)
+                }
+
+                is CleanWizardDependencyInjectionFramework.Koin.Core -> {
+                    generateKoinModule(
+                        mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!),
+                        diFramework
+                    )
+                }
+            }
         }
 
         return emptyList()
@@ -168,35 +167,20 @@ class UseCaseProcessor(
                 function.build()
             ).addAnnotation(UseCase::class)
 
-            if (dependencyInjectionFramework is CleanWizardDependencyInjectionFramework.KoinAnnotations) {
+            if (dependencyInjectionFramework is CleanWizardDependencyInjectionFramework.Koin.Annotations) {
                 classToBuild.addAnnotation(Factory::class)
             }
 
-            val fileSpec =
-                FileSpec.builder(packageName, className)
-                    .addType(classToBuild.build())
-                    .build()
-
-            try {
-                val file = codeGenerator.createNewFile(
-                    Dependencies.ALL_FILES,
-                    packageName,
-                    className
-                )
-
-                OutputStreamWriter(file).use { writer ->
-                    fileSpec.writeTo(writer)
-                }
-            } catch (someFile: Exception) {
-
-            }
+            FileSpec.builder(packageName, className)
+                .addType(classToBuild.build())
+                .build().writeNewFile(codeGenerator)
         }
         return true
     }
 
     private fun generateKoinAnnotationsModule(
         symbol: KSClassDeclaration?,
-        koinAnnotationsConfig: CleanWizardDependencyInjectionFramework.KoinAnnotations
+        koinAnnotationsConfig: CleanWizardDependencyInjectionFramework.Koin.Annotations
     ) {
         symbol?.let {
 
@@ -211,9 +195,9 @@ class UseCaseProcessor(
             val classBuilder =
                 TypeSpec.classBuilder(className).addAnnotation(Module::class)
                     .addAnnotation(
-                        AnnotationSpec.builder(ComponentScan::class).also {
+                        AnnotationSpec.builder(ComponentScan::class).also { annotationSpecBuilder ->
                             if (koinAnnotationsConfig.specifyUseCasePackageForComponentScan)
-                                it.addMember(
+                                annotationSpecBuilder.addMember(
                                     "value = %S",
                                     "$packageName.${layerConfigs.domain.useCaseConfig.packageName}"
                                 )
@@ -221,20 +205,15 @@ class UseCaseProcessor(
                             .build()
                     )
 
-            try {
-                FileSpec.builder(packageName, className)
-                    .addType(classBuilder.build())
-                    .build().writeNewFile(codeGenerator)
-
-            } catch (fileAlreadyExistsException: FileAlreadyExistsException) {
-
-            }
+            FileSpec.builder(packageName, className)
+                .addType(classBuilder.build())
+                .build().writeNewFile(codeGenerator)
         }
     }
 
     private fun generateKoinModule(
         generatedUseCases: List<KSClassDeclaration>,
-        koinConfig: CleanWizardDependencyInjectionFramework.Koin
+        koinConfig: CleanWizardDependencyInjectionFramework.Koin.Core
     ) {
         val symbolName = generatedUseCases.firstOrNull()
 
@@ -271,9 +250,11 @@ class UseCaseProcessor(
                 )
             if (koinConfig.useConstructorDSL)
                 fileSpec.addImport("org.koin.core.module.dsl", "factoryOf")
+
             generatedUseCases.forEach {
                 fileSpec.addImport(it.toClassName(), "")
             }
+
             fileSpec.build().writeNewFile(codeGenerator)
         }
     }

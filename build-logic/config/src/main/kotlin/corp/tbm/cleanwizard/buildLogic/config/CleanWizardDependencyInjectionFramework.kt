@@ -12,26 +12,41 @@ sealed class CleanWizardDependencyInjectionFramework(val dependencies: List<Stri
     @SerialName("none")
     data object None : CleanWizardDependencyInjectionFramework(listOf())
 
+    /**
+     * Have to do it this weird way because if you do `listOf("io.insert-koin:koin-core + additionalDeps`,
+     * compiler throws a warning that `additionalDependencies is not used as a property and val should be removed`
+     * but `@Serializable` throws a compiler error that for the class with properties to be Serializable,
+     * properties must be either `var` or `val`.
+     */
     @Serializable
     @SerialName("koin")
-    class Koin(
-        var automaticallyCreateModule: Boolean = true,
-        var useConstructorDSL: Boolean = true,
-    ) : CleanWizardDependencyInjectionFramework(listOf("io.insert-koin:koin-core"))
-
-    @Serializable
-    @SerialName("koin-annotations")
-    class KoinAnnotations(
-        var automaticallyCreateModule: Boolean = false,
-        var specifyUseCasePackageForComponentScan: Boolean = false
-    ) :
-        CleanWizardDependencyInjectionFramework(
-            listOf(
-                "io.insert-koin:koin-core",
-                "io.insert-koin:koin-annotations",
-                "io.insert-koin:koin-ksp-compiler"
+    sealed class Koin(private val additionalDependencies: List<String> = listOf()) :
+        CleanWizardDependencyInjectionFramework(mutableListOf("io.insert-koin:koin-core").also {
+            it.addAll(
+               additionalDependencies
             )
-        )
+        }) {
+
+        @Serializable
+        @SerialName("core")
+        class Core(
+            var automaticallyCreateModule: Boolean = true,
+            var useConstructorDSL: Boolean = true,
+        ) : Koin()
+
+        @Serializable
+        @SerialName("annotations")
+        class Annotations(
+            var automaticallyCreateModule: Boolean = false,
+            var specifyUseCasePackageForComponentScan: Boolean = false
+        ) :
+            Koin(
+                listOf(
+                    "io.insert-koin:koin-annotations",
+                    "io.insert-koin:koin-ksp-compiler"
+                )
+            )
+    }
 
     @Serializable
     @SerialName("dagger")

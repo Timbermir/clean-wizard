@@ -40,6 +40,10 @@ class CleanWizardDependencyInjectionFrameworkBuilder {
         KoinBuilder().apply(block)
     }
 
+    fun kodein(block: CleanWizardDependencyInjectionFramework.Kodein.() -> Unit) {
+        dependencyInjectionFramework = CleanWizardDependencyInjectionFramework.Kodein().apply(block)
+    }
+
     fun dagger() {
         dependencyInjectionFramework = CleanWizardDependencyInjectionFramework.Dagger
     }

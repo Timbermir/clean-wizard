@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     implementation(projects.workloads.multiModule.domain)
+    implementation(libs.kodein)
 }
 
 `clean-wizard-codegen` {

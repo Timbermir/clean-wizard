@@ -5,8 +5,8 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.kotlinx.serialization.json)
     implementation(projects.config)
+    implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.google.devtools.ksp)
     compileOnly(files(ksp.javaClass.superclass.protectionDomain.codeSource.location))

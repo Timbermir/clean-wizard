@@ -5,6 +5,7 @@ import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
@@ -29,6 +30,7 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOpti
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
 import corp.tbm.cleanwizard.visitors.enums.EnumGenerateVisitor
 import java.io.OutputStreamWriter
+import kotlin.reflect.KClass
 
 const val PARAMETER_SEPARATOR = ", \n    "
 const val PARAMETER_PREFIX = "\n    "
@@ -306,11 +308,19 @@ class DataClassProcessor(
                     }
                     this
                 }, propertyBuilder = { _, _, property ->
-                    addAnnotation(
-                        AnnotationSpec.builder(
-                            jsonSerializer.annotation
-                        ).addMember("${jsonSerializer.nameProperty} = %S", property.name).build()
-                    )
+                    if (!property.hasAnnotation(jsonSerializer.annotation)) {
+                        addAnnotation(
+                            AnnotationSpec.builder(
+                                jsonSerializer.annotation
+                            ).addMember("${jsonSerializer.nameProperty} = %S", property.name).build()
+                        )
+                    } else {
+                        val existingAnnotation = property.annotations
+                            .find { it.shortName.asString() == jsonSerializer.annotation.simpleName }
+                        existingAnnotation?.let { ann ->
+                            addAnnotation(ann.toAnnotationSpec())
+                        }
+                    }
                     this
                 })
 
@@ -489,6 +499,33 @@ class DataClassProcessor(
         } catch (_: FileAlreadyExistsException) {
         }
     }
+
+    private fun KSPropertyDeclaration.hasAnnotation(
+        annotation: KClass<out Annotation>
+    ): Boolean {
+        return annotations.any { ann ->
+            val resolvedName = ann.annotationType.resolve().declaration.qualifiedName?.asString()
+            resolvedName == annotation.qualifiedName
+        }
+    }
+
+    private fun KSAnnotation.toAnnotationSpec(): AnnotationSpec {
+        val builder = AnnotationSpec.builder(
+            ClassName.bestGuess(this.annotationType.resolve().declaration.qualifiedName!!.asString())
+        )
+        this.arguments
+            .filterNot {
+                it.name?.asString() == "ignore" || (it.name?.asString() == "alternate" && (it.value as? List<*>)?.isEmpty() == true)
+            }
+            .forEach { arg ->
+                builder.addMember(
+                    "${arg.name?.asString()} = ${if (arg.value is String) "%S" else "%L"}",
+                    arg.value.toString()
+                )
+            }
+        return builder.build()
+    }
+
 }
 
 internal class DataClassProcessorProvider : SymbolProcessorProvider {

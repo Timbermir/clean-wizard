@@ -19,13 +19,16 @@ buildscript {
 
 `clean-wizard` {
 
-    jsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
+    jsonSerializer = CleanWizardJsonSerializer.Moshi
     dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER
 
     dependencyInjection {
         kodein {
             useSimpleFunctions = true
             binding = KodeinBinding.Multiton()
+        }
+        koin {
+            annotations()
         }
     }
 
@@ -36,21 +39,22 @@ buildscript {
         toDomainMapFunctionName = "toModel"
     }
 
-    presentation {
-        classSuffix = "Ui"
-        packageName = "uis"
-        toDomainMapFunctionName = "fromUI"
-    }
-
     domain {
         classSuffix = "Domain"
         packageName = "models"
         toDTOMapFunctionName = "fromDomain"
         toUIMapFunctionName = "toUI"
         useCase {
-            packageName = "usecase"
+            packageName = "useCase"
             useCaseFunctionType = CleanWizardUseCaseFunctionType.CustomFunctionName("execute")
-            classSuffix = "useCase"
+            classSuffix = "UseCase"
         }
+    }
+
+    presentation {
+        moduleName = "ui"
+        classSuffix = "Ui"
+        packageName = "uis"
+        toDomainMapFunctionName = "fromUI"
     }
 }

@@ -11,6 +11,7 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.asPackage
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
@@ -44,7 +45,7 @@ fun KSPropertyDeclaration.getQualifiedPackageNameBasedOnParameterName(
     packageName: String
 ): String {
 
-    val relevantParts = packageName.split(".").toMutableList()
+    val relevantParts = packageName.asPackage.toMutableList()
 
     return dataClassGenerationPattern.getQualifiedPackageName(relevantParts, type.resolve())
 }

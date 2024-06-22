@@ -45,6 +45,7 @@ javax-inject = { group = "javax.inject", name = "javax.inject", version = "1" }
 [bundles]
 kotlinx = ["kotlinx-collections-immutable", "kotlinx-datetime", "kotlinx-serialization-json", "kotlinx-coroutines-core"]
 foundation-codegen = ["kotlinx-serialization-json", "google-devtools-ksp", "squareup-kotlinpoet-ksp"]
+di = ["kodein", "koin-core", "koin-annotations", "javax-inject"]
 [plugins]
 # Custom Plugins
 cleanwizard-core = { id = "corp.tbm.cleanwizard", version = "1.0.0" }

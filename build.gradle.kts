@@ -1,6 +1,7 @@
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDataClassGenerationPattern
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
+import corp.tbm.cleanwizard.buildLogic.config.KodeinBinding
 
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
@@ -19,11 +20,12 @@ buildscript {
 `clean-wizard` {
 
     jsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
-    dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.TYPE
+    dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER
 
     dependencyInjection {
-        koinAnnotations {
-            automaticallyCreateModule = true
+        kodein {
+            useSimpleFunctions = true
+            binding = KodeinBinding.Multiton()
         }
     }
 

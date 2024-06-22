@@ -18,6 +18,7 @@ import corp.tbm.cleanwizard.buildLogic.config.KodeinBinding
 import corp.tbm.cleanwizard.buildLogic.config.KodeinFunction
 import corp.tbm.cleanwizard.foundation.annotations.Repository
 import corp.tbm.cleanwizard.foundation.annotations.UseCase
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.asPackage
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.kotlinpoet.addImport
@@ -26,6 +27,8 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnot
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.basePackagePath
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isListSubclass
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.packagePath
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.log
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.packageLastSegment
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
@@ -69,7 +72,7 @@ class UseCaseProcessor(
                 }
 
                 is CleanWizardDependencyInjectionFramework.Koin.Core -> {
-                    generateKoinModule(
+                    generateKoinCoreModule(
                         mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!),
                         diFramework
                     )
@@ -94,15 +97,11 @@ class UseCaseProcessor(
 
             val className =
                 "${declaredFunction.name.firstCharUppercase()}${layerConfigs.domain.useCaseConfig.classSuffix.firstCharUppercase()}"
-            val packageName =
-                "${
-                    dataClassGenerationPattern.generatePackageName(
-                        symbol,
-                        layerConfigs.domain
-                    )
-                }.${layerConfigs.domain.useCaseConfig.packageName}"
+            val packageName = dataClassGenerationPattern.generateUseCasePackageName(symbol)
 
             val repositoryName = symbol.name.firstCharLowercase()
+
+            logger.log(packageName)
 
             val constructor = FunSpec.constructorBuilder()
                 .addParameter(repositoryName, symbol.toClassName())
@@ -187,40 +186,7 @@ class UseCaseProcessor(
         return true
     }
 
-    private fun generateKoinAnnotationsModule(
-        symbol: KSClassDeclaration?,
-        koinAnnotationsConfig: CleanWizardDependencyInjectionFramework.Koin.Annotations
-    ) {
-        symbol?.let {
-
-            val packageName = dataClassGenerationPattern.generatePackageName(
-                symbol,
-                layerConfigs.domain
-            )
-
-            val className =
-                "${symbol.basePackagePath.packageLastSegment.firstCharUppercase()}${layerConfigs.domain.moduleName.firstCharUppercase()}Module"
-
-            val classBuilder =
-                TypeSpec.classBuilder(className).addAnnotation(Module::class)
-                    .addAnnotation(
-                        AnnotationSpec.builder(ComponentScan::class).also { annotationSpecBuilder ->
-                            if (koinAnnotationsConfig.specifyUseCasePackageForComponentScan)
-                                annotationSpecBuilder.addMember(
-                                    "value = %S",
-                                    "$packageName.${layerConfigs.domain.useCaseConfig.packageName}"
-                                )
-                        }
-                            .build()
-                    )
-
-            FileSpec.builder(packageName, className)
-                .addType(classBuilder.build())
-                .build().writeNewFile(codeGenerator)
-        }
-    }
-
-    private fun generateKoinModule(
+    private fun generateKoinCoreModule(
         generatedUseCases: List<KSClassDeclaration>,
         koinConfig: CleanWizardDependencyInjectionFramework.Koin.Core
     ) {
@@ -228,10 +194,8 @@ class UseCaseProcessor(
 
         symbolName?.let { symbol ->
 
-            val packageName = dataClassGenerationPattern.generatePackageName(
-                symbol,
-                layerConfigs.domain
-            )
+            val packageName =
+                symbol.packagePath.asPackage.dropLastWhile { it != layerConfigs.domain.moduleName }.asPackage
 
             val className =
                 "${symbol.basePackagePath.packageLastSegment.firstCharUppercase()}${layerConfigs.domain.moduleName.firstCharUppercase()}Module"
@@ -270,6 +234,37 @@ class UseCaseProcessor(
         }
     }
 
+    private fun generateKoinAnnotationsModule(
+        symbol: KSClassDeclaration?,
+        koinAnnotationsConfig: CleanWizardDependencyInjectionFramework.Koin.Annotations
+    ) {
+        symbol?.let {
+
+            val packageName =
+                symbol.packagePath.asPackage.dropLastWhile { it != layerConfigs.domain.moduleName }.asPackage
+
+            val className =
+                "${symbol.basePackagePath.packageLastSegment.firstCharUppercase()}${layerConfigs.domain.moduleName.firstCharUppercase()}Module"
+
+            val classBuilder =
+                TypeSpec.classBuilder(className).addAnnotation(Module::class)
+                    .addAnnotation(
+                        AnnotationSpec.builder(ComponentScan::class).also { annotationSpecBuilder ->
+                            if (koinAnnotationsConfig.specifyUseCasePackageForComponentScan)
+                                annotationSpecBuilder.addMember(
+                                    "value = %S",
+                                    "$packageName.${layerConfigs.domain.useCaseConfig.packageName}"
+                                )
+                        }
+                            .build()
+                    )
+
+            FileSpec.builder(packageName, className)
+                .addType(classBuilder.build())
+                .build().writeNewFile(codeGenerator)
+        }
+    }
+
     private fun generateKodeinModule(
         generatedUseCases: List<KSClassDeclaration>,
         kodeinConfig: CleanWizardDependencyInjectionFramework.Kodein
@@ -278,10 +273,8 @@ class UseCaseProcessor(
 
         symbolName?.let { symbol ->
 
-            val packageName = dataClassGenerationPattern.generatePackageName(
-                symbol,
-                layerConfigs.domain
-            )
+            val packageName =
+                symbol.packagePath.asPackage.dropLastWhile { it != layerConfigs.domain.moduleName }.asPackage
 
             val className =
                 "${symbol.basePackagePath.packageLastSegment.firstCharUppercase()}${layerConfigs.domain.moduleName.firstCharUppercase()}Module"
@@ -312,8 +305,14 @@ class UseCaseProcessor(
                                 }
                                 getProvisionLambda(
                                     when (binding is KodeinBinding.Factory || binding is KodeinBinding.Multiton) {
-                                        true ->
+                                        true -> {
+                                            val repositoryType =
+                                                symbol.primaryConstructor?.parameters?.first()?.type?.resolve()
+                                                    ?.toClassName()
+                                            logger.log(repositoryType?.packageName)
+                                            repositoryType?.let { addImport(it, "") }
                                             "$repositoryName: ${repositoryName.firstCharUppercase()} -> $useCaseName($repositoryName)"
+                                        }
 
                                         false ->
                                             useCaseName
@@ -323,7 +322,8 @@ class UseCaseProcessor(
                         }
                         fileSpec.applyKodeinFunction(if (kodeinConfig.useSimpleFunctions) binding.shortFunction else binding.longFunction)
                     }
-                }""".trimIndent()
+                }
+}""".trimIndent()
             )
 
             fileSpec.addProperty(propertySpec.build())

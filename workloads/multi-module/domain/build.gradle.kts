@@ -5,9 +5,7 @@ plugins {
 
 dependencies {
     implementation(projects.foundation.annotations)
-    implementation(libs.koin.core)
-    implementation(libs.koin.annotations)
-    implementation(libs.kodein)
+    implementation(libs.bundles.di)
     ksp(projects.processors.useCase)
     ksp(libs.koin.annotations.ksp)
 }

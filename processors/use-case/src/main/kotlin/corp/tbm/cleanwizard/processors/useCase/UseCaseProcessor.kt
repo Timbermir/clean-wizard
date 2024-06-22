@@ -14,10 +14,13 @@ import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
+import corp.tbm.cleanwizard.buildLogic.config.KodeinBinding
+import corp.tbm.cleanwizard.buildLogic.config.KodeinFunction
 import corp.tbm.cleanwizard.foundation.annotations.Repository
 import corp.tbm.cleanwizard.foundation.annotations.UseCase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.kotlinpoet.addImport
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.kotlinpoet.writeNewFile
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.basePackagePath
@@ -73,6 +76,7 @@ class UseCaseProcessor(
                 }
             }
         }
+
         if (diFramework is CleanWizardDependencyInjectionFramework.Kodein) {
             generateKodeinModule(
                 mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!),
@@ -289,70 +293,37 @@ class UseCaseProcessor(
             ).initializer(
                 """DI.Module("$className") {
                             ${
-                    generatedUseCases.joinToString(
+                    generatedUseCases.map { it.name }.joinToString(
                         prefix = "\n",
                         separator = "\n",
                     ) { useCaseName ->
+
                         val repositoryName =
                             symbol.primaryConstructor?.parameters?.first()?.name?.asString().toString()
-                        val prefix = "bind"
 
-                        val functionToUse = when (kodeinConfig.useFactory) {
-                            true ->
-                                "factory"
+                        val binding = kodeinConfig.binding
 
-                            false ->
-                                "provider"
-                        }
-
-                        val providerThing: () -> String =
-                            {
-                                "{ ${
-                                    when (functionToUse) {
-                                        "factory" ->
+                        fun FileSpec.Builder.applyKodeinFunction(
+                            function: KodeinFunction,
+                        ): String {
+                            return function.run {
+                                imports.forEach {
+                                    addImport(it)
+                                }
+                                getProvisionLambda(
+                                    when (binding is KodeinBinding.Factory || binding is KodeinBinding.Multiton) {
+                                        true ->
                                             "$repositoryName: ${repositoryName.firstCharUppercase()} -> $useCaseName($repositoryName)"
 
-                                        else ->
-                                            "$useCaseName(instance())"
-                                    }
-                                } }"
-                            }
-                        
-                        val functionName = when (kodeinConfig.useSimpleFunctions) {
-                            true -> {
-                                fileSpec.addImport(
-                                    "org.kodein.di",
-                                    if (functionToUse == "factory") "bindFactory" else "bindProvider"
-                                )
-                                when (functionToUse) {
-                                    "factory" -> {
-                                        "$prefix${functionToUse.firstCharUppercase()} ${providerThing()}"
-                                    }
-
-                                    else -> {
-                                        "$prefix${functionToUse.firstCharUppercase()} ${providerThing()}"
-                                    }
-                                }
-                            }
-
-                            false -> {
-                                fileSpec.addImport("org.kodein.di", "bind")
-                                fileSpec.addImport(
-                                    "org.kodein.di",
-                                    if (functionToUse == "factory") {
-                                        "factory"
-                                    } else {
-                                        fileSpec.addImport("org.kodein.di", "instance")
-                                        "provider"
+                                        false ->
+                                            useCaseName
                                     }
                                 )
-                                "$prefix<$useCaseName>() with $functionToUse ${providerThing()}"
                             }
                         }
-                        functionName
+                        fileSpec.applyKodeinFunction(if (kodeinConfig.useSimpleFunctions) binding.shortFunction else binding.longFunction)
                     }
-                }
-}""".trimIndent()
+                }""".trimIndent()
             )
 
             fileSpec.addProperty(propertySpec.build())

@@ -1,6 +1,6 @@
 package corp.tbm.cleanwizard.buildLogic.convention.plugins
 
-import com.google.devtools.ksp.gradle.KspTaskJvm
+import com.google.devtools.ksp.gradle.KspTask
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.*
 import corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions.CleanWizardCodegenExtension
@@ -51,70 +51,73 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
     }
 
     private fun Project.configureGradleTasks(codegenExtension: CleanWizardCodegenExtension) {
-        tasks.named("compileKotlin") {
-            dependsOn(tasks.named("copyGeneratedUIClasses"))
+        afterEvaluate {
+            val presentationProject = project(codegenExtension.presentationProject)
+
+            val domainProject = project(codegenExtension.domainProject)
+
+            presentationProject.tasks.withType<KotlinCompile>().configureEach {
+                mustRunAfter("${this@configureGradleTasks.path}:copyGeneratedUIClasses")
+            }
+
+            val copyGeneratedDomainClasses = tasks.register<Copy>("copyGeneratedDomainClasses") {
+                copyToModule(
+                    this,
+                    {
+                        exclude("**/${cleanWizardExtension.layerConfigs.data.moduleName}/**")
+                        exclude("**/${cleanWizardExtension.layerConfigs.presentation.moduleName}/**")
+                    },
+                    project(codegenExtension.domainProject),
+                )
+            }
+
+//            domainProject.tasks.withType<KspTask>().configureEach {
+//                mustRunAfter(copyGeneratedDomainClasses)
+//            }
+
+            tasks.register<Copy>("copyGeneratedUIClasses") {
+                copyToModule(
+                    this,
+                    {
+                        exclude("**/${cleanWizardExtension.layerConfigs.data.moduleName}/**")
+                        exclude("**/${cleanWizardExtension.layerConfigs.domain.moduleName}/**")
+                    },
+                    project(codegenExtension.presentationProject),
+                )
+                finalizedBy("cleanDomainAndPresentationClassesInData")
+            }
+
+            tasks.register<Delete>("cleanDomainAndPresentationClassesInData") {
+
+                val basePackage = File(
+                    kspMainBuildDirectory,
+                    lastPackageSegmentWhereFirstSourceClassOccurs.split(".").joinToString("/")
+                        .replace(cleanWizardExtension.layerConfigs.data.moduleName, "")
+                ).path
+
+                delete(File(basePackage, "/${cleanWizardExtension.layerConfigs.domain.moduleName}"))
+                delete(File(basePackage, "/${cleanWizardExtension.layerConfigs.presentation.moduleName}"))
+            }
+
+            tasks.withType<KspTask>().configureEach {
+                finalizedBy(copyGeneratedDomainClasses, "copyGeneratedUIClasses")
+            }
         }
+
 
         tasks.withType<KotlinCompile>().configureEach {
             compilerOptions {
                 jvmTarget.set(this@configureGradleTasks.jvmTarget)
             }
         }
-
-        tasks.withType<KspTaskJvm>().configureEach {
-            finalizedBy("copyGeneratedDomainClasses")
-        }
-
-        tasks.register<Copy>("copyGeneratedDomainClasses") {
-
-            copyToModule(
-                this,
-                "kspKotlin",
-                {
-                    exclude("**/${cleanWizardExtension.layerConfigs.data.moduleName}/**")
-                    exclude("**/${cleanWizardExtension.layerConfigs.presentation.moduleName}/**")
-                },
-                project(codegenExtension.domainProject),
-                "copyGeneratedUIClasses"
-            )
-        }
-
-        tasks.register<Copy>("copyGeneratedUIClasses") {
-            copyToModule(
-                this,
-                "copyGeneratedDomainClasses",
-                {
-                    exclude("**/${cleanWizardExtension.layerConfigs.data.moduleName}/**")
-                    exclude("**/${cleanWizardExtension.layerConfigs.domain.moduleName}/**")
-                },
-                project(codegenExtension.presentationProject),
-                "cleanDomainAndPresentationClassesInData"
-            )
-        }
-
-        tasks.register<Delete>("cleanDomainAndPresentationClassesInData") {
-            dependsOn("copyGeneratedUIClasses")
-
-            val basePackage = File(
-                kspMainBuildDirectory,
-                lastPackageSegmentWhereFirstSourceClassOccurs.split(".").joinToString("/")
-                    .replace(cleanWizardExtension.layerConfigs.data.moduleName, "")
-            ).path
-
-            delete(File(basePackage, "/${cleanWizardExtension.layerConfigs.domain.moduleName}"))
-            delete(File(basePackage, "/${cleanWizardExtension.layerConfigs.presentation.moduleName}"))
-        }
     }
 
     private fun Project.copyToModule(
         copy: Copy,
-        taskToDependOn: String,
         fromCopySpec: CopySpec.() -> Unit,
         pathToCopyInto: Project,
-        taskToFinalizeBy: String
     ) {
         copy.apply {
-            dependsOn(taskToDependOn)
 
             from(kspMainBuildDirectory) {
                 fromCopySpec()
@@ -124,7 +127,6 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
             includeEmptyDirs = false
 
             into(pathToCopyInto.kspMainBuildDirectory)
-            finalizedBy(taskToFinalizeBy)
         }
     }
 
@@ -170,10 +172,6 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
             configuration.dependencies.map { dependency -> "${dependency.group}:${dependency.name}" }
         }.toSet()
 
-
-        dataDependencies.forEach {
-            println(it)
-        }
         if (codegenExtension.domainProject.isEmpty())
             error("You have to specify path for your domain module")
         if (codegenExtension.presentationProject.isEmpty())

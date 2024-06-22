@@ -18,6 +18,8 @@ squareup-moshi = "1.15.1"
 # Koin
 koin = "3.5.6"
 koin-annotations = "1.3.1"
+# Kodein
+kodein = "7.22.0"
 [libraries]
 # Kotlin
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -36,11 +38,14 @@ squareup-moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "
 koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
 koin-annotations = { group = "io.insert-koin", name = "koin-annotations", version.ref = "koin-annotations" }
 koin-annotations-ksp = { group = "io.insert-koin", name = "koin-ksp-compiler", version.ref = "koin-annotations" }
+# Kodein
+kodein = { group = "org.kodein.di", name = "kodein-di", version.ref = "kodein" }
 # JavaX
 javax-inject = { group = "javax.inject", name = "javax.inject", version = "1" }
 [bundles]
 kotlinx = ["kotlinx-collections-immutable", "kotlinx-datetime", "kotlinx-serialization-json", "kotlinx-coroutines-core"]
 foundation-codegen = ["kotlinx-serialization-json", "google-devtools-ksp", "squareup-kotlinpoet-ksp"]
+di = ["kodein", "koin-core", "koin-annotations", "javax-inject"]
 [plugins]
 # Custom Plugins
 cleanwizard-core = { id = "corp.tbm.cleanwizard", version = "1.0.0" }

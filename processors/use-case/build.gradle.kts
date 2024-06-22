@@ -4,7 +4,5 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.koin.core)
-    implementation(libs.javax.inject)
-    implementation(libs.koin.annotations)
+    implementation(libs.bundles.di)
 }

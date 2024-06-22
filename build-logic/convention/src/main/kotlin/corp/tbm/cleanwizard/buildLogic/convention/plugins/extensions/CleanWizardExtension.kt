@@ -26,28 +26,57 @@ open class CleanWizardExtension(
     fun dependencyInjection(
         block: CleanWizardDependencyInjectionFrameworkBuilder.() -> Unit
     ) {
-        dependencyInjectionFramework = CleanWizardDependencyInjectionFrameworkBuilder.apply(block).build()
+        dependencyInjectionFramework = CleanWizardDependencyInjectionFrameworkBuilder().apply(block).build()
     }
 }
 
 @CleanWizardConfigDsl
-object CleanWizardDependencyInjectionFrameworkBuilder {
+class CleanWizardDependencyInjectionFrameworkBuilder {
 
-    private var framework: CleanWizardDependencyInjectionFramework = CleanWizardDependencyInjectionFramework.None
+    private var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework =
+        CleanWizardDependencyInjectionFramework.None
 
-    fun koin(block: CleanWizardDependencyInjectionFramework.Koin.() -> Unit) {
-        framework = CleanWizardDependencyInjectionFramework.Koin().apply(block)
+    fun koin(block: KoinBuilder.() -> Unit) {
+        KoinBuilder().apply(block)
     }
 
-    fun koinAnnotations(block: CleanWizardDependencyInjectionFramework.KoinAnnotations.() -> Unit) {
-        framework = CleanWizardDependencyInjectionFramework.KoinAnnotations().apply(block)
+    fun kodein() {
+        dependencyInjectionFramework = CleanWizardDependencyInjectionFramework.Kodein()
+    }
+
+    fun kodein(block: CleanWizardDependencyInjectionFramework.Kodein.() -> Unit) {
+        dependencyInjectionFramework = CleanWizardDependencyInjectionFramework.Kodein().apply(block)
     }
 
     fun dagger() {
-        framework = CleanWizardDependencyInjectionFramework.Dagger
+        dependencyInjectionFramework = CleanWizardDependencyInjectionFramework.Dagger
     }
 
     internal fun build(): CleanWizardDependencyInjectionFramework {
-        return framework
+        return dependencyInjectionFramework
+    }
+
+    @CleanWizardConfigDsl
+    inner class KoinBuilder {
+
+        fun core() {
+            this@CleanWizardDependencyInjectionFrameworkBuilder.dependencyInjectionFramework =
+                CleanWizardDependencyInjectionFramework.Koin.Core()
+        }
+
+        fun core(block: CleanWizardDependencyInjectionFramework.Koin.Core.() -> Unit) {
+            this@CleanWizardDependencyInjectionFrameworkBuilder.dependencyInjectionFramework =
+                CleanWizardDependencyInjectionFramework.Koin.Core().apply(block)
+        }
+
+        fun annotations() {
+            this@CleanWizardDependencyInjectionFrameworkBuilder.dependencyInjectionFramework =
+                CleanWizardDependencyInjectionFramework.Koin.Annotations()
+        }
+
+        fun annotations(block: CleanWizardDependencyInjectionFramework.Koin.Annotations.() -> Unit) {
+            this@CleanWizardDependencyInjectionFrameworkBuilder.dependencyInjectionFramework =
+                CleanWizardDependencyInjectionFramework.Koin.Annotations().apply(block)
+        }
     }
 }

@@ -1,7 +1,6 @@
 package corp.tbm.cleanwizard.foundation.annotations
 
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
 annotation class DTO(
     val toDomainAsTopLevel: Boolean = true,
     val backwardsMappingConfig: BackwardsMappingConfig = BackwardsMappingConfig.NONE

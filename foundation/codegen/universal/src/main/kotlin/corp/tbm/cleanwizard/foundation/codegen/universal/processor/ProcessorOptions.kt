@@ -7,29 +7,25 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.getFile
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.readJsonFromFile
 
 object ProcessorOptions {
+    private var processorOptions = mapOf<String, String>()
 
-    private var _dataClassGenerationPattern: DataClassGenerationPattern = DataClassGenerationPattern.LAYER
-    val dataClassGenerationPattern
-        get() = _dataClassGenerationPattern
+    val dataClassGenerationPattern: DataClassGenerationPattern by lazy {
+        DataClassGenerationPattern.entries.first { it.name == processorOptions["DATA_CLASS_GENERATION_PATTERN"] }
+    }
 
-    private var _jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
-    val jsonSerializer: CleanWizardJsonSerializer
-        get() = _jsonSerializer
+    val jsonSerializer: CleanWizardJsonSerializer by lazy {
+        processorOptions.getFile("JSON_SERIALIZER").readJsonFromFile()
+    }
 
-    private var _dependencyInjectionFramework: CleanWizardDependencyInjectionFramework =
-        CleanWizardDependencyInjectionFramework.None
-    val dependencyInjectionFramework: CleanWizardDependencyInjectionFramework
-        get() = _dependencyInjectionFramework
+    val dependencyInjectionFramework: CleanWizardDependencyInjectionFramework by lazy {
+        processorOptions.getFile("DEPENDENCY_INJECTION_FRAMEWORK").readJsonFromFile()
+    }
 
-    private var _layerConfigs = CleanWizardLayerConfigWrapper()
-    val layerConfigs
-        get() = _layerConfigs
+    val layerConfigs: CleanWizardLayerConfigWrapper by lazy {
+        processorOptions.getFile("LAYER_CONFIGS").readJsonFromFile()
+    }
 
-    fun generateConfigs(processorOptions: Map<String, String>) = with(processorOptions) {
-        _dataClassGenerationPattern =
-            DataClassGenerationPattern.entries.first { it.name == processorOptions["DATA_CLASS_GENERATION_PATTERN"] }
-        _jsonSerializer = getFile("JSON_SERIALIZER").readJsonFromFile()
-        _dependencyInjectionFramework = getFile("DEPENDENCY_INJECTION_FRAMEWORK").readJsonFromFile()
-        _layerConfigs = getFile("LAYER_CONFIGS").readJsonFromFile()
+    fun generateConfigs(processorOptions: Map<String, String>) {
+        this.processorOptions = processorOptions
     }
 }

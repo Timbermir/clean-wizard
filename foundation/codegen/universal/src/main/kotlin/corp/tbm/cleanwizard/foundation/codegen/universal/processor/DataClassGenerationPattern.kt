@@ -6,6 +6,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
 import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.asPackage
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.basePackagePath
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isClassMappable
@@ -24,12 +25,21 @@ enum class DataClassGenerationPattern {
             return "${symbol.basePackagePath}.${layerConfig.moduleName}"
         }
 
+        override fun generateUseCasePackageName(symbol: KSClassDeclaration): String {
+            return "${
+                generatePackageName(
+                    symbol,
+                    layerConfigs.domain
+                )
+            }.${layerConfigs.domain.useCaseConfig.packageName}"
+        }
+
         override fun findLayerConfig(packageName: String): CleanWizardLayerConfig {
             return layerConfigs.first { modelType -> packageName.packageLastSegment == modelType.moduleName || packageName.packageLastSegment == modelType.packageName }
         }
 
         override fun getQualifiedPackageName(packageName: MutableList<String>, type: KSType): String {
-            return packageName.joinToString(".")
+            return packageName.asPackage
         }
 
         override fun classNameReplacement(
@@ -62,6 +72,12 @@ enum class DataClassGenerationPattern {
             }.${layerConfig.packageName}"
         }
 
+        override fun generateUseCasePackageName(symbol: KSClassDeclaration): String {
+            return "${
+                symbol.basePackagePath.asPackage.dropLast(1).asPackage
+            }.${layerConfigs.domain.moduleName}.${layerConfigs.domain.useCaseConfig.packageName}"
+        }
+
         override fun findLayerConfig(packageName: String): CleanWizardLayerConfig {
             return layerConfigs.first { layerConfig -> packageName.packageLastSegment == layerConfig.packageName }
         }
@@ -79,7 +95,7 @@ enum class DataClassGenerationPattern {
 
                     else -> name
                 }?.replace(dtoRegex, "")?.firstCharLowercase().toString()
-            return packageName.joinToString(".")
+            return packageName.asPackage
         }
 
         override fun classNameReplacement(
@@ -103,6 +119,7 @@ enum class DataClassGenerationPattern {
     };
 
     abstract fun generatePackageName(symbol: KSClassDeclaration, layerConfig: CleanWizardLayerConfig): String
+    abstract fun generateUseCasePackageName(symbol: KSClassDeclaration): String
     abstract fun findLayerConfig(packageName: String): CleanWizardLayerConfig
     abstract fun getQualifiedPackageName(packageName: MutableList<String>, type: KSType): String
     abstract fun classNameReplacement(

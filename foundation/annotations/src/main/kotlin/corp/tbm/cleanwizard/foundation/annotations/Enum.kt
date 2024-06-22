@@ -1,7 +1,6 @@
 package corp.tbm.cleanwizard.foundation.annotations
 
 @Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
 annotation class StringEnum(
     val enumName: String = "",
@@ -11,7 +10,6 @@ annotation class StringEnum(
 )
 
 @Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
 annotation class ByteEnum(
     val enumName: String = "",
@@ -21,7 +19,6 @@ annotation class ByteEnum(
 )
 
 @Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
 annotation class ShortEnum(
     val enumName: String = "",
@@ -31,7 +28,6 @@ annotation class ShortEnum(
 )
 
 @Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
 annotation class IntEnum(
     val enumName: String = "",
@@ -41,7 +37,6 @@ annotation class IntEnum(
 )
 
 @Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
 annotation class LongEnum(
     val enumName: String = "",
@@ -51,7 +46,6 @@ annotation class LongEnum(
 )
 
 @Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
 annotation class FloatEnum(
     val enumName: String = "",
@@ -61,7 +55,6 @@ annotation class FloatEnum(
 )
 
 @Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
 annotation class DoubleEnum(
     val enumName: String = "",
@@ -71,7 +64,6 @@ annotation class DoubleEnum(
 )
 
 @Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
 annotation class BooleanEnum(
     val enumName: String = "",

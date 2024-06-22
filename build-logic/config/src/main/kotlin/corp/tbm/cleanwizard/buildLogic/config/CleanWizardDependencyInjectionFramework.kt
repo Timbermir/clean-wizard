@@ -38,7 +38,7 @@ sealed class CleanWizardDependencyInjectionFramework(val dependencies: List<Stri
         @SerialName("annotations")
         class Annotations(
             var automaticallyCreateModule: Boolean = false,
-            var specifyUseCasePackageForComponentScan: Boolean = false
+            var specifyUseCasePackageForComponentScan: Boolean = false,
         ) :
             Koin(
                 listOf(
@@ -51,9 +51,8 @@ sealed class CleanWizardDependencyInjectionFramework(val dependencies: List<Stri
     @Serializable
     @SerialName("kodein")
     class Kodein(
-        var useFactory: Boolean = true,
         var useSimpleFunctions: Boolean = true,
-//        var binding: KodeinBinding = KodeinBinding(),
+        var binding: KodeinBinding = KodeinBinding.Provider
     ) :
         CleanWizardDependencyInjectionFramework(listOf("org.kodein.di:kodein-di"))
 
@@ -63,83 +62,103 @@ sealed class CleanWizardDependencyInjectionFramework(val dependencies: List<Stri
 }
 
 @Serializable
+@SerialName("kodein-binding")
 sealed class KodeinBinding(
-    val defaultFunctionImport: KodeinFunction,
-    val shortFunctionImport: KodeinFunction,
+    val longFunction: KodeinFunction,
+    val shortFunction: KodeinFunction,
 ) {
+    @Serializable
+    @SerialName("provider")
     data object Provider :
         KodeinBinding(
             KodeinFunction(
-                CleanWizardImport.Kodein(name = "provider"), { content ->
-                    defaultFunctionProvisionLambda("provider", content)
-                }, listOf(bindImport, instanceImport)
+                listOf(CleanWizardImport.Kodein(name = "provider"), bindImport, instanceImport),
+                getLongFunctionDefaultProvisionLambda("provider")
             ),
             KodeinFunction(
-                CleanWizardImport.Kodein(name = "bindProvider"),
-                { content ->
-                    "{ $content(instance()) }"
-                },
-                listOf(instanceImport)
+                listOf(CleanWizardImport.Kodein(name = "bindProvider"), instanceImport),
+                getShortFunctionDefaultProvisionLambda("Provider")
             )
         )
 
-    data object Singleton : KodeinBinding(
+    @Serializable
+    @SerialName("singleton")
+    class Singleton(private val enableSync: Boolean = false) : KodeinBinding(
         KodeinFunction(
-            CleanWizardImport.Kodein(name = "singleton"), { content ->
-                defaultFunctionProvisionLambda("singleton", content)
-            }, listOf(bindImport, instanceImport)
+            listOf(CleanWizardImport.Kodein(name = "singleton"), bindImport, instanceImport),
+            getLongFunctionDefaultProvisionLambda("singleton(sync = $enableSync)")
         ),
         KodeinFunction(
-            CleanWizardImport.Kodein(name = "bindSingleton"),
-            { content ->
-                "{ $content(instance()) }"
-            }, listOf(instanceImport)
+            listOf(CleanWizardImport.Kodein(name = "bindSingleton"), instanceImport),
+            getShortFunctionDefaultProvisionLambda("Singleton(sync = $enableSync)")
         )
     )
 
+    @Serializable
+    @SerialName("eagerSingleton")
     data object EagerSingleton : KodeinBinding(
         KodeinFunction(
-            CleanWizardImport.Kodein(name = "eagerSingleton"), { content ->
-                defaultFunctionProvisionLambda("eagerSingleton", content)
-            }, listOf(bindImport, instanceImport)
+            listOf(CleanWizardImport.Kodein(name = "eagerSingleton"), bindImport, instanceImport),
+            getLongFunctionDefaultProvisionLambda("eagerSingleton")
         ),
         KodeinFunction(
-            CleanWizardImport.Kodein(name = "bindEagerSingleton"),
-            { content ->
-                "{ $content(instance()) }"
-            }, listOf(instanceImport)
+            listOf(CleanWizardImport.Kodein(name = "bindEagerSingleton"), instanceImport),
+            getShortFunctionDefaultProvisionLambda("EagerSingleton")
         )
     )
 
-    class Factory(private val definedType: String) : KodeinBinding(
-        KodeinFunction(CleanWizardImport.Kodein(name = "factory"), { content ->
-            "{ factory { $content } }"
-        }, listOf(bindImport)),
-        KodeinFunction(CleanWizardImport.Kodein(name = "bindFactory"), { content ->
+    @Serializable
+    @SerialName("multiton")
+    class Multiton(private val enableSync: Boolean = false) : KodeinBinding(
+        KodeinFunction(
+            listOf(
+                CleanWizardImport.Kodein(name = "multiton"),
+                bindImport
+            ),
+            "bind { multiton(sync = $enableSync) { {content} } }"
+        ),
+        KodeinFunction(
+            listOf(CleanWizardImport.Kodein(name = "bindMultiton")),
+            "bindMultiton(sync = $enableSync) { {content} }"
+        )
+    )
 
-        })
+    @Serializable
+    @SerialName("factory")
+    data object Factory : KodeinBinding(
+        KodeinFunction(
+            listOf(CleanWizardImport.Kodein(name = "factory"), bindImport),
+            "bind { factory { {content} } }"
+        ),
+        KodeinFunction(
+            listOf(CleanWizardImport.Kodein(name = "bindFactory")),
+            "bindFactory { {content} } "
+        )
     )
 
     companion object {
         private val bindImport = CleanWizardImport.Kodein(name = "bind")
         private val instanceImport = CleanWizardImport.Kodein(name = "instance")
-        private val defaultFunctionProvisionLambda: (functionName: String, content: String) -> String =
-            { functionName, content ->
-                "{ $functionName { $content(instance()) } }"
-            }
-    }
-}
 
-fun someFun() {
-    KodeinBinding.Provider.shortFunctionImport.provisionLambda
+        private fun getLongFunctionDefaultProvisionLambda(functionName: String): String {
+            return "bind { $functionName { {content}(instance()) } }"
+        }
+
+        private fun getShortFunctionDefaultProvisionLambda(functionName: String): String {
+            return "bind$functionName { {content}(instance()) } "
+        }
+    }
 }
 
 @Serializable
 data class KodeinFunction(
-    val import: CleanWizardImport.Kodein,
-    val provisionLambda: (content: String) -> String,
-    val additionalImports: List<CleanWizardImport>,
+    val imports: List<CleanWizardImport.Kodein>,
+    private val provisionLambda: String
 ) {
+
+    fun getProvisionLambda(newContent: String): String {
+        return provisionLambda.replace("{content}", newContent)
+    }
 }
 
 @Serializable

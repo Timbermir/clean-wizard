@@ -1,8 +1,5 @@
-@file:OptIn(KspExperimental::class)
-
 package corp.tbm.cleanwizard.processors.useCase
 
-import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -28,8 +25,8 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.baseP
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isListSubclass
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.packagePath
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.log
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.packageLastSegment
+import corp.tbm.cleanwizard.foundation.codegen.universal.processor.Logger
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dependencyInjectionFramework
@@ -47,11 +44,12 @@ const val PARAMETER_PREFIX = "\n    "
 class UseCaseProcessor(
     private val codeGenerator: CodeGenerator,
     processorOptions: Map<String, String>,
-    private val logger: KSPLogger
+    logger: KSPLogger
 ) : SymbolProcessor {
 
     init {
         ProcessorOptions.generateConfigs(processorOptions)
+        Logger.getInstance(logger)
     }
 
     private lateinit var mResolver: Resolver
@@ -59,8 +57,6 @@ class UseCaseProcessor(
     override fun process(resolver: Resolver): List<KSAnnotated> {
         mResolver = resolver
         val symbols = resolver.getAnnotatedSymbols<KSClassDeclaration>(Repository::class.qualifiedName!!)
-
-        symbols.onEach(::generateUseCase)
 
         val diFramework = dependencyInjectionFramework
 
@@ -87,21 +83,21 @@ class UseCaseProcessor(
             )
         }
 
-        return emptyList()
+        return symbols.filter { !generateUseCase(it) }
     }
 
     private fun generateUseCase(symbol: KSClassDeclaration): Boolean {
         symbol.getDeclaredFunctions().forEach { declaredFunction ->
-            if (declaredFunction.parameters.any { it.type.resolve().isError })
+            if (declaredFunction.parameters.any { it.type.resolve().isError }) {
                 return false
+            }
 
             val className =
                 "${declaredFunction.name.firstCharUppercase()}${layerConfigs.domain.useCaseConfig.classSuffix.firstCharUppercase()}"
+
             val packageName = dataClassGenerationPattern.generateUseCasePackageName(symbol)
 
             val repositoryName = symbol.name.firstCharLowercase()
-
-            logger.log(packageName)
 
             val constructor = FunSpec.constructorBuilder()
                 .addParameter(repositoryName, symbol.toClassName())
@@ -135,17 +131,14 @@ class UseCaseProcessor(
                 FunSpec.builder(
                     when (val functionType = layerConfigs.domain.useCaseConfig.useCaseFunctionType) {
 
-                        is CleanWizardUseCaseFunctionType.Operator -> {
+                        is CleanWizardUseCaseFunctionType.Operator ->
                             "invoke"
-                        }
 
-                        is CleanWizardUseCaseFunctionType.InheritRepositoryFunctionName -> {
+                        is CleanWizardUseCaseFunctionType.InheritRepositoryFunctionName ->
                             declaredFunction.name
-                        }
 
-                        is CleanWizardUseCaseFunctionType.CustomFunctionName -> {
+                        is CleanWizardUseCaseFunctionType.CustomFunctionName ->
                             functionType.functionName
-                        }
                     }
                 )
                     .addModifiers(functionModifiers)
@@ -179,7 +172,10 @@ class UseCaseProcessor(
                 classToBuild.addAnnotation(Factory::class)
             }
 
-            FileSpec.builder(packageName, className)
+            FileSpec.builder(
+                packageName,
+                className
+            )
                 .addType(classToBuild.build())
                 .build().writeNewFile(codeGenerator)
         }
@@ -299,26 +295,26 @@ class UseCaseProcessor(
                         fun FileSpec.Builder.applyKodeinFunction(
                             function: KodeinFunction,
                         ): String {
-                            return function.run {
-                                imports.forEach {
-                                    addImport(it)
-                                }
-                                getProvisionLambda(
-                                    when (binding is KodeinBinding.Factory || binding is KodeinBinding.Multiton) {
-                                        true -> {
-                                            val repositoryType =
-                                                symbol.primaryConstructor?.parameters?.first()?.type?.resolve()
-                                                    ?.toClassName()
-                                            logger.log(repositoryType?.packageName)
-                                            repositoryType?.let { addImport(it, "") }
-                                            "$repositoryName: ${repositoryName.firstCharUppercase()} -> $useCaseName($repositoryName)"
-                                        }
 
-                                        false ->
-                                            useCaseName
-                                    }
-                                )
+                            function.imports.forEach {
+                                addImport(it)
                             }
+
+                            return function.getProvisionLambda(
+                                when (binding is KodeinBinding.Factory || binding is KodeinBinding.Multiton) {
+                                    true -> {
+                                        val repositoryType =
+                                            symbol.primaryConstructor?.parameters?.first()?.type?.resolve()
+                                                ?.toClassName()!!
+                                        addImport(repositoryType, "")
+                                        "$repositoryName: ${repositoryName.firstCharUppercase()} -> $useCaseName($repositoryName)"
+                                    }
+
+                                    false -> {
+                                        useCaseName
+                                    }
+                                }
+                            )
                         }
                         fileSpec.applyKodeinFunction(if (kodeinConfig.useSimpleFunctions) binding.shortFunction else binding.longFunction)
                     }

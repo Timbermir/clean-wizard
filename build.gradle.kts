@@ -1,5 +1,4 @@
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDataClassGenerationPattern
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
 import corp.tbm.cleanwizard.buildLogic.config.KodeinBinding
 
@@ -19,21 +18,23 @@ buildscript {
 
 `clean-wizard` {
 
-    jsonSerializer = CleanWizardJsonSerializer.Moshi
+    `json-serializer` {
+        `kotlinx-serialization` {
+            delimiter = "_"
+        }
+    }
+
     dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER
 
-    dependencyInjection {
+    `dependency-injection` {
         kodein {
             useSimpleFunctions = true
             binding = KodeinBinding.Multiton()
         }
-        koin {
-            annotations()
-        }
     }
 
     data {
-        classSuffix = "Dto"
+        classSuffix = "DTO"
         packageName = "dtos"
         interfaceMapperName = "DtoMapper"
         toDomainMapFunctionName = "toModel"
@@ -58,3 +59,13 @@ buildscript {
         toDomainMapFunctionName = "fromUI"
     }
 }
+
+tasks.register("deleteOrphanedDirs", Delete::class) {
+    delete(
+        "build-logic/config/build",
+        "build-logic/convention/build",
+        "build-logic/.gradle",
+        "build-logic/build",
+    )
+}
+tasks.prepareKotlinBuildScriptModel { dependsOn("deleteOrphanedDirs") }

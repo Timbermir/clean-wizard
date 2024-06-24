@@ -2,15 +2,18 @@ package corp.tbm.cleanwizard.buildLogic.config
 
 import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
+import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDsl
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
 @Serializable
+@CleanWizardConfigDsl
 sealed class CleanWizardJsonSerializer(
     val dependency: String,
     val annotation: KClass<out Annotation>,
-    val nameProperty: String = "value"
+    val nameProperty: String = "value",
+    var delimiter: String = ""
 ) {
 
     @Serializable

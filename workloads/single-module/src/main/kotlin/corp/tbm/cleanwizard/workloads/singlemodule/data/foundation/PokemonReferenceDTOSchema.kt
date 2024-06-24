@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.foundation
+package corp.tbm.cleanwizard.workloads.singlemodule.data.foundation
 
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 

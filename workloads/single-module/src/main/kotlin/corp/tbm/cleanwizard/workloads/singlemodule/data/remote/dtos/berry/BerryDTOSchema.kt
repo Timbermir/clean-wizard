@@ -1,7 +1,7 @@
-package corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.berry
+package corp.tbm.cleanwizard.workloads.singlemodule.data.remote.dtos.berry
 
 import corp.tbm.cleanwizard.foundation.annotations.DTO
-import corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.foundation.PokemonReferenceDTOSchema
+import corp.tbm.cleanwizard.workloads.singlemodule.data.foundation.PokemonReferenceDTOSchema
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.serialization.SerialName
 

@@ -6,10 +6,14 @@ import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDsl
 @CleanWizardConfigDsl
 open class CleanWizardExtension(
     var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER,
-    var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization,
+    internal var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization,
     internal var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework = CleanWizardDependencyInjectionFramework.None,
     internal var layerConfigs: CleanWizardLayerConfigWrapper = CleanWizardLayerConfigWrapper(),
 ) {
+
+    fun `json-serializer`(block: CleanWizardJsonSerializerBuilder.() -> Unit) {
+        jsonSerializer = CleanWizardJsonSerializerBuilder().apply(block).build()
+    }
 
     fun data(block: CleanWizardLayerConfig.Data.() -> Unit) {
         layerConfigs.data.apply(block)
@@ -23,10 +27,32 @@ open class CleanWizardExtension(
         layerConfigs.presentation.apply(block)
     }
 
-    fun dependencyInjection(
+    fun `dependency-injection`(
         block: CleanWizardDependencyInjectionFrameworkBuilder.() -> Unit
     ) {
         dependencyInjectionFramework = CleanWizardDependencyInjectionFrameworkBuilder().apply(block).build()
+    }
+}
+
+@CleanWizardConfigDsl
+class CleanWizardJsonSerializerBuilder {
+    private var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
+
+    fun `kotlinx-serialization`(block: CleanWizardJsonSerializer.KotlinXSerialization.() -> Unit = {}) {
+        jsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization.apply(block)
+    }
+
+    fun gson(block: CleanWizardJsonSerializer.Gson.() -> Unit = {}) {
+        jsonSerializer = CleanWizardJsonSerializer.Gson.apply(block)
+
+    }
+
+    fun moshi(block: CleanWizardJsonSerializer.Moshi.() -> Unit = {}) {
+        jsonSerializer = CleanWizardJsonSerializer.Moshi.apply(block)
+    }
+
+    internal fun build(): CleanWizardJsonSerializer {
+        return jsonSerializer
     }
 }
 
@@ -40,11 +66,7 @@ class CleanWizardDependencyInjectionFrameworkBuilder {
         KoinBuilder().apply(block)
     }
 
-    fun kodein() {
-        dependencyInjectionFramework = CleanWizardDependencyInjectionFramework.Kodein()
-    }
-
-    fun kodein(block: CleanWizardDependencyInjectionFramework.Kodein.() -> Unit) {
+    fun kodein(block: CleanWizardDependencyInjectionFramework.Kodein.() -> Unit = {}) {
         dependencyInjectionFramework = CleanWizardDependencyInjectionFramework.Kodein().apply(block)
     }
 

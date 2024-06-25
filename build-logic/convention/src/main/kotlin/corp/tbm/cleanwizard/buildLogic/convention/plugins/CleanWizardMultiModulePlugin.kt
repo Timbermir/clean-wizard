@@ -52,8 +52,8 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
 
     private fun Project.configureGradleTasks(codegenExtension: CleanWizardCodegenExtension) {
         afterEvaluate {
-            val presentationProject = project(codegenExtension.presentationProject)
 
+            val presentationProject = project(codegenExtension.presentationProject)
             val domainProject = project(codegenExtension.domainProject)
 
             val copyGeneratedDomainClasses = tasks.register<Copy>("copyGeneratedDomainClasses") {
@@ -63,7 +63,7 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
                         exclude("**/${cleanWizardExtension.layerConfigs.data.moduleName}/**")
                         exclude("**/${cleanWizardExtension.layerConfigs.presentation.moduleName}/**")
                     },
-                    project(codegenExtension.domainProject),
+                    domainProject,
                 )
             }
 
@@ -85,7 +85,7 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
                         exclude("**/${cleanWizardExtension.layerConfigs.data.moduleName}/**")
                         exclude("**/${cleanWizardExtension.layerConfigs.domain.moduleName}/**")
                     },
-                    project(codegenExtension.presentationProject),
+                    presentationProject,
                 )
                 finalizedBy(cleanDomainAndPresentationClasses)
             }

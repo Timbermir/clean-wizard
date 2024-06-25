@@ -1,11 +1,11 @@
-package corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.pokemon
+package corp.tbm.cleanwizard.workloads.singlemodule.data.remote.dtos.poke.pokemon
 
 import corp.tbm.cleanwizard.foundation.annotations.DTO
-import corp.tbm.cleanwizard.workloads.multimodule.data.foundation.PokemonReferenceDTOSchema
+import corp.tbm.cleanwizard.workloads.singlemodule.data.remote.dtos.poke.PokemonReferenceDTOSchema
 import kotlinx.serialization.SerialName
 
 @DTO
-data class PokemonMoveSchemaDTO(
+data class PokemonMoveDTOSchema(
     val move: PokemonReferenceDTOSchema,
     @SerialName("version_group_details")
     val versionGroupDetails: PokemonMoveVersionGroupDetailsDTOSchema

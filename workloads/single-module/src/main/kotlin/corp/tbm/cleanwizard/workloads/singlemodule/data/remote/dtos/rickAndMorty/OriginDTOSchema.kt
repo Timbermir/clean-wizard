@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.workloads.singlemodule.data.dtos.rickAndMorty
+package corp.tbm.cleanwizard.workloads.singlemodule.data.remote.dtos.rickAndMorty
 
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO

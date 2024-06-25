@@ -5,7 +5,7 @@ import corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.poke.PokemonR
 import kotlinx.serialization.SerialName
 
 @DTO
-data class PokemonMoveSchemaDTO(
+data class PokemonMoveDTOSchema(
     val move: PokemonReferenceDTOSchema,
     @SerialName("version_group_details")
     val versionGroupDetails: PokemonMoveVersionGroupDetailsDTOSchema

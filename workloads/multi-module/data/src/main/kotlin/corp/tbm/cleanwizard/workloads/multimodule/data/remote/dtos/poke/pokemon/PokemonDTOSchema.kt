@@ -1,7 +1,7 @@
-package corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.pokemon
+package corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.poke.pokemon
 
 import corp.tbm.cleanwizard.foundation.annotations.DTO
-import corp.tbm.cleanwizard.workloads.multimodule.data.foundation.PokemonReferenceDTOSchema
+import corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.poke.PokemonReferenceDTOSchema
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.serialization.SerialName
 
@@ -28,5 +28,5 @@ data class PokemonDTOSchema(
     val heldItems: ImmutableList<PokemonItemDTOSchema>,
     @SerialName("location_area_encounters")
     val locationAreaEncounters: String,
-    val moves: ImmutableList<PokemonMoveSchemaDTO>
+    val moves: ImmutableList<PokemonMoveDTOSchema>
 )

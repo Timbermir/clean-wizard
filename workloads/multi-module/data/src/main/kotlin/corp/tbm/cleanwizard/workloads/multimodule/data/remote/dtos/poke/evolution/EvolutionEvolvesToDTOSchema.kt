@@ -1,7 +1,7 @@
-package corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.evolution
+package corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.poke.evolution
 
 import corp.tbm.cleanwizard.foundation.annotations.DTO
-import corp.tbm.cleanwizard.workloads.multimodule.data.foundation.PokemonReferenceDTOSchema
+import corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.poke.PokemonReferenceDTOSchema
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.serialization.SerialName
 

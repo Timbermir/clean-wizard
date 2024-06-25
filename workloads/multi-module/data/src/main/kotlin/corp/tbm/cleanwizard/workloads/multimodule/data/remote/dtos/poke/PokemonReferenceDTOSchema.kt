@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.workloads.multimodule.data.foundation
+package corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.poke
 
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 

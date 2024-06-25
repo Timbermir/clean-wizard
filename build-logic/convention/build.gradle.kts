@@ -52,6 +52,11 @@ gradlePlugin {
                 id = codegen.visitor.pluginId
                 implementationClass = pluginConfigVersions.visitor.implementation.get()
             }
+
+            register(publish.pluginId) {
+                id = publish.pluginId
+                implementationClass = pluginConfigVersions.publish.implementation.get()
+            }
         }
     }
 }

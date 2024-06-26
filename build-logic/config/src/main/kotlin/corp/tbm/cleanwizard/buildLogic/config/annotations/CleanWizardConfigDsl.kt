@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.buildLogic.config.dsl
+package corp.tbm.cleanwizard.buildLogic.config.annotations
 
 @DslMarker
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.TYPE, AnnotationTarget.VALUE_PARAMETER)

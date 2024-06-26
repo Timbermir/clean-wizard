@@ -29,7 +29,7 @@ class PublishPlugin : Plugin<Project> {
                         version = projectConfig.versions.version.get()
 
                         afterEvaluate {
-                            from(components["java"])
+                            from(components["kotlin"])
                         }
 
                         pom {

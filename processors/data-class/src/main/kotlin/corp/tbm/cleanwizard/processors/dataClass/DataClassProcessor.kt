@@ -99,7 +99,6 @@ class DataClassProcessor(
 
     private fun reprocess(resolver: Resolver, symbols: List<KSClassDeclaration>): List<KSAnnotated> {
         processingRound++
-
         val deferredSymbols by lazy {
             mutableSetOf<KSAnnotated>()
         }
@@ -540,11 +539,22 @@ class DataClassProcessor(
             }
             .forEach { arg ->
                 builder.addMember(
-                    "${arg.name?.asString()} = ${if (arg.value is String) "%S" else "%L"}",
+                    "${
+                        if (jsonSerializer.delimiter.isNotEmpty()) camelToSnake(
+                            arg.name?.asString().toString()
+                        ) else arg.name?.asString()
+                    } = ${if (arg.value is String) "%S" else "%L"}",
                     arg.value.toString()
                 )
             }
         return builder.build()
+    }
+
+    fun camelToSnake(camelCase: String): String {
+        val regex = "(?<=[a-zA-Z])[A-Z]".toRegex()
+        return regex.replace(camelCase) {
+            "${jsonSerializer.delimiter}${it.value}"
+        }.lowercase()
     }
 }
 

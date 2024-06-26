@@ -1,7 +1,7 @@
 package corp.tbm.cleanwizard.buildLogic.config.api
 
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
-import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDsl
+import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardConfigDsl
 
 @CleanWizardConfigDsl
 abstract class CleanWizardJsonSerializerBuilder {

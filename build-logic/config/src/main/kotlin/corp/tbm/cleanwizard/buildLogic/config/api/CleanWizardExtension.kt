@@ -2,14 +2,14 @@ package corp.tbm.cleanwizard.buildLogic.config.api
 
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDataClassGenerationPattern
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
-import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDsl
+import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardConfigDsl
 
 @CleanWizardConfigDsl
-abstract class ICleanWizardExtension {
+abstract class CleanWizardExtension {
 
     abstract var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern
 
-    abstract fun `json-serializer`(block: ICleanWizardJsonSerializerBuilder.() -> Unit)
+    abstract fun `json-serializer`(block: CleanWizardJsonSerializerBuilder.() -> Unit)
 
     abstract fun data(block: CleanWizardLayerConfig.Data.() -> Unit)
 
@@ -17,5 +17,5 @@ abstract class ICleanWizardExtension {
 
     abstract fun presentation(block: CleanWizardLayerConfig.Presentation.() -> Unit)
 
-    abstract fun `dependency-injection`(block: ICleanWizardDependencyInjectionFrameworkBuilder.() -> Unit)
+    abstract fun `dependency-injection`(block: CleanWizardDependencyInjectionFrameworkBuilder.() -> Unit)
 }

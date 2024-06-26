@@ -81,22 +81,12 @@ class CleanWizardDependencyInjectionFrameworkBuilder {
     @CleanWizardConfigDsl
     inner class KoinBuilder {
 
-        fun core() {
-            this@CleanWizardDependencyInjectionFrameworkBuilder.dependencyInjectionFramework =
-                CleanWizardDependencyInjectionFramework.Koin.Core()
-        }
-
-        fun core(block: CleanWizardDependencyInjectionFramework.Koin.Core.() -> Unit) {
+        fun core(block: CleanWizardDependencyInjectionFramework.Koin.Core.() -> Unit = {}) {
             this@CleanWizardDependencyInjectionFrameworkBuilder.dependencyInjectionFramework =
                 CleanWizardDependencyInjectionFramework.Koin.Core().apply(block)
         }
 
-        fun annotations() {
-            this@CleanWizardDependencyInjectionFrameworkBuilder.dependencyInjectionFramework =
-                CleanWizardDependencyInjectionFramework.Koin.Annotations()
-        }
-
-        fun annotations(block: CleanWizardDependencyInjectionFramework.Koin.Annotations.() -> Unit) {
+        fun annotations(block: CleanWizardDependencyInjectionFramework.Koin.Annotations.() -> Unit = {}) {
             this@CleanWizardDependencyInjectionFrameworkBuilder.dependencyInjectionFramework =
                 CleanWizardDependencyInjectionFramework.Koin.Annotations().apply(block)
         }

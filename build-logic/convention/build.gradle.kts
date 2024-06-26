@@ -1,5 +1,4 @@
 plugins {
-    `java-gradle-plugin`
     alias(libs.plugins.kotlin.dsl)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.kotlin.serialization)
@@ -18,13 +17,6 @@ dependencies {
     compileOnly(files(pluginConfig.javaClass.superclass.protectionDomain.codeSource.location))
 }
 
-sourceSets {
-    main {
-        kotlin.srcDirs("src/main/kotlin")
-        kotlin.srcDirs(projects.config.dependencyProject.sourceSets.getByName("internal").allSource)
-    }
-}
-
 group = projectConfig.versions.group.get()
 version = "2.0.0-RC1"
 
@@ -36,36 +28,11 @@ gradlePlugin {
     plugins {
         libs.plugins.cleanwizard.apply {
 
-            val pluginConfigVersions = pluginConfig.versions
+            val pluginConfigVersions = pluginConfig.versions.cleanwizard
 
-            register(internal.kotlin.pluginId) {
-                id = internal.kotlin.pluginId
-                implementationClass = pluginConfigVersions.foundation.kotlin.implementation.get()
-            }
-
-            register(internal.codegen.foundation.pluginId) {
-                id = internal.codegen.foundation.pluginId
-                implementationClass = pluginConfigVersions.foundation.codegen.implementation.get()
-            }
-
-            register(internal.codegen.visitor.pluginId) {
-                id = internal.codegen.visitor.pluginId
-                implementationClass = pluginConfigVersions.visitor.implementation.get()
-            }
-
-            register(internal.publish.pluginId) {
-                id = internal.publish.pluginId
-                implementationClass = pluginConfigVersions.publish.implementation.get()
-            }
-        }
-    }
-}
-gradlePlugin {
-    plugins {
-        libs.plugins.cleanwizard.apply {
             register(core.pluginId) {
                 id = core.pluginId
-                implementationClass = pluginConfig.versions.cleanwizard.implementation.get()
+                implementationClass = pluginConfigVersions.root.implementation.get()
                 displayName = "Clean Wizard Root Project Plugin"
                 description = "This plugin is required for advanced configuration"
                 tags.set(
@@ -84,7 +51,7 @@ gradlePlugin {
 
             register(multimodule.pluginId) {
                 id = multimodule.pluginId
-                implementationClass = pluginConfig.versions.cleanwizard.multimodule.implementation.get()
+                implementationClass = pluginConfigVersions.multimodule.implementation.get()
                 displayName = "Clean Wizard Multi Module Plugin"
                 description = "This plugins is required for across module generation"
                 tags.set(
@@ -100,6 +67,31 @@ gradlePlugin {
                     )
                 )
             }
+
+            register(internal.kotlin.pluginId) {
+                id = internal.kotlin.pluginId
+                implementationClass = pluginConfigVersions.kotlin.implementation.get()
+            }
+
+            register(internal.codegen.pluginId) {
+                id = internal.codegen.pluginId
+                implementationClass = pluginConfigVersions.codegen.implementation.get()
+            }
+
+            register(internal.processor.pluginId) {
+                id = internal.processor.pluginId
+                implementationClass = pluginConfigVersions.processor.implementation.get()
+            }
+
+            register(internal.visitor.pluginId) {
+                id = internal.visitor.pluginId
+                implementationClass = pluginConfigVersions.visitor.implementation.get()
+            }
+
+            register(internal.publish.pluginId) {
+                id = internal.publish.pluginId
+                implementationClass = pluginConfigVersions.publish.implementation.get()
+            }
         }
     }
 }
@@ -109,13 +101,11 @@ internal val Provider<PluginDependency>.pluginId
 
 publishing {
     publications {
+
         create<MavenPublication>("clean-wizard-core-plugin") {
             group = projectConfig.versions.group.get()
             artifactId = projectConfig.versions.artifact.get()
             version = projectConfig.versions.version.get()
-            components.forEach {
-                println(it.name)
-            }
 
             pom {
                 withXml {
@@ -131,12 +121,11 @@ publishing {
                 }
             }
         }
-        create<MavenPublication>("clean-wizard-multi-module-plugin") {
 
+        create<MavenPublication>("clean-wizard-multi-module-plugin") {
+            group = projectConfig.versions.group.get()
+            artifactId = "${projectConfig.versions.artifact.get()}-multi-module"
+            version = projectConfig.versions.version.get()
         }
-    }
-}
-gradlePlugin {
-    plugins {
     }
 }

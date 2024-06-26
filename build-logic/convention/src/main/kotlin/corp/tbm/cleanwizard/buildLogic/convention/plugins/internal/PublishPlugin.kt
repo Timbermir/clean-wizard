@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.buildLogic.convention.plugins
+package corp.tbm.cleanwizard.buildLogic.convention.plugins.internal
 
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.alias
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.libs

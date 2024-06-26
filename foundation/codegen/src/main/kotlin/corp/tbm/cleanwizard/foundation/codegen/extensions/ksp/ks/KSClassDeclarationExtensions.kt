@@ -1,10 +1,10 @@
-package corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks
+package corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.asPackage
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.DataClassGenerationPattern
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
+import corp.tbm.cleanwizard.foundation.codegen.extensions.asPackage
+import corp.tbm.cleanwizard.foundation.codegen.processor.DataClassGenerationPattern
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dataClassGenerationPattern
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
 
 inline val KSClassDeclaration.name
     get() = simpleName.asString()

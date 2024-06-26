@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.foundation.codegen.universal.processor
+package corp.tbm.cleanwizard.foundation.codegen.processor
 
 import com.google.devtools.ksp.processing.KSPLogger
 

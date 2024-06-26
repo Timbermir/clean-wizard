@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.foundation.codegen.universal
+package corp.tbm.cleanwizard.foundation.codegen
 
 import corp.tbm.cleanwizard.foundation.annotations.*
 import kotlin.reflect.KClass

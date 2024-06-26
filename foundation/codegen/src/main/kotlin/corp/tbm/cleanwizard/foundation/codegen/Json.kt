@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.foundation.codegen.universal
+package corp.tbm.cleanwizard.foundation.codegen
 
 import kotlinx.serialization.json.Json
 

@@ -1,10 +1,10 @@
-package corp.tbm.cleanwizard.foundation.codegen.universal.processor
+package corp.tbm.cleanwizard.foundation.codegen.processor
 
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfigWrapper
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.getFile
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.readJsonFromFile
+import corp.tbm.cleanwizard.foundation.codegen.extensions.getFile
+import corp.tbm.cleanwizard.foundation.codegen.extensions.readJsonFromFile
 
 object ProcessorOptions {
     private var processorOptions = mapOf<String, String>()
@@ -26,6 +26,6 @@ object ProcessorOptions {
     }
 
     fun generateConfigs(processorOptions: Map<String, String>) {
-        this.processorOptions = processorOptions
+        ProcessorOptions.processorOptions = processorOptions
     }
 }

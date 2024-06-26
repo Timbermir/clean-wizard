@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.foundation.codegen.universal.extensions.kotlinpoet
+package corp.tbm.cleanwizard.foundation.codegen.extensions.kotlinpoet
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies

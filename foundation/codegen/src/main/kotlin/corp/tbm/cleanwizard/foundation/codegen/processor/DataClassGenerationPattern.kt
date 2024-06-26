@@ -1,19 +1,19 @@
-package corp.tbm.cleanwizard.foundation.codegen.universal.processor
+package corp.tbm.cleanwizard.foundation.codegen.processor
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
-import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.asPackage
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.basePackagePath
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isClassMappable
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isListMappable
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.packageLastSegment
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
+import corp.tbm.cleanwizard.foundation.codegen.extensions.asPackage
+import corp.tbm.cleanwizard.foundation.codegen.extensions.firstCharLowercase
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.basePackagePath
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.isClassMappable
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.isListMappable
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.name
+import corp.tbm.cleanwizard.foundation.codegen.extensions.packageLastSegment
+import corp.tbm.cleanwizard.foundation.codegen.extensions.withoutDTOSchemaSuffix
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
 
 enum class DataClassGenerationPattern {
     LAYER {
@@ -68,7 +68,7 @@ enum class DataClassGenerationPattern {
             layerConfig: CleanWizardLayerConfig
         ): String {
             return "${symbol.basePackagePath}.${
-                symbol.name.replace(dtoRegex, "").firstCharLowercase()
+                symbol.name.withoutDTOSchemaSuffix.firstCharLowercase()
             }.${layerConfig.packageName}"
         }
 
@@ -94,7 +94,7 @@ enum class DataClassGenerationPattern {
                             ?.toClassName()?.simpleName
 
                     else -> name
-                }?.replace(dtoRegex, "")?.firstCharLowercase().toString()
+                }?.withoutDTOSchemaSuffix?.firstCharLowercase().toString()
             return packageName.asPackage
         }
 

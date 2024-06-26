@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks
+package corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
@@ -10,11 +10,11 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
-import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.asPackage
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
+import corp.tbm.cleanwizard.foundation.codegen.extensions.asPackage
+import corp.tbm.cleanwizard.foundation.codegen.extensions.firstCharUppercase
+import corp.tbm.cleanwizard.foundation.codegen.extensions.withoutDTOSchemaSuffix
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dataClassGenerationPattern
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()
@@ -25,17 +25,15 @@ fun KSPropertyDeclaration.getParameterName(packageName: String): String {
     return when {
 
         resolvedType.isClassMappable ->
-            resolvedType.toClassName().simpleName.replace(
-                dtoRegex,
-                ""
-            ) + dataClassGenerationPattern.findLayerConfig(packageName).classSuffix
+            resolvedType.toClassName().simpleName.withoutDTOSchemaSuffix + dataClassGenerationPattern.findLayerConfig(
+                packageName
+            ).classSuffix
 
-        resolvedType.isListMappable -> {
-            resolvedType.arguments.first().type?.resolve()?.toClassName()?.simpleName?.replace(
-                dtoRegex,
-                ""
-            ) + dataClassGenerationPattern.findLayerConfig(packageName).classSuffix
-        }
+        resolvedType.isListMappable ->
+            resolvedType.arguments.first().type?.resolve()
+                ?.toClassName()?.simpleName.withoutDTOSchemaSuffix + dataClassGenerationPattern.findLayerConfig(
+                packageName
+            ).classSuffix
 
         else -> name
     }

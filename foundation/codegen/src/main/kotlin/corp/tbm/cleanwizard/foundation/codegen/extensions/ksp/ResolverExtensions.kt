@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp
+package corp.tbm.cleanwizard.foundation.codegen.extensions.ksp
 
 import com.google.devtools.ksp.processing.Resolver
 

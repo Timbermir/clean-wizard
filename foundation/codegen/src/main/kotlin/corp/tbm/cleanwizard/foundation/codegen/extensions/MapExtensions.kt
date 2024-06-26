@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.foundation.codegen.universal.extensions
+package corp.tbm.cleanwizard.foundation.codegen.extensions
 
 import java.io.File
 

@@ -11,16 +11,6 @@ dependencies {
     implementation(libs.squareup.moshi)
 }
 
-sourceSets {
-    val internal by creating {
-        kotlin.srcDirs("src/internal/kotlin")
-    }
-
-    val main by getting {
-        kotlin.srcDirs("src/main/kotlin", "src/internal/kotlin")
-    }
-}
-
 tasks.withType<KotlinCompile>().configureEach {
     this.compilerOptions {
         languageVersion =

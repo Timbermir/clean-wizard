@@ -1,3 +1,3 @@
 plugins {
-    alias(libs.plugins.cleanwizard.codegen.foundation)
+    alias(libs.plugins.cleanwizard.internal.codegen.foundation)
 }

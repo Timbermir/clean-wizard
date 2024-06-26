@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.cleanwizard.codegen.foundation)
+    alias(libs.plugins.cleanwizard.internal.codegen.foundation)
 }
 dependencies {
     implementation(projects.foundation.codegen.universal)

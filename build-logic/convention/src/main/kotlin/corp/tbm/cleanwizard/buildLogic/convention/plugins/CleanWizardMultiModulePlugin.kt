@@ -19,7 +19,7 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
 
-            alias(libs.plugins.cleanwizard.kotlin)
+            alias(libs.plugins.cleanwizard.internal.kotlin)
             alias(libs.plugins.google.devtools.ksp)
 
             val codegenExtension =
@@ -57,6 +57,8 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
             val domainProject = project(codegenExtension.domainProject)
 
             val copyGeneratedDomainClasses = tasks.register<Copy>("copyGeneratedDomainClasses") {
+                println(delete(File(domainProject.kspMainBuildDirectory)))
+                println(delete(File(presentationProject.kspMainBuildDirectory)))
                 copyToModule(
                     this,
                     {

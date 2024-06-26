@@ -12,7 +12,7 @@ internal class VisitorPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
 
-            alias(libs.plugins.cleanwizard.codegen.foundation)
+            alias(libs.plugins.cleanwizard.internal.codegen.foundation)
 
             dependencies {
                 implementation(project(":foundation:codegen:universal"))

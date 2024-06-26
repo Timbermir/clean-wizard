@@ -23,7 +23,7 @@ class PublishPlugin : Plugin<Project> {
 
             extensions.configure<PublishingExtension> {
                 publications {
-                    create<MavenPublication>("clean-wizard") {
+                    this.create<MavenPublication>("clean-wizard") {
                         groupId = projectConfig.versions.group.get()
                         artifactId = projectConfig.versions.artifact.get()
                         version = projectConfig.versions.version.get()
@@ -31,6 +31,7 @@ class PublishPlugin : Plugin<Project> {
                         afterEvaluate {
                             from(components["java"])
                         }
+
                         pom {
                             inceptionYear.set("2024")
                             name.set("Clean Wizard")
@@ -48,6 +49,16 @@ class PublishPlugin : Plugin<Project> {
                                 url.set("https://github.com/Timbermir/clean-wizard")
                                 connection.set("scm:git:git://github.com/Timbermir/clean-wizard.git")
                                 developerConnection.set("scm:git@github.com:Timbermir/clean-wizard.git")
+                            }
+
+                            issueManagement {
+                                system.set("GitHub Issues")
+                                url.set("https://github.com/Timbermir/clean-wizard/issues/")
+                            }
+
+                            pom.organization {
+                                name.set("Timbermir")
+                                url.set("https://github.com/Timbermir")
                             }
 
                             developers {

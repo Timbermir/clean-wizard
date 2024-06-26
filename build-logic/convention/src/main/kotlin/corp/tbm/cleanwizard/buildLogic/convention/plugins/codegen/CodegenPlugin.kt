@@ -13,7 +13,7 @@ internal class CodegenPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
 
-            alias(libs.plugins.cleanwizard.kotlin)
+            alias(libs.plugins.cleanwizard.internal.kotlin)
             alias(libs.plugins.google.devtools.ksp)
 
             dependencies {

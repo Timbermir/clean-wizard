@@ -1,6 +1,8 @@
 [versions]
 # MavenPublish
 vanniktech-maven-publish = "0.28.0"
+# Gradle
+gradle-publish = "1.2.1"
 # Kotlin
 kotlin = "2.0.0"
 kotlin-dsl = "4.4.0"
@@ -47,16 +49,18 @@ kotlinx = ["kotlinx-collections-immutable", "kotlinx-datetime", "kotlinx-seriali
 foundation-codegen = ["kotlinx-serialization-json", "google-devtools-ksp", "squareup-kotlinpoet-ksp"]
 di = ["kodein", "koin-core", "koin-annotations", "javax-inject"]
 [plugins]
+# Gradle
+gradle-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-publish" }
 # Maven
 maven-publish = { id = "maven-publish" }
 maven-signing = { id = "signing" }
 # Custom Plugins
 cleanwizard-core = { id = "corp.tbm.cleanwizard", version = "1.0.0" }
 cleanwizard-multimodule = { id = "corp.tbm.cleanwizard.multimodule" }
-cleanwizard-kotlin = { id = "corp.tbm.cleanwizard.kotlin" }
-cleanwizard-codegen-foundation = { id = "corp.tbm.cleanwizard.codegen.foundation" }
-cleanwizard-codegen-visitor = { id = "corp.tbm.cleanwizard.codegen.visitor" }
-cleanwizard-publish = { id = "corp.tbm.cleanwizard.publish" }
+cleanwizard-internal-kotlin = { id = "corp.tbm.cleanwizard.kotlin" }
+cleanwizard-internal-codegen-foundation = { id = "corp.tbm.cleanwizard.codegen.foundation" }
+cleanwizard-internal-codegen-visitor = { id = "corp.tbm.cleanwizard.codegen.visitor" }
+cleanwizard-internal-publish = { id = "corp.tbm.cleanwizard.publish" }
 # MavenPublish
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }
 # Kotlin

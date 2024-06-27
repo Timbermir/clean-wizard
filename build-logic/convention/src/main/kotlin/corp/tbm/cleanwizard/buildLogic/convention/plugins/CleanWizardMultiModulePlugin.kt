@@ -16,17 +16,16 @@ import java.io.File
 internal class CleanWizardMultiModulePlugin : Plugin<Project> {
 
     private var lastPackageSegmentWhereFirstSourceClassOccurs = ""
+
     override fun apply(target: Project) {
         with(target) {
 
-            alias(libs.plugins.cleanwizard.internal.kotlin)
             alias(libs.plugins.google.devtools.ksp)
 
             val codegenExtension =
                 extensions.create("clean-wizard-codegen", CleanWizardCodegenExtension::class.java)
 
             dependencies {
-                implementation(libs.bundles.kotlinx)
                 implementation(project(":foundation:annotations"))
                 implementation(project(":clean-wizard"))
                 ksp(project(":processors:data-class"))

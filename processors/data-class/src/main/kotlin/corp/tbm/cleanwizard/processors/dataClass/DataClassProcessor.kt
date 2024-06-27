@@ -15,21 +15,20 @@ import com.squareup.kotlinpoet.ksp.toKModifier
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
-import corp.tbm.cleanwizard.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
-import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
-import corp.tbm.cleanwizard.foundation.codegen.universal.exceptions.references.PropertyAlreadyMarkedWithEnumException
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ifEmpty
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ifNotEmpty
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.kotlinpoet.writeNewFile
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.*
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.DataClassGenerationPattern
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.Logger
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.jsonSerializer
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
+import corp.tbm.cleanwizard.foundation.codegen.exceptions.references.PropertyAlreadyMarkedWithEnumException
+import corp.tbm.cleanwizard.foundation.codegen.extensions.firstCharLowercase
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ifEmpty
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ifNotEmpty
+import corp.tbm.cleanwizard.foundation.codegen.extensions.kotlinpoet.writeNewFile
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.getAnnotatedSymbols
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.*
+import corp.tbm.cleanwizard.foundation.codegen.extensions.withoutDTOSchemaSuffix
+import corp.tbm.cleanwizard.foundation.codegen.processor.DataClassGenerationPattern
+import corp.tbm.cleanwizard.foundation.codegen.processor.Logger
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dataClassGenerationPattern
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.jsonSerializer
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
 import corp.tbm.cleanwizard.visitors.enums.EnumGenerateVisitor
 import kotlin.reflect.KClass
 
@@ -466,7 +465,7 @@ class DataClassProcessor(
 
         val properties = symbol.getDeclaredProperties().toList()
 
-        val className = symbol.name.replace(dtoRegex, "") + layerConfig.classSuffix
+        val className = symbol.name.withoutDTOSchemaSuffix + layerConfig.classSuffix
 
         val packageName = "${
             dataClassGenerationPattern.generatePackageName(
@@ -502,7 +501,11 @@ class DataClassProcessor(
                             it.mutable(property.isMutable)
                             it.addModifiers(property.modifiers.toList().map { modifier -> modifier.toKModifier() }
                                 .filter { modifier ->
-                                    modifier?.name in allowedDataClassPropertiesModifiers.map { allowedModifier ->
+                                    modifier?.name in listOf(
+                                        KModifier.PUBLIC,
+                                        KModifier.OVERRIDE,
+                                        KModifier.FINAL
+                                    ).map { allowedModifier ->
                                         allowedModifier.name
                                     }
                                 }
@@ -550,7 +553,7 @@ class DataClassProcessor(
         return builder.build()
     }
 
-    fun camelToSnake(camelCase: String): String {
+    private fun camelToSnake(camelCase: String): String {
         val regex = "(?<=[a-zA-Z])[A-Z]".toRegex()
         return regex.replace(camelCase) {
             "${jsonSerializer.delimiter}${it.value}"

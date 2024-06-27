@@ -8,11 +8,11 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import corp.tbm.cleanwizard.foundation.codegen.universal.EnumType
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.kotlinpoet.writeNewFile
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.takeIfNotEmptyOrReturnDefault
+import corp.tbm.cleanwizard.foundation.codegen.EnumType
+import corp.tbm.cleanwizard.foundation.codegen.extensions.firstCharUppercase
+import corp.tbm.cleanwizard.foundation.codegen.extensions.kotlinpoet.writeNewFile
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.name
+import corp.tbm.cleanwizard.foundation.codegen.extensions.takeIfNotEmptyOrReturnDefault
 
 class EnumGenerateVisitor(
     private val codeGenerator: CodeGenerator

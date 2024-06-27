@@ -1,3 +1,3 @@
 plugins {
-    alias(libs.plugins.cleanwizard.internal.codegen.visitor)
+    alias(libs.plugins.cleanwizard.internal.visitor)
 }

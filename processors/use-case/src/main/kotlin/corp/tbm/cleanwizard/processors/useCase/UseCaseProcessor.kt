@@ -11,31 +11,30 @@ import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
-import corp.tbm.cleanwizard.buildLogic.config.KodeinBinding
-import corp.tbm.cleanwizard.buildLogic.config.KodeinFunction
 import corp.tbm.cleanwizard.foundation.annotations.Repository
 import corp.tbm.cleanwizard.foundation.annotations.UseCase
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.asPackage
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.kotlinpoet.addImport
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.kotlinpoet.writeNewFile
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.basePackagePath
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.isListSubclass
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.packagePath
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.packageLastSegment
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.Logger
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dependencyInjectionFramework
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
+import corp.tbm.cleanwizard.foundation.codegen.extensions.asPackage
+import corp.tbm.cleanwizard.foundation.codegen.extensions.firstCharLowercase
+import corp.tbm.cleanwizard.foundation.codegen.extensions.firstCharUppercase
+import corp.tbm.cleanwizard.foundation.codegen.extensions.kotlinpoet.addImport
+import corp.tbm.cleanwizard.foundation.codegen.extensions.kotlinpoet.writeNewFile
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.getAnnotatedSymbols
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.basePackagePath
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.isListSubclass
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.name
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.packagePath
+import corp.tbm.cleanwizard.foundation.codegen.extensions.packageLastSegment
+import corp.tbm.cleanwizard.foundation.codegen.processor.Logger
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dataClassGenerationPattern
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dependencyInjectionFramework
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
 import kotlinx.collections.immutable.toImmutableSet
 import org.kodein.di.DI
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
+import org.koin.core.module.KoinDslMarker
 import javax.inject.Inject
 
 const val PARAMETER_SEPARATOR = ", \n    "
@@ -282,18 +281,18 @@ class UseCaseProcessor(
             ).initializer(
                 """DI.Module("$className") {
                             ${
-                    generatedUseCases.map { it.name }.joinToString(
+                    generatedUseCases.map { it }.joinToString(
                         prefix = "\n",
                         separator = "\n",
-                    ) { useCaseName ->
+                    ) { useCase ->
 
                         val repositoryName =
-                            symbol.primaryConstructor?.parameters?.first()?.name?.asString().toString()
+                            useCase.primaryConstructor?.parameters?.first()?.name?.asString().toString()
 
                         val binding = kodeinConfig.binding
 
                         fun FileSpec.Builder.applyKodeinFunction(
-                            function: KodeinFunction,
+                            function: CleanWizardDependencyInjectionFramework.Kodein.KodeinBinding.KodeinFunction,
                         ): String {
 
                             function.imports.forEach {
@@ -301,17 +300,17 @@ class UseCaseProcessor(
                             }
 
                             return function.getProvisionLambda(
-                                when (binding is KodeinBinding.Factory || binding is KodeinBinding.Multiton) {
+                                when (binding is CleanWizardDependencyInjectionFramework.Kodein.KodeinBinding.Factory || binding is CleanWizardDependencyInjectionFramework.Kodein.KodeinBinding.Multiton) {
                                     true -> {
                                         val repositoryType =
-                                            symbol.primaryConstructor?.parameters?.first()?.type?.resolve()
+                                            useCase.primaryConstructor?.parameters?.first()?.type?.resolve()
                                                 ?.toClassName()!!
                                         addImport(repositoryType, "")
-                                        "$repositoryName: ${repositoryName.firstCharUppercase()} -> $useCaseName($repositoryName)"
+                                        "$repositoryName: ${repositoryName.firstCharUppercase()} -> $useCase($repositoryName)"
                                     }
 
                                     false -> {
-                                        useCaseName
+                                        useCase.name
                                     }
                                 }
                             )

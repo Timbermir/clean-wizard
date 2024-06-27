@@ -1,19 +1,19 @@
 package corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions
 
 import corp.tbm.cleanwizard.buildLogic.config.*
-import corp.tbm.cleanwizard.buildLogic.config.api.ICleanWizardDependencyInjectionFrameworkBuilder
-import corp.tbm.cleanwizard.buildLogic.config.api.ICleanWizardExtension
-import corp.tbm.cleanwizard.buildLogic.config.api.ICleanWizardJsonSerializerBuilder
+import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardDependencyInjectionFrameworkBuilder
+import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardExtension
+import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardJsonSerializerBuilder
 
-internal open class CleanWizardExtension(
+internal open class CleanWizardExtensionImplementation(
     override var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER,
     internal var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization,
     internal var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework = CleanWizardDependencyInjectionFramework.None,
     internal val layerConfigs: CleanWizardLayerConfigWrapper = CleanWizardLayerConfigWrapper(),
-) : ICleanWizardExtension() {
+) : CleanWizardExtension() {
 
-    override fun `json-serializer`(block: ICleanWizardJsonSerializerBuilder.() -> Unit) {
-        jsonSerializer = CleanWizardJsonSerializerBuilder().apply(block).build()
+    override fun `json-serializer`(block: CleanWizardJsonSerializerBuilder.() -> Unit) {
+        jsonSerializer = CleanWizardJsonSerializerBuilderImplementation().apply(block).build()
     }
 
     override fun data(block: CleanWizardLayerConfig.Data.() -> Unit) {
@@ -28,12 +28,13 @@ internal open class CleanWizardExtension(
         layerConfigs.presentation.apply(block)
     }
 
-    override fun `dependency-injection`(block: ICleanWizardDependencyInjectionFrameworkBuilder.() -> Unit) {
-        dependencyInjectionFramework = CleanWizardDependencyInjectionFrameworkBuilder().apply(block).build()
+    override fun `dependency-injection`(block: CleanWizardDependencyInjectionFrameworkBuilder.() -> Unit) {
+        dependencyInjectionFramework =
+            CleanWizardDependencyInjectionFrameworkBuilderImplementation().apply(block).build()
     }
 }
 
-private class CleanWizardJsonSerializerBuilder : ICleanWizardJsonSerializerBuilder() {
+private class CleanWizardJsonSerializerBuilderImplementation : CleanWizardJsonSerializerBuilder() {
 
     override var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
 
@@ -55,13 +56,14 @@ private class CleanWizardJsonSerializerBuilder : ICleanWizardJsonSerializerBuild
     }
 }
 
-private class CleanWizardDependencyInjectionFrameworkBuilder : ICleanWizardDependencyInjectionFrameworkBuilder() {
+private class CleanWizardDependencyInjectionFrameworkBuilderImplementation :
+    CleanWizardDependencyInjectionFrameworkBuilder() {
 
     override var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework =
         CleanWizardDependencyInjectionFramework.None
 
-    override fun koin(block: IKoinBuilder.() -> Unit) {
-        KoinBuilder().apply(block)
+    override fun koin(block: KoinBuilder.() -> Unit) {
+        KoinBuilderImplementation().apply(block)
     }
 
     override fun kodein(block: CleanWizardDependencyInjectionFramework.Kodein.() -> Unit) {
@@ -76,15 +78,15 @@ private class CleanWizardDependencyInjectionFrameworkBuilder : ICleanWizardDepen
         return dependencyInjectionFramework
     }
 
-    private inner class KoinBuilder : IKoinBuilder() {
+    private inner class KoinBuilderImplementation : KoinBuilder() {
 
         override fun core(block: CleanWizardDependencyInjectionFramework.Koin.Core.() -> Unit) {
-            this@CleanWizardDependencyInjectionFrameworkBuilder.dependencyInjectionFramework =
+            this@CleanWizardDependencyInjectionFrameworkBuilderImplementation.dependencyInjectionFramework =
                 CleanWizardDependencyInjectionFramework.Koin.Core().apply(block)
         }
 
         override fun annotations(block: CleanWizardDependencyInjectionFramework.Koin.Annotations.() -> Unit) {
-            this@CleanWizardDependencyInjectionFrameworkBuilder.dependencyInjectionFramework =
+            this@CleanWizardDependencyInjectionFrameworkBuilderImplementation.dependencyInjectionFramework =
                 CleanWizardDependencyInjectionFramework.Koin.Annotations().apply(block)
         }
     }

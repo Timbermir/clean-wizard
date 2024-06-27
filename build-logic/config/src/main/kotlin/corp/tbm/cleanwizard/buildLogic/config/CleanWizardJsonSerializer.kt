@@ -2,7 +2,7 @@ package corp.tbm.cleanwizard.buildLogic.config
 
 import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
-import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDsl
+import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardConfigDsl
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass

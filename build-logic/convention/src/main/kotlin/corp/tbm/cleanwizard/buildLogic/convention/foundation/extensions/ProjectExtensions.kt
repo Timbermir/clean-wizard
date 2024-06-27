@@ -1,7 +1,7 @@
 package corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions
 
 import com.google.devtools.ksp.gradle.KspExtension
-import corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions.CleanWizardExtension
+import corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions.CleanWizardExtensionImplementation
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.accessors.dm.LibrariesForPluginConfig
 import org.gradle.accessors.dm.LibrariesForProjectConfig
@@ -51,8 +51,8 @@ internal inline val Project.kspMainBuildDirectory: String
 internal inline val Project.kspTestBuildDirectory: String
     get() = File(layout.buildDirectory.asFile.get().path, "generated/ksp/test/kotlin").path
 
-internal inline val Project.cleanWizardExtension: CleanWizardExtension
-    get() = rootProject.extensions.getByType(CleanWizardExtension::class.java)
+internal inline val Project.cleanWizardExtension: CleanWizardExtensionImplementation
+    get() = rootProject.extensions.getByType(CleanWizardExtensionImplementation::class.java)
 
 internal inline val Project.jvmTarget
     get() = JvmTarget.values()

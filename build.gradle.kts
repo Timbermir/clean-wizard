@@ -1,13 +1,12 @@
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDataClassGenerationPattern
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
-import corp.tbm.cleanwizard.buildLogic.config.KodeinBinding
 
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.google.devtools.ksp) apply false
     alias(libs.plugins.cleanwizard.core)
-    idea
 }
 
 buildscript {
@@ -29,7 +28,7 @@ buildscript {
     `dependency-injection` {
         kodein {
             useSimpleFunctions = true
-            binding = KodeinBinding.Multiton()
+            binding = CleanWizardDependencyInjectionFramework.Kodein.KodeinBinding.Multiton()
         }
     }
 

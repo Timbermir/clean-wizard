@@ -1,6 +1,6 @@
 package corp.tbm.cleanwizard.buildLogic.config
 
-import corp.tbm.cleanwizard.buildLogic.config.dsl.CleanWizardConfigDsl
+import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardConfigDsl
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -18,6 +18,7 @@ sealed class CleanWizardLayerConfig(
         @SerialName("dataModuleName") override var moduleName: String = "data",
         @SerialName("dataClassSuffix") override var classSuffix: String = "DTO",
         @SerialName("dataPackageName") override var packageName: String = "dto",
+        var schemaSuffix: String = "DTOSchema",
         var interfaceMapperName: String = "DTOMapper",
         var toDomainMapFunctionName: String = "toDomain",
     ) : CleanWizardLayerConfig(moduleName, classSuffix, packageName)

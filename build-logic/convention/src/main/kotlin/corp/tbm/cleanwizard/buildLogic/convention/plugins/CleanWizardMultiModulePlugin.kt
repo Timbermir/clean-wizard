@@ -3,7 +3,7 @@ package corp.tbm.cleanwizard.buildLogic.convention.plugins
 import com.google.devtools.ksp.gradle.KspTask
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.*
-import corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions.CleanWizardCodegenExtension
+import corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions.CleanWizardMultiModuleCodegenExtensionImplementation
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.CopySpec
@@ -16,24 +16,23 @@ import java.io.File
 internal class CleanWizardMultiModulePlugin : Plugin<Project> {
 
     private var lastPackageSegmentWhereFirstSourceClassOccurs = ""
+
     override fun apply(target: Project) {
         with(target) {
 
-            alias(libs.plugins.cleanwizard.kotlin)
             alias(libs.plugins.google.devtools.ksp)
 
             val codegenExtension =
-                extensions.create("clean-wizard-codegen", CleanWizardCodegenExtension::class.java)
+                extensions.create("clean-wizard-codegen", CleanWizardMultiModuleCodegenExtensionImplementation::class.java)
 
             dependencies {
-                implementation(libs.bundles.kotlinx)
                 implementation(project(":foundation:annotations"))
                 implementation(project(":clean-wizard"))
                 ksp(project(":processors:data-class"))
             }
 
             gradle.projectsEvaluated {
-                scanForMissingDependencies(this@with.extensions.getByType<CleanWizardCodegenExtension>())
+                scanForMissingDependencies(this@with.extensions.getByType<CleanWizardMultiModuleCodegenExtensionImplementation>())
             }
 
             configureGradleTasks(codegenExtension)
@@ -50,13 +49,15 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
         }
     }
 
-    private fun Project.configureGradleTasks(codegenExtension: CleanWizardCodegenExtension) {
+    private fun Project.configureGradleTasks(codegenExtension: CleanWizardMultiModuleCodegenExtensionImplementation) {
         afterEvaluate {
 
-            val presentationProject = project(codegenExtension.presentationProject)
-            val domainProject = project(codegenExtension.domainProject)
+            val presentationProject = project(codegenExtension.presentationProjectPath)
+            val domainProject = project(codegenExtension.domainProjectPath)
 
             val copyGeneratedDomainClasses = tasks.register<Copy>("copyGeneratedDomainClasses") {
+                println(delete(File(domainProject.kspMainBuildDirectory)))
+                println(delete(File(presentationProject.kspMainBuildDirectory)))
                 copyToModule(
                     this,
                     {
@@ -163,18 +164,18 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
         }
     }
 
-    private fun Project.scanForMissingDependencies(codegenExtension: CleanWizardCodegenExtension) {
+    private fun Project.scanForMissingDependencies(codegenExtension: CleanWizardMultiModuleCodegenExtensionImplementation) {
 
         val dataDependencies = configurations.flatMap { configuration ->
             configuration.dependencies.map { dependency -> "${dependency.group}:${dependency.name}" }
         }.toSet()
 
-        if (codegenExtension.domainProject.isEmpty())
+        if (codegenExtension.domainProjectPath.isEmpty())
             error("You have to specify path for your domain module")
-        if (codegenExtension.presentationProject.isEmpty())
+        if (codegenExtension.presentationProjectPath.isEmpty())
             error("You have to specify path for your presentation module")
-        val domainProject = project(codegenExtension.domainProject)
-        val domainDependencies = project(codegenExtension.domainProject).configurations.flatMap { configuration ->
+        val domainProject = project(codegenExtension.domainProjectPath)
+        val domainDependencies = project(codegenExtension.domainProjectPath).configurations.flatMap { configuration ->
             configuration.dependencies.map { dependency -> "${dependency.group}:${dependency.name}" }
         }.toSet()
 

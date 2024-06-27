@@ -10,6 +10,6 @@ dependencies {
 }
 
 `clean-wizard-codegen` {
-    domainProject = projects.workloads.multiModule.domain.dependencyProject.path
-    presentationProject = projects.workloads.multiModule.presentation.dependencyProject.path
+    domainProjectPath = projects.workloads.multiModule.domain.dependencyProject.path
+    presentationProjectPath = projects.workloads.multiModule.presentation.dependencyProject.path
 }

@@ -24,7 +24,13 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "clean-wizard-root"
-includeBuild("build-logic")
+includeBuild(".")
+includeBuild("build-logic") {
+    dependencySubstitution {
+        project(":config")
+    }
+}
+include("aggregator")
 include(
     "foundation:annotations",
     "foundation:codegen"

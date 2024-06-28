@@ -1,10 +1,12 @@
 package corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions
 
 import corp.tbm.cleanwizard.buildLogic.config.*
+import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardInternalAPI
 import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardDependencyInjectionFrameworkBuilder
 import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardExtension
 import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardJsonSerializerBuilder
 
+@OptIn(CleanWizardInternalAPI::class)
 internal open class CleanWizardExtensionImplementation(
     override var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER,
     internal var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization,
@@ -34,6 +36,7 @@ internal open class CleanWizardExtensionImplementation(
     }
 }
 
+@CleanWizardInternalAPI
 private class CleanWizardJsonSerializerBuilderImplementation : CleanWizardJsonSerializerBuilder() {
 
     override var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
@@ -56,6 +59,7 @@ private class CleanWizardJsonSerializerBuilderImplementation : CleanWizardJsonSe
     }
 }
 
+@CleanWizardInternalAPI
 private class CleanWizardDependencyInjectionFrameworkBuilderImplementation :
     CleanWizardDependencyInjectionFrameworkBuilder() {
 

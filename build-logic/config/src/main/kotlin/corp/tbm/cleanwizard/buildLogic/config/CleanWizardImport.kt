@@ -11,7 +11,6 @@ sealed class CleanWizardImport(
 
     @Serializable
     data class Kodein(
-        @SerialName("kodeinPackageName") override val packageName: String = "org.kodein.di",
         @SerialName("kodeinName") override val name: String
-    ) : CleanWizardImport(packageName, name)
+    ) : CleanWizardImport("org.kodein.di", name)
 }

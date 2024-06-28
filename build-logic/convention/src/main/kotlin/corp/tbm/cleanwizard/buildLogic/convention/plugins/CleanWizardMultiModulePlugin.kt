@@ -23,7 +23,10 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
             alias(libs.plugins.google.devtools.ksp)
 
             val codegenExtension =
-                extensions.create("clean-wizard-codegen", CleanWizardMultiModuleCodegenExtensionImplementation::class.java)
+                extensions.create(
+                    "clean-wizard-codegen",
+                    CleanWizardMultiModuleCodegenExtensionImplementation::class.java
+                )
 
             dependencies {
                 implementation(project(":foundation:annotations"))
@@ -56,8 +59,8 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
             val domainProject = project(codegenExtension.domainProjectPath)
 
             val copyGeneratedDomainClasses = tasks.register<Copy>("copyGeneratedDomainClasses") {
-                println(delete(File(domainProject.kspMainBuildDirectory)))
-                println(delete(File(presentationProject.kspMainBuildDirectory)))
+                delete(File(domainProject.kspMainBuildDirectory))
+                delete(File(presentationProject.kspMainBuildDirectory))
                 copyToModule(
                     this,
                     {

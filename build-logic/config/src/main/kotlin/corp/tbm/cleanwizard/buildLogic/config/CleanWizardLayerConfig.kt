@@ -7,32 +7,32 @@ import kotlinx.serialization.Serializable
 @CleanWizardConfigDsl
 @Serializable
 sealed class CleanWizardLayerConfig(
-    @SerialName("moduleName") open var moduleName: String,
-    @SerialName("classSuffix") open var classSuffix: String,
-    @SerialName("packageName") open var packageName: String
+    var moduleName: String,
+    var classSuffix: String,
+    var packageName: String
 ) {
 
     @Serializable
     @SerialName("Data")
     data class Data(
-        @SerialName("dataModuleName") override var moduleName: String = "data",
-        @SerialName("dataClassSuffix") override var classSuffix: String = "DTO",
-        @SerialName("dataPackageName") override var packageName: String = "dto",
         var schemaSuffix: String = "DTOSchema",
         var interfaceMapperName: String = "DTOMapper",
         var toDomainMapFunctionName: String = "toDomain",
-    ) : CleanWizardLayerConfig(moduleName, classSuffix, packageName)
+        val roomConfig: CleanWizardRoomConfig = CleanWizardRoomConfig(),
+    ) : CleanWizardLayerConfig("data", "DTO", "dto") {
+
+        fun room(block: CleanWizardRoomConfig.() -> Unit) {
+            roomConfig.apply(block)
+        }
+    }
 
     @Serializable
     @SerialName("Domain")
     data class Domain(
-        @SerialName("domainModuleName") override var moduleName: String = "domain",
-        @SerialName("domainClassSuffix") override var classSuffix: String = "Model",
-        @SerialName("domainPackageName") override var packageName: String = "model",
         var toDTOMapFunctionName: String = "toDTO",
         var toUIMapFunctionName: String = "toUI",
-        var useCaseConfig: CleanWizardUseCaseConfig = CleanWizardUseCaseConfig()
-    ) : CleanWizardLayerConfig(moduleName, classSuffix, packageName) {
+        val useCaseConfig: CleanWizardUseCaseConfig = CleanWizardUseCaseConfig()
+    ) : CleanWizardLayerConfig("domain", "Model", "model") {
 
         fun useCase(block: CleanWizardUseCaseConfig.() -> Unit) {
             useCaseConfig.apply(block)
@@ -42,9 +42,6 @@ sealed class CleanWizardLayerConfig(
     @Serializable
     @SerialName("Presentation")
     data class Presentation(
-        @SerialName("presentationModuleName") override var moduleName: String = "presentation",
-        @SerialName("presentationClassSuffix") override var classSuffix: String = "UI",
-        @SerialName("presentationPackageName") override var packageName: String = "ui",
         var toDomainMapFunctionName: String = "toDomain",
-    ) : CleanWizardLayerConfig(moduleName, classSuffix, packageName)
+    ) : CleanWizardLayerConfig("presentation", "UI", "ui")
 }

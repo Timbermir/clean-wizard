@@ -7,9 +7,4 @@ import kotlinx.serialization.Serializable
 @CleanWizardConfigDsl
 class CleanWizardRoomConfig(
     val roomTypeConvertersConfig: CleanWizardRoomTypeConvertersConfig = CleanWizardRoomTypeConvertersConfig()
-) {
-
-    fun typeConverters(block: CleanWizardRoomTypeConvertersConfig.() -> Unit) {
-        roomTypeConvertersConfig.apply(block)
-    }
-}
+)

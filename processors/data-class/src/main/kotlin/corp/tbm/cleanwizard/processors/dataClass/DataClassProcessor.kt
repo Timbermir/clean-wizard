@@ -36,7 +36,7 @@ const val PARAMETER_SEPARATOR = ", \n    "
 const val PARAMETER_PREFIX = "\n    "
 
 @OptIn(KspExperimental::class)
-class DataClassProcessor(
+private class DataClassProcessor(
     private val codeGenerator: CodeGenerator,
     processorOptions: Map<String, String>,
     private val logger: KSPLogger

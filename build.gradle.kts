@@ -3,10 +3,12 @@ import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFram
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
 
 plugins {
+    `java-library`
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.google.devtools.ksp) apply false
     alias(libs.plugins.cleanwizard.core)
+    alias(libs.plugins.vanniktech.maven.publish) apply false
 }
 
 buildscript {

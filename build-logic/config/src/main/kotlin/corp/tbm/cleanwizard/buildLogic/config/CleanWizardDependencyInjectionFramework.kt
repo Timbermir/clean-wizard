@@ -20,7 +20,10 @@ sealed class CleanWizardDependencyInjectionFramework(val dependencies: List<Stri
      */
     @Serializable
     @SerialName("koin")
-    sealed class Koin(private val additionalDependencies: List<String> = listOf()) :
+    sealed class Koin(
+        private val additionalDependencies: List<String> = listOf(),
+        var automaticallyCreateModule: Boolean,
+    ) :
         CleanWizardDependencyInjectionFramework(mutableListOf("io.insert-koin:koin-core").also {
             it.addAll(
                 additionalDependencies
@@ -30,21 +33,20 @@ sealed class CleanWizardDependencyInjectionFramework(val dependencies: List<Stri
         @Serializable
         @SerialName("core")
         class Core(
-            var automaticallyCreateModule: Boolean = true,
             var useConstructorDSL: Boolean = true,
-        ) : Koin()
+        ) : Koin(automaticallyCreateModule = true)
 
         @Serializable
         @SerialName("annotations")
         class Annotations(
-            var automaticallyCreateModule: Boolean = false,
             var specifyUseCasePackageForComponentScan: Boolean = false,
         ) :
             Koin(
                 listOf(
                     "io.insert-koin:koin-annotations",
                     "io.insert-koin:koin-ksp-compiler"
-                )
+                ),
+                false
             )
     }
 

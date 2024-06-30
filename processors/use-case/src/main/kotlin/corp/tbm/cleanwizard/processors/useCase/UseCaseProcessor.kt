@@ -34,7 +34,6 @@ import org.kodein.di.DI
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
-import org.koin.core.module.KoinDslMarker
 import javax.inject.Inject
 
 const val PARAMETER_SEPARATOR = ", \n    "
@@ -59,27 +58,30 @@ class UseCaseProcessor(
 
         val diFramework = dependencyInjectionFramework
 
-        if (diFramework is CleanWizardDependencyInjectionFramework.Koin) {
+        when {
+            diFramework is CleanWizardDependencyInjectionFramework.Koin && diFramework.automaticallyCreateModule -> {
 
-            when (diFramework) {
-                is CleanWizardDependencyInjectionFramework.Koin.Annotations -> {
-                    generateKoinAnnotationsModule(symbols.firstOrNull(), diFramework)
-                }
+                when (diFramework) {
 
-                is CleanWizardDependencyInjectionFramework.Koin.Core -> {
-                    generateKoinCoreModule(
-                        mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!),
-                        diFramework
-                    )
+                    is CleanWizardDependencyInjectionFramework.Koin.Core -> {
+                        generateKoinCoreModule(
+                            mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!),
+                            diFramework
+                        )
+                    }
+
+                    is CleanWizardDependencyInjectionFramework.Koin.Annotations -> {
+                        generateKoinAnnotationsModule(symbols.firstOrNull(), diFramework)
+                    }
                 }
             }
-        }
 
-        if (diFramework is CleanWizardDependencyInjectionFramework.Kodein) {
-            generateKodeinModule(
-                mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!),
-                diFramework
-            )
+            diFramework is CleanWizardDependencyInjectionFramework.Kodein -> {
+                generateKodeinModule(
+                    mResolver.getAnnotatedSymbols<KSClassDeclaration>(UseCase::class.qualifiedName!!),
+                    diFramework
+                )
+            }
         }
 
         return symbols.filter { !generateUseCase(it) }
@@ -165,7 +167,10 @@ class UseCaseProcessor(
                     .build()
             ).addFunction(
                 function.build()
-            ).addAnnotation(UseCase::class)
+            )
+
+            if (dependencyInjectionFramework != CleanWizardDependencyInjectionFramework.None)
+                classToBuild.addAnnotation(UseCase::class)
 
             if (dependencyInjectionFramework is CleanWizardDependencyInjectionFramework.Koin.Annotations) {
                 classToBuild.addAnnotation(Factory::class)

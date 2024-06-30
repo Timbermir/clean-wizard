@@ -1,10 +1,16 @@
 package corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions
 
 import corp.tbm.cleanwizard.buildLogic.config.*
+import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardInternalAPI
 import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardDependencyInjectionFrameworkBuilder
 import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardExtension
 import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardJsonSerializerBuilder
+import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardDataLayerConfigBuilder
+import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardDataLayerRoomConfigBuilder
+import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardDomainLayerConfigBuilder
+import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardPresentationLayerConfigBuilder
 
+@OptIn(CleanWizardInternalAPI::class)
 internal open class CleanWizardExtensionImplementation(
     override var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER,
     internal var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization,
@@ -16,16 +22,16 @@ internal open class CleanWizardExtensionImplementation(
         jsonSerializer = CleanWizardJsonSerializerBuilderImplementation().apply(block).build()
     }
 
-    override fun data(block: CleanWizardLayerConfig.Data.() -> Unit) {
-        layerConfigs.data.apply(block)
+    override fun data(block: CleanWizardDataLayerConfigBuilder.() -> Unit) {
+        CleanWizardDataLayerConfigBuilderImplementation(layerConfigs.data).apply(block)
     }
 
-    override fun domain(block: CleanWizardLayerConfig.Domain.() -> Unit) {
-        layerConfigs.domain.apply(block)
+    override fun domain(block: CleanWizardDomainLayerConfigBuilder.() -> Unit) {
+        CleanWizardDomainLayerConfigBuilderImplementation(layerConfigs.domain).apply(block)
     }
 
-    override fun presentation(block: CleanWizardLayerConfig.Presentation.() -> Unit) {
-        layerConfigs.presentation.apply(block)
+    override fun presentation(block: CleanWizardPresentationLayerConfigBuilder.() -> Unit) {
+        CleanWizardPresentationLayerConfigBuilderImplementation(layerConfigs.presentation).apply(block)
     }
 
     override fun `dependency-injection`(block: CleanWizardDependencyInjectionFrameworkBuilder.() -> Unit) {
@@ -34,6 +40,7 @@ internal open class CleanWizardExtensionImplementation(
     }
 }
 
+@CleanWizardInternalAPI
 private class CleanWizardJsonSerializerBuilderImplementation : CleanWizardJsonSerializerBuilder() {
 
     override var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
@@ -56,6 +63,7 @@ private class CleanWizardJsonSerializerBuilderImplementation : CleanWizardJsonSe
     }
 }
 
+@CleanWizardInternalAPI
 private class CleanWizardDependencyInjectionFrameworkBuilderImplementation :
     CleanWizardDependencyInjectionFrameworkBuilder() {
 
@@ -90,4 +98,74 @@ private class CleanWizardDependencyInjectionFrameworkBuilderImplementation :
                 CleanWizardDependencyInjectionFramework.Koin.Annotations().apply(block)
         }
     }
+}
+
+@CleanWizardInternalAPI
+private class CleanWizardDataLayerConfigBuilderImplementation(private val cleanWizardLayerConfig: CleanWizardLayerConfig.Data) :
+    CleanWizardDataLayerConfigBuilder(cleanWizardLayerConfig) {
+
+    private val roomConfigBuilder = CleanWizardDataLayerRoomConfigBuilderImplementation()
+
+    override var schemaSuffix: String
+        get() = cleanWizardLayerConfig.schemaSuffix
+        set(value) {
+            cleanWizardLayerConfig.schemaSuffix = value
+        }
+
+    override var interfaceMapperName: String
+        get() = cleanWizardLayerConfig.interfaceMapperName
+        set(value) {
+            cleanWizardLayerConfig.interfaceMapperName = value
+        }
+
+    override var toDomainMapFunctionName: String
+        get() = cleanWizardLayerConfig.toDomainMapFunctionName
+        set(value) {
+            cleanWizardLayerConfig.toDomainMapFunctionName = value
+        }
+
+    override fun room(block: CleanWizardDataLayerRoomConfigBuilder.() -> Unit) {
+        roomConfigBuilder.apply(block)
+    }
+
+    private inner class CleanWizardDataLayerRoomConfigBuilderImplementation :
+        CleanWizardDataLayerRoomConfigBuilder() {
+
+        override fun typeConverters(block: CleanWizardRoomTypeConvertersConfig.() -> Unit) {
+            this@CleanWizardDataLayerConfigBuilderImplementation.cleanWizardLayerConfig.roomConfig.roomTypeConvertersConfig.apply(
+                block
+            )
+        }
+    }
+}
+
+@CleanWizardInternalAPI
+private class CleanWizardDomainLayerConfigBuilderImplementation(private val domainLayerConfig: CleanWizardLayerConfig.Domain) :
+    CleanWizardDomainLayerConfigBuilder(
+        domainLayerConfig
+    ) {
+    override var toDTOMapFunctionName: String
+        get() = domainLayerConfig.toDTOMapFunctionName
+        set(value) {
+            domainLayerConfig.toDTOMapFunctionName = value
+        }
+    override var toUIMapFunctionName: String
+        get() = domainLayerConfig.toUIMapFunctionName
+        set(value) {
+            domainLayerConfig.toUIMapFunctionName = value
+        }
+
+    override fun useCase(block: CleanWizardUseCaseConfig.() -> Unit) {
+        domainLayerConfig.useCaseConfig.apply(block)
+    }
+}
+
+@CleanWizardInternalAPI
+private class CleanWizardPresentationLayerConfigBuilderImplementation(private val presentationLayerConfig: CleanWizardLayerConfig.Presentation) :
+    CleanWizardPresentationLayerConfigBuilder(presentationLayerConfig) {
+    override var toDomainMapFunctionName: String
+        get() = presentationLayerConfig.toDomainMapFunctionName
+        set(value) {
+            presentationLayerConfig.toDomainMapFunctionName = value
+        }
 }

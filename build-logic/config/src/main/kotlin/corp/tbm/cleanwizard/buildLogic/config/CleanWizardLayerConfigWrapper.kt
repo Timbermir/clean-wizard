@@ -9,7 +9,7 @@ data class CleanWizardLayerConfigWrapper(
     val presentation: CleanWizardLayerConfig.Presentation = CleanWizardLayerConfig.Presentation()
 ) {
 
-    val configs = listOf(data, domain, presentation)
+    private val configs = listOf(data, domain, presentation)
 
     fun first(predicate: (CleanWizardLayerConfig) -> Boolean): CleanWizardLayerConfig {
         return configs.first { predicate(it) }

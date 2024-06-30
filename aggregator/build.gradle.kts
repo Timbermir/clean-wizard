@@ -1,19 +1,22 @@
 import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
-    alias(libs.plugins.cleanwizard.internal.processor)
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.maven.publish)
+    alias(libs.plugins.maven.signing)
     alias(libs.plugins.vanniktech.maven.publish)
 }
 
 dependencies {
-    implementation(libs.bundles.di)
+    implementation(projects.foundation.annotations)
+    implementation(projects.processors.dataClass)
 }
 
 mavenPublishing {
 
     coordinates(
         projectConfig.versions.group.get(),
-        "${projectConfig.versions.artifact.get()}-use-case-compiler",
+        projectConfig.versions.artifact.get(),
         projectConfig.versions.version.get()
     )
 
@@ -42,6 +45,7 @@ mavenPublishing {
             system.set("GitHub Issues")
             url.set("https://github.com/Timbermir/clean-wizard/issues/")
         }
+
         organization {
             name.set("Timbermir")
             url.set("https://github.com/Timbermir")

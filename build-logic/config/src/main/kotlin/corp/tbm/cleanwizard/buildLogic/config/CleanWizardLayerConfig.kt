@@ -19,12 +19,7 @@ sealed class CleanWizardLayerConfig(
         var interfaceMapperName: String = "DTOMapper",
         var toDomainMapFunctionName: String = "toDomain",
         val roomConfig: CleanWizardRoomConfig = CleanWizardRoomConfig(),
-    ) : CleanWizardLayerConfig("data", "DTO", "dto") {
-
-        fun room(block: CleanWizardRoomConfig.() -> Unit) {
-            roomConfig.apply(block)
-        }
-    }
+    ) : CleanWizardLayerConfig("data", "DTO", "dto")
 
     @Serializable
     @SerialName("Domain")
@@ -32,12 +27,7 @@ sealed class CleanWizardLayerConfig(
         var toDTOMapFunctionName: String = "toDTO",
         var toUIMapFunctionName: String = "toUI",
         val useCaseConfig: CleanWizardUseCaseConfig = CleanWizardUseCaseConfig()
-    ) : CleanWizardLayerConfig("domain", "Model", "model") {
-
-        fun useCase(block: CleanWizardUseCaseConfig.() -> Unit) {
-            useCaseConfig.apply(block)
-        }
-    }
+    ) : CleanWizardLayerConfig("domain", "Model", "model")
 
     @Serializable
     @SerialName("Presentation")

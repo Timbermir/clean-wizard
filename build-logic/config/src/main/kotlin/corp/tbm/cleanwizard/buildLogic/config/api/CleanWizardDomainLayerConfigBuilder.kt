@@ -1,7 +1,6 @@
 package corp.tbm.cleanwizard.buildLogic.config.api
 
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseConfig
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
 import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardConfigDsl
 

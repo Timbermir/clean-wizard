@@ -19,15 +19,15 @@ buildscript {
 
 `clean-wizard` {
 
-    `json-serializer` {
-        `kotlinx-serialization` {
+    jsonSerializer {
+        kotlinXSerialization {
             delimiter = "_"
         }
     }
 
     dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER
 
-    `dependency-injection` {
+    dependencyInjection {
         kodein {
             useSimpleFunctions = true
             binding = CleanWizardDependencyInjectionFramework.Kodein.KodeinBinding.Multiton()

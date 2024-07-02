@@ -1,8 +1,6 @@
 package corp.tbm.cleanwizard.buildLogic.config.api
 
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardRoomConfig
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardRoomTypeConvertersConfig
 import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardConfigDsl
 
 abstract class CleanWizardDataLayerConfigBuilder(data: CleanWizardLayerConfig.Data) :

@@ -8,7 +8,7 @@ abstract class CleanWizardJsonSerializerBuilder {
 
     protected abstract var jsonSerializer: CleanWizardJsonSerializer
 
-    abstract fun kotlinXSerialization(block: CleanWizardJsonSerializer.KotlinXSerialization.() -> Unit = {})
+    abstract fun kotlinXSerialization(block: KotlinXSerializationBuilder.() -> Unit = {})
 
     abstract fun gson(block: CleanWizardJsonSerializer.Gson.() -> Unit = {})
 

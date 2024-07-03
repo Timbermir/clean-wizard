@@ -2,10 +2,22 @@ package corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions
 
 import corp.tbm.cleanwizard.buildLogic.config.*
 import corp.tbm.cleanwizard.buildLogic.config.api.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.element
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonBuilder
 
 internal open class CleanWizardExtensionImplementation(
     override var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER,
-    internal var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization,
+    internal var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization(),
     internal var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework = CleanWizardDependencyInjectionFramework.None,
 ) : CleanWizardExtension() {
 
@@ -42,19 +54,21 @@ internal open class CleanWizardExtensionImplementation(
 
 private class CleanWizardJsonSerializerBuilderImplementation : CleanWizardJsonSerializerBuilder() {
 
-    override var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
+    override var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization()
 
-    override fun kotlinXSerialization(block: CleanWizardJsonSerializer.KotlinXSerialization.() -> Unit) {
-        jsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization.apply(block)
+    private val kotlinXSerializationBuilder = KotlinXSerializationBuilderImplementation()
+
+    override fun kotlinXSerialization(block: KotlinXSerializationBuilder.() -> Unit) {
+        jsonSerializer = kotlinXSerializationBuilder.apply(block).build()
     }
 
     override fun gson(block: CleanWizardJsonSerializer.Gson.() -> Unit) {
-        jsonSerializer = CleanWizardJsonSerializer.Gson.apply(block)
+        jsonSerializer = CleanWizardJsonSerializer.Gson().apply(block)
 
     }
 
     override fun moshi(block: CleanWizardJsonSerializer.Moshi.() -> Unit) {
-        jsonSerializer = CleanWizardJsonSerializer.Moshi.apply(block)
+        jsonSerializer = CleanWizardJsonSerializer.Moshi().apply(block)
     }
 
     fun build(): CleanWizardJsonSerializer {
@@ -195,5 +209,28 @@ private class CleanWizardPresentationLayerConfigBuilderImplementation(presentati
             packageName,
             toDomainMapFunctionName
         )
+    }
+}
+
+private class KotlinXSerializationBuilderImplementation : KotlinXSerializationBuilder() {
+
+    @Serializable
+    override var json = Json {
+        encodeDefaults = true
+        explicitNulls = false
+        ignoreUnknownKeys = true
+        isLenient = true
+        prettyPrint = true
+        classDiscriminator = "type"
+    }
+
+    override fun json(builder: JsonBuilder.() -> Unit) {
+        json = Json {
+            builder()
+        }
+    }
+
+    override fun build(): CleanWizardJsonSerializer.KotlinXSerialization {
+        return CleanWizardJsonSerializer.KotlinXSerialization(delimiter, KotlinXSerializerConfig(json))
     }
 }

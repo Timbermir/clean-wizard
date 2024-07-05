@@ -45,7 +45,9 @@ sealed class CleanWizardJsonSerializer(
 
     @Serializable
     @SerialName("gson")
-    data object Gson : CleanWizardJsonSerializer("com.google.code.gson:gson", SerializedName::class)
+    data class Gson(
+        val serializerConfig: CleanWizardGsonSerializationConfig = CleanWizardGsonSerializationConfig()
+    ) : CleanWizardJsonSerializer("com.google.code.gson:gson", SerializedName::class)
 
     @Serializable
     @SerialName("moshi")

@@ -1,48 +1,12 @@
 package corp.tbm.cleanwizard.buildLogic.config.api
 
 import com.google.gson.*
-import com.google.gson.annotations.Expose
 import com.google.gson.internal.Excluder
 import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardConfigDsl
 import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardIncubatingAPI
 import corp.tbm.cleanwizard.buildLogic.config.toCleanWizardGsonSerializationConfig
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.ClassDiscriminatorMode
-import kotlinx.serialization.json.JsonNamingStrategy
 import java.text.DateFormat
 
-@CleanWizardConfigDsl
-abstract class KotlinXSerializationBuilder {
-
-    abstract fun json(block: KotlinXSerializationConfigBuilder.() -> Unit)
-}
-
-@CleanWizardConfigDsl
-abstract class KotlinXSerializationConfigBuilder {
-    var encodeDefaults: Boolean = false
-    var ignoreUnknownKeys: Boolean = false
-    var isLenient: Boolean = false
-    var allowStructuredMapKeys: Boolean = false
-    var prettyPrint: Boolean = false
-    var explicitNulls: Boolean = true
-    var prettyPrintIndent: String = "    "
-    var coerceInputValues: Boolean = false
-    var useArrayPolymorphism: Boolean = false
-    var classDiscriminator: String = "type"
-    var allowSpecialFloatingPointValues: Boolean = false
-    var useAlternativeNames: Boolean = true
-
-    @OptIn(ExperimentalSerializationApi::class)
-    var namingStrategy: JsonNamingStrategy? = null
-    var decodeEnumsCaseInsensitive: Boolean = false
-    var allowTrailingComma: Boolean = false
-    var allowComments: Boolean = false
-    var classDiscriminatorMode: ClassDiscriminatorMode = ClassDiscriminatorMode.POLYMORPHIC
-}
-
-fun someFun() {
-    GsonBuilder().excludeFieldsWithoutExposeAnnotation()
-}
 @CleanWizardConfigDsl
 abstract class GsonSerializationBuilder {
     /**
@@ -72,7 +36,8 @@ abstract class GsonSerializationBuilder {
     @CleanWizardIncubatingAPI
     var gson: Gson? = null
 
-        var excluder: Excluder = Excluder.DEFAULT
+    var excluder: Excluder = Excluder.DEFAULT
+
     /**
      * Alternative to [GsonBuilder.setLongSerializationPolicy].
      */

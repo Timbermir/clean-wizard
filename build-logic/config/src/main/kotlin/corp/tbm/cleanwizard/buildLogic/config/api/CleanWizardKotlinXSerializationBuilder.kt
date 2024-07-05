@@ -6,13 +6,13 @@ import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.JsonNamingStrategy
 
 @CleanWizardConfigDsl
-abstract class KotlinXSerializationBuilder {
+abstract class CleanWizardKotlinXSerializationBuilder {
 
-    abstract fun json(block: KotlinXSerializationConfigBuilder.() -> Unit)
+    abstract fun json(block: CleanWizardKotlinXSerializationConfigBuilder.() -> Unit)
 }
 
 @CleanWizardConfigDsl
-abstract class KotlinXSerializationConfigBuilder {
+abstract class CleanWizardKotlinXSerializationConfigBuilder {
     var encodeDefaults: Boolean = false
     var ignoreUnknownKeys: Boolean = false
     var isLenient: Boolean = false

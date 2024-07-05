@@ -4,11 +4,10 @@ import com.google.gson.*
 import com.google.gson.internal.Excluder
 import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardConfigDsl
 import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardIncubatingAPI
-import corp.tbm.cleanwizard.buildLogic.config.toCleanWizardGsonSerializationConfig
 import java.text.DateFormat
 
 @CleanWizardConfigDsl
-abstract class GsonSerializationBuilder {
+abstract class CleanWizardGsonSerializationBuilder {
     /**
      * Allows you to pass raw [Gson]. Values from it will be collected
      * via [Reflection](https://www.oracle.com/technical-resources/articles/java/javareflection.html) due to

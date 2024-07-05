@@ -1,59 +1,87 @@
 package corp.tbm.cleanwizard.buildLogic.config
 
 import com.google.gson.*
+import com.google.gson.internal.Excluder
+import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
 import kotlinx.serialization.Serializable
 import java.text.DateFormat
 
 @Serializable
 data class CleanWizardGsonSerializationConfig(
+    val excluder: Excluder = Excluder.DEFAULT,
     val longSerializationPolicy: LongSerializationPolicy = LongSerializationPolicy.DEFAULT,
     val fieldNamingPolicy: FieldNamingPolicy = FieldNamingPolicy.IDENTITY,
 //    var instanceCreators: Map<Type, InstanceCreator<*>> = HashMap()
-    val factories: List<TypeAdapterFactory> = ArrayList(),
-    val hierarchyFactories: List<TypeAdapterFactory> = ArrayList(),
     val serializeNulls: Boolean = false,
     val datePattern: String? = null,
     val dateStyle: Int = DateFormat.DEFAULT,
     val timeStyle: Int = DateFormat.DEFAULT,
     val complexMapKeySerialization: Boolean = false,
     val serializeSpecialFloatingPointValues: Boolean = false,
-    val escapeHtmlChars: Boolean = true,
+    val htmlSafe: Boolean = true,
 //    var formattingStyle: FormattingStyle = FormattingStyle.COMPACT,
     val generateNonExecutableJson: Boolean = false,
     val strictness: Strictness? = null,
     val useJdkUnsafe: Boolean = true,
-    val objectToNumberStrategy: ToNumberStrategy = ToNumberPolicy.DOUBLE,
-    val numberToNumberStrategy: ToNumberStrategy = ToNumberPolicy.LAZILY_PARSED_NUMBER,
+    val objectToNumberStrategy: CleanWizardToNumberStrategy = ToNumberPolicy.DOUBLE.toCleanWizardToNumberStrategy(),
+    val numberToNumberStrategy: CleanWizardToNumberStrategy = ToNumberPolicy.LAZILY_PARSED_NUMBER.toCleanWizardToNumberStrategy()
 //    var reflectionFilters: ArrayDeque<ReflectionAccessFilter> = ArrayDeque<ReflectionAccessFilter>()
 )
 
+abstract class CleanWizardGsonExcluder : TypeAdapterFactory, Cloneable {
+
+}
+
+fun Excluder.toCleanWizardGsonExcluder(): CleanWizardGsonExcluder {
+    return object : CleanWizardGsonExcluder() {
+        override fun <T : Any?> create(gson: Gson?, type: TypeToken<T>?): TypeAdapter<T> {
+            return this@toCleanWizardGsonExcluder.create(gson, type)
+        }
+    }
+}
+
 fun CleanWizardGsonSerializationConfig.toGson(): Gson {
-    val builder = GsonBuilder()
-    builder.apply {
+    return GsonBuilder().apply {
         setLongSerializationPolicy(longSerializationPolicy)
         setFieldNamingPolicy(fieldNamingPolicy)
-        factories.forEach(::registerTypeAdapterFactory)
-        hierarchyFactories.forEach(::registerTypeAdapterFactory)
-        if (serializeNulls)
-            serializeNulls()
+        if (serializeNulls) serializeNulls()
         setDateFormat(dateStyle, timeStyle)
         datePattern?.let(::setDateFormat)
         if (complexMapKeySerialization) enableComplexMapKeySerialization()
         if (serializeSpecialFloatingPointValues) serializeSpecialFloatingPointValues()
-        if (!escapeHtmlChars)
+        if (!htmlSafe)
             disableHtmlEscaping()
         if (generateNonExecutableJson)
             generateNonExecutableJson()
-        setStrictness(strictness)
-        if (!useJdkUnsafe)
-            disableJdkUnsafe()
+        strictness?.let(::setStrictness)
+        if (!useJdkUnsafe) disableJdkUnsafe()
         setObjectToNumberStrategy(objectToNumberStrategy)
-        this.create().newBuilder().setNumberToNumberStrategy(numberToNumberStrategy)
+        setNumberToNumberStrategy(numberToNumberStrategy)
     }.create()
-
-    return builder.create()
 }
 
+@Serializable
+abstract class CleanWizardToNumberStrategy : ToNumberStrategy {
+    abstract override fun readNumber(`in`: JsonReader): Number
+
+    @Serializable
+    companion object
+}
+
+fun ToNumberStrategy.toCleanWizardToNumberStrategy(): CleanWizardToNumberStrategy {
+
+    return object : CleanWizardToNumberStrategy() {
+        override fun readNumber(`in`: JsonReader): Number {
+            return this@toCleanWizardToNumberStrategy.readNumber(`in`)
+        }
+    }
+}
+
+/**
+ * Builds [CleanWizardGsonSerializationConfig] from [Gson] instance
+ * using [Reflection](https://www.oracle.com/technical-resources/articles/java/javareflection.html)
+ */
 fun Gson.toCleanWizardGsonSerializationConfig(): CleanWizardGsonSerializationConfig {
     try {
         val gsonClass: Class<*> = this::class.java
@@ -69,42 +97,38 @@ fun Gson.toCleanWizardGsonSerializationConfig(): CleanWizardGsonSerializationCon
         }
 
         val longSerializationPolicy = getFieldValue("longSerializationPolicy") as LongSerializationPolicy
-        val fieldNamingPolicy = getFieldValue("fieldNamingPolicy") as FieldNamingPolicy
-        val factories = getFieldValue("factories") as List<TypeAdapterFactory>? ?: listOf()
-        val hierarchyFactories = getFieldValue("hierarchyFactories") as List<TypeAdapterFactory>? ?: listOf()
-        val serializeNulls = getFieldValue("serializeNulls") as Boolean? ?: false
-        val dateStyle = getFieldValue("dateStyle") as Int? ?: DateFormat.DEFAULT
-        val timeStyle = getFieldValue("timeStyle") as Int? ?: DateFormat.DEFAULT
+        val fieldNamingPolicy = getFieldValue("fieldNamingPolicy") as FieldNamingPolicy? ?: FieldNamingPolicy.IDENTITY
+        val serializeNulls = getFieldValue("serializeNulls") as Boolean
+        val dateStyle = getFieldValue("dateStyle") as Int
+        val timeStyle = getFieldValue("timeStyle") as Int
         val datePattern = getFieldValue("datePattern") as String?
-        val complexMapKeySerialization = getFieldValue("complexMapKeySerialization") as Boolean? ?: false
+        val complexMapKeySerialization = getFieldValue("complexMapKeySerialization") as Boolean
         val serializeSpecialFloatingPointValues =
-            getFieldValue("serializeSpecialFloatingPointValues") as Boolean? ?: false
-        val escapeHtmlChars = getFieldValue("escapeHtmlChars") as Boolean? ?: true
-        val generateNonExecutableJson = getFieldValue("generateNonExecutableJson") as Boolean? ?: false
+            getFieldValue("serializeSpecialFloatingPointValues") as Boolean
+        val htmlSafe = getFieldValue("htmlSafe") as Boolean? ?: true
+        val generateNonExecutableJson = getFieldValue("generateNonExecutableJson") as Boolean
         val strictness = getFieldValue("strictness") as Strictness?
-        val useJdkUnsafe = getFieldValue("useJdkUnsafe") as Boolean? ?: true
+        val useJdkUnsafe = getFieldValue("useJdkUnsafe") as Boolean
         val objectToNumberStrategy =
-            getFieldValue("objectToNumberStrategy") as ToNumberStrategy? ?: ToNumberPolicy.DOUBLE
+            getFieldValue("objectToNumberStrategy") as ToNumberStrategy
         val numberToNumberStrategy =
-            getFieldValue("numberToNumberStrategy") as ToNumberStrategy? ?: ToNumberPolicy.LAZILY_PARSED_NUMBER
+            getFieldValue("numberToNumberStrategy") as ToNumberStrategy
 
         return CleanWizardGsonSerializationConfig(
             longSerializationPolicy,
             fieldNamingPolicy,
-            factories,
-            hierarchyFactories,
             serializeNulls,
             datePattern,
             dateStyle,
             timeStyle,
             complexMapKeySerialization,
             serializeSpecialFloatingPointValues,
-            escapeHtmlChars,
+            htmlSafe,
             generateNonExecutableJson,
             strictness,
             useJdkUnsafe,
-            objectToNumberStrategy,
-            numberToNumberStrategy
+            objectToNumberStrategy.toCleanWizardToNumberStrategy(),
+            numberToNumberStrategy.toCleanWizardToNumberStrategy()
         )
     } catch (e: Exception) {
         e.printStackTrace()

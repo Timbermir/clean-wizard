@@ -1,10 +1,15 @@
 package corp.tbm.cleanwizard.buildLogic.config.api
 
-import com.google.gson.GsonBuilder
+import com.google.gson.*
+import com.google.gson.annotations.Expose
+import com.google.gson.internal.Excluder
 import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardConfigDsl
+import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardIncubatingAPI
+import corp.tbm.cleanwizard.buildLogic.config.toCleanWizardGsonSerializationConfig
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.JsonNamingStrategy
+import java.text.DateFormat
 
 @CleanWizardConfigDsl
 abstract class KotlinXSerializationBuilder {
@@ -35,30 +40,106 @@ abstract class KotlinXSerializationConfigBuilder {
     var classDiscriminatorMode: ClassDiscriminatorMode = ClassDiscriminatorMode.POLYMORPHIC
 }
 
+fun someFun() {
+    GsonBuilder().excludeFieldsWithoutExposeAnnotation()
+}
 @CleanWizardConfigDsl
-abstract class GsonSerializationBuilder
+abstract class GsonSerializationBuilder {
+    /**
+     * Allows you to pass raw [Gson]. Values from it will be collected
+     * via [Reflection](https://www.oracle.com/technical-resources/articles/java/javareflection.html) due to
+     * inability to properly serialize it.
+     *
+     * If it is not assigned, properties will be used for building instead.
+     *
+     * However, it is **not recommended to use** because of reflection under the hood as it is not reliable.
+     *
+     * @see [toCleanWizardGsonSerializationConfig]
+     * @see longSerializationPolicy
+     * @see fieldNamingPolicy
+     * @see serializeNulls
+     * @see datePattern
+     * @see timeStyle
+     * @see complexMapKeySerialization
+     * @see serializeSpecialFloatingPointValues
+     * @see htmlSafe
+     * @see generateNonExecutableJson
+     * @see strictness
+     * @see useJdkUnsafe
+     * @see objectToNumberStrategy
+     * @see numberToNumberStrategy
+     */
+    @CleanWizardIncubatingAPI
+    var gson: Gson? = null
 
-@CleanWizardConfigDsl
-abstract class GsonSerializationConfigBuilder {
+        var excluder: Excluder = Excluder.DEFAULT
+    /**
+     * Alternative to [GsonBuilder.setLongSerializationPolicy].
+     */
+    var longSerializationPolicy: LongSerializationPolicy = LongSerializationPolicy.DEFAULT
 
-//    var excluder: Excluder = Excluder.DEFAULT
-//    var longSerializationPolicy = LongSerializationPolicy.DEFAULT
-//    var fieldNamingPolicy: FieldNamingStrategy = FieldNamingPolicy.IDENTITY
-//    var instanceCreators: Map<Type, InstanceCreator<*>> = HashMap()
-//    var factories: List<TypeAdapterFactory> = ArrayList()
-//    var hierarchyFactories: List<TypeAdapterFactory> = ArrayList()
-//    var serializeNulls = false
-//    var datePattern: String? = null
-//    var dateStyle = DateFormat.DEFAULT
-//    var timeStyle = DateFormat.DEFAULT
-//    var complexMapKeySerialization = false
-//    var serializeSpecialFloatingPointValues = false
-//    var escapeHtmlChars = true
-//    var formattingStyle: FormattingStyle = FormattingStyle.COMPACT
-//    var generateNonExecutableJson = false
-//    var strictness: Strictness? = null
-//    var useJdkUnsafe = true
-//    var objectToNumberStrategy: ToNumberStrategy = ToNumberPolicy.DOUBLE
-//    var numberToNumberStrategy: ToNumberStrategy = ToNumberPolicy.LAZILY_PARSED_NUMBER
-//    var reflectionFilters = ArrayDeque<ReflectionAccessFilter>()
+    /**
+     * Alternative to [GsonBuilder.setFieldNamingPolicy]
+     */
+    var fieldNamingPolicy: FieldNamingPolicy = FieldNamingPolicy.IDENTITY
+
+    /**
+     * Alternative to [GsonBuilder.serializeNulls]
+     */
+    var serializeNulls: Boolean = false
+
+    /**
+     * Alternative to [GsonBuilder.setDateFormat]
+     */
+    var datePattern: String? = null
+
+    /**
+     * Alternative to [GsonBuilder.setDateFormat]
+     */
+    var dateStyle: Int = DateFormat.DEFAULT
+
+    /**
+     * Alternative to [GsonBuilder.setDateFormat]
+     */
+    var timeStyle: Int = DateFormat.DEFAULT
+
+    /**
+     * Alternative to [GsonBuilder.enableComplexMapKeySerialization]
+     */
+    var complexMapKeySerialization: Boolean = false
+
+    /**
+     * Alternative to [GsonBuilder.serializeSpecialFloatingPointValues]
+     */
+    var serializeSpecialFloatingPointValues: Boolean = false
+
+    /**
+     * Alternative to [GsonBuilder.disableHtmlEscaping]
+     */
+    var htmlSafe: Boolean = true
+
+    /**
+     * Alternative to [GsonBuilder.generateNonExecutableJson]
+     */
+    var generateNonExecutableJson: Boolean = false
+
+    /**
+     * Alternative to [GsonBuilder.setStrictness]
+     */
+    var strictness: Strictness? = null
+
+    /**
+     * Alternative to [GsonBuilder.useJdkUnsafe]
+     */
+    var useJdkUnsafe: Boolean = true
+
+    /**
+     * Alternative to [GsonBuilder.setObjectToNumberStrategy]
+     */
+    var objectToNumberStrategy: ToNumberStrategy = ToNumberPolicy.DOUBLE
+
+    /**
+     * Alternative to [GsonBuilder.setNumberToNumberStrategy]
+     */
+    var numberToNumberStrategy: ToNumberStrategy = ToNumberPolicy.LAZILY_PARSED_NUMBER
 }

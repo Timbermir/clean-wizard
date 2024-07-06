@@ -7,6 +7,7 @@ plugins {
 
 dependencies {
     implementation(projects.visitors.enums)
+    implementation(libs.room.common)
 }
 
 mavenPublishing {

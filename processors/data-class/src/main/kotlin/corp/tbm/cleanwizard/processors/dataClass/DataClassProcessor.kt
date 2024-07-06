@@ -1,19 +1,19 @@
 package corp.tbm.cleanwizard.processors.dataClass
 
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getAnnotationsByType
-import com.google.devtools.ksp.getDeclaredProperties
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.writeTo
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
@@ -21,6 +21,7 @@ import corp.tbm.cleanwizard.foundation.codegen.kotlinpoet.allowedDataClassProper
 import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
 import corp.tbm.cleanwizard.foundation.codegen.universal.exceptions.references.PropertyAlreadyMarkedWithEnumException
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
+import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.*
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.DataClassGenerationPattern
@@ -29,6 +30,8 @@ import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOpti
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.jsonSerializer
 import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
 import corp.tbm.cleanwizard.visitors.enums.EnumGenerateVisitor
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.io.OutputStreamWriter
 import kotlin.reflect.KClass
 
@@ -212,6 +215,11 @@ class DataClassProcessor(
                                 ).build()
                         )
                     }
+                    addAnnotationsForDTO(symbol)
+
+                    if (symbol.isAnnotationPresent(Entity::class)) {
+                        generateTypeConvertersAndFile(symbol, packageName, className, resolver)
+                    }
                     this
                 },
                 fileSpecBuilder = { packageName, className, properties ->
@@ -321,6 +329,9 @@ class DataClassProcessor(
                             addAnnotation(ann.toAnnotationSpec())
                         }
                     }
+                    if (property.hasAnnotation(PrimaryKey::class)) {
+
+                    }
                     this
                 })
 
@@ -392,6 +403,85 @@ class DataClassProcessor(
                 })
         }
         return emptyList()
+    }
+
+    @OptIn(KspExperimental::class)
+    private fun TypeSpec.Builder.addAnnotationsForDTO(symbol: KSClassDeclaration): TypeSpec.Builder {
+        if (symbol.isAnnotationPresent(DTO::class)) {
+            symbol.annotations.filter { it.shortName.asString() == "Serializable" }.forEach { _ ->
+                addAnnotation(AnnotationSpec.builder(Serializable::class).build())
+            }
+            symbol.annotations.filter { it.shortName.asString() == "Entity" }.forEach { entityAnnotation ->
+                addAnnotation(entityAnnotation.toAnnotationSpec())
+            }
+        }
+        return this
+    }
+
+    private fun generateTypeConvertersAndFile(
+        symbol: KSClassDeclaration,
+        packageName: String,
+        className: String,
+        resolver: Resolver
+    ) {
+        val converterClassName = "${className}Converter"
+        val converterPackageName = "$packageName.converters"
+        val converterClassBuilder = TypeSpec.objectBuilder(converterClassName)
+
+        val converterFile = codeGenerator.createNewFile(
+            Dependencies(true, symbol.containingFile!!),
+            converterPackageName,
+            converterClassName
+        )
+
+        generateTypeConverters(symbol, resolver, packageName, converterClassBuilder)
+
+        val converterFileSpec = FileSpec.builder(converterPackageName, converterClassName)
+            .addImport(Json::class, "")
+            .addImport("kotlinx.serialization", "encodeToString")
+            .addType(converterClassBuilder.build())
+            .build()
+
+        OutputStreamWriter(converterFile).use { writer ->
+            converterFileSpec.writeTo(writer)
+        }
+    }
+
+    private fun generateTypeConverters(
+        symbol: KSClassDeclaration,
+        resolver: Resolver,
+        packageName: String,
+        converterClassBuilder: TypeSpec.Builder
+    ) {
+        symbol.getDeclaredProperties().forEach { property ->
+            if (property.type.resolve().isMappable) {
+                val propertyName = property.simpleName.asString()
+                val propertyType = property.determineParameterType(symbol, resolver, packageName)
+
+                when (jsonSerializer) {
+                    CleanWizardJsonSerializer.KotlinXSerialization -> {
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("from${propertyName.firstCharUppercase()}")
+                                .returns(String::class)
+                                .addAnnotation(ClassName("androidx.room", "TypeConverter"))
+                                .addParameter(propertyName, propertyType)
+                                .addStatement("return Json.encodeToString($propertyName)")
+                                .build()
+                        )
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("to${propertyName.firstCharUppercase()}")
+                                .returns(propertyType)
+                                .addAnnotation(ClassName("androidx.room", "TypeConverter"))
+                                .addParameter("json", String::class)
+                                .addStatement("return Json.decodeFromString(json)")
+                                .build()
+                        )
+                    }
+
+                    else -> {}
+                }
+            }
+        }
     }
 
     private fun generateTopLevelMappingFunctions(
@@ -475,6 +565,7 @@ class DataClassProcessor(
                                 }
                                 .filterNotNull())
                             it.initializer(property.name)
+
                             propertyBuilder(it, packageName, className, property)
 
                         }.build()
@@ -514,8 +605,14 @@ class DataClassProcessor(
             ClassName.bestGuess(this.annotationType.resolve().declaration.qualifiedName!!.asString())
         )
         this.arguments
-            .filterNot {
-                it.name?.asString() == "ignore" || (it.name?.asString() == "alternate" && (it.value as? List<*>)?.isEmpty() == true)
+            .filterNot { arg ->
+                when (val value = arg.value) {
+                    is String -> value.isEmpty()
+                    is List<*> -> value.isEmpty()
+                    is Boolean -> !value
+                    null -> true
+                    else -> false
+                }
             }
             .forEach { arg ->
                 builder.addMember(
@@ -525,7 +622,6 @@ class DataClassProcessor(
             }
         return builder.build()
     }
-
 }
 
 internal class DataClassProcessorProvider : SymbolProcessorProvider {

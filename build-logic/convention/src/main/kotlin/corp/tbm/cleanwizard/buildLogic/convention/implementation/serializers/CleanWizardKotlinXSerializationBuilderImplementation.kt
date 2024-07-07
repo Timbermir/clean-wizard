@@ -5,6 +5,8 @@ import corp.tbm.cleanwizard.buildLogic.config.CleanWizardKotlinXSerializationCon
 import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardKotlinXSerializationBuilder
 import corp.tbm.cleanwizard.buildLogic.config.toCleanWizardKotlinXSerializationJsonNamingStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.ClassDiscriminatorMode
+import kotlinx.serialization.json.JsonNamingStrategy
 
 internal class CleanWizardKotlinXSerializationBuilderImplementation : CleanWizardKotlinXSerializationBuilder() {
 
@@ -22,6 +24,40 @@ internal class CleanWizardKotlinXSerializationBuilderImplementation : CleanWizar
 
     private class CleanWizardKotlinXSerializationConfigBuilderImplementation :
         CleanWizardKotlinXSerializationConfigBuilder() {
+        override var encodeDefaults: Boolean = false
+
+        override var ignoreUnknownKeys: Boolean = false
+
+        override var isLenient: Boolean = false
+
+        override var allowStructuredMapKeys: Boolean = false
+
+        override var prettyPrint: Boolean = false
+
+        override var explicitNulls: Boolean = true
+
+        override var prettyPrintIndent: String = "    "
+
+        override var coerceInputValues: Boolean = false
+
+        override var useArrayPolymorphism: Boolean = false
+
+        override var classDiscriminator: String = "type"
+
+        override var allowSpecialFloatingPointValues: Boolean = false
+
+        override var useAlternativeNames: Boolean = true
+
+        @OptIn(ExperimentalSerializationApi::class)
+        override var namingStrategy: JsonNamingStrategy? = null
+
+        override var decodeEnumsCaseInsensitive: Boolean = false
+
+        override var allowTrailingComma: Boolean = false
+
+        override var allowComments: Boolean = false
+
+        override var classDiscriminatorMode: ClassDiscriminatorMode = ClassDiscriminatorMode.POLYMORPHIC
 
         @OptIn(ExperimentalSerializationApi::class)
         fun build(): CleanWizardKotlinXSerializationConfig {

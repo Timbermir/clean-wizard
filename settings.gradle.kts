@@ -24,12 +24,16 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "clean-wizard-root"
-includeBuild("build-logic")
+includeBuild(".")
+includeBuild("build-logic") {
+    dependencySubstitution {
+        project(":config")
+    }
+}
+include("aggregator")
 include(
     "foundation:annotations",
-    "foundation:codegen:ksp",
-    "foundation:codegen:kotlinpoet",
-    "foundation:codegen:universal"
+    "foundation:codegen"
 )
 include("clean-wizard")
 include("visitors:enums")

@@ -1,7 +1,6 @@
 package corp.tbm.cleanwizard.visitors.enums
 
 import com.google.devtools.ksp.processing.CodeGenerator
-import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.visitor.KSDefaultVisitor
@@ -9,15 +8,14 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.ksp.writeTo
-import corp.tbm.cleanwizard.foundation.codegen.universal.EnumType
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.name
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.takeIfNotEmptyOrReturnDefault
+import corp.tbm.cleanwizard.foundation.codegen.EnumType
+import corp.tbm.cleanwizard.foundation.codegen.extensions.firstCharUppercase
+import corp.tbm.cleanwizard.foundation.codegen.extensions.kotlinpoet.writeNewFile
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.name
+import corp.tbm.cleanwizard.foundation.codegen.extensions.takeIfNotEmptyOrReturnDefault
 
 class EnumGenerateVisitor(
-    private val codeGenerator: CodeGenerator,
-    private val logger: KSPLogger
+    private val codeGenerator: CodeGenerator
 ) : KSDefaultVisitor<String, Unit>() {
 
     override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: String) {
@@ -77,14 +75,7 @@ class EnumGenerateVisitor(
                 }.build()
         }
 
-        val fileSpec = FileSpec.builder(
-            packageName,
-            enumType.enumName
-        ).apply {
-            addType(enumClass)
-        }.build()
-
-        fileSpec.writeTo(codeGenerator, true)
+        FileSpec.builder(packageName, enumType.enumName).addType(enumClass).build().writeNewFile(codeGenerator)
     }
 
     private fun generateAppropriateEnumBuilder(

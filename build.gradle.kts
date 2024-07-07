@@ -1,13 +1,14 @@
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDataClassGenerationPattern
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
 
 plugins {
+    `java-library`
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.google.devtools.ksp) apply false
     alias(libs.plugins.cleanwizard.core)
-    idea
+    alias(libs.plugins.vanniktech.maven.publish) apply false
 }
 
 buildscript {
@@ -18,26 +19,26 @@ buildscript {
 
 `clean-wizard` {
 
-    jsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization
-    dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.TYPE
+    `json-serializer` {
+        `kotlinx-serialization` {
+            delimiter = "_"
+        }
+    }
 
-    dependencyInjection {
-        koinAnnotations {
-            automaticallyCreateModule = true
+    dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER
+
+    `dependency-injection` {
+        kodein {
+            useSimpleFunctions = true
+            binding = CleanWizardDependencyInjectionFramework.Kodein.KodeinBinding.Multiton()
         }
     }
 
     data {
-        classSuffix = "Dto"
+        classSuffix = "DTO"
         packageName = "dtos"
         interfaceMapperName = "DtoMapper"
         toDomainMapFunctionName = "toModel"
-    }
-
-    presentation {
-        classSuffix = "Ui"
-        packageName = "uis"
-        toDomainMapFunctionName = "fromUI"
     }
 
     domain {
@@ -46,9 +47,16 @@ buildscript {
         toDTOMapFunctionName = "fromDomain"
         toUIMapFunctionName = "toUI"
         useCase {
-            packageName = "usecase"
+            packageName = "useCase"
             useCaseFunctionType = CleanWizardUseCaseFunctionType.CustomFunctionName("execute")
-            classSuffix = "useCase"
+            classSuffix = "UseCase"
         }
+    }
+
+    presentation {
+        moduleName = "ui"
+        classSuffix = "Ui"
+        packageName = "uis"
+        toDomainMapFunctionName = "fromUI"
     }
 }

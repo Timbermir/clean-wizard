@@ -2,7 +2,10 @@ package corp.tbm.cleanwizard.processors.dataClass
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.google.devtools.ksp.*
+import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.getDeclaredProperties
+import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -12,23 +15,21 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.ksp.toKModifier
-import com.squareup.kotlinpoet.ksp.writeTo
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
-import corp.tbm.cleanwizard.foundation.codegen.kotlinpoet.allowedDataClassPropertiesModifiers
-import corp.tbm.cleanwizard.foundation.codegen.universal.dtoRegex
-import corp.tbm.cleanwizard.foundation.codegen.universal.exceptions.references.PropertyAlreadyMarkedWithEnumException
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharLowercase
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.firstCharUppercase
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.getAnnotatedSymbols
-import corp.tbm.cleanwizard.foundation.codegen.universal.extensions.ksp.ks.*
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.DataClassGenerationPattern
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.dataClassGenerationPattern
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.jsonSerializer
-import corp.tbm.cleanwizard.foundation.codegen.universal.processor.ProcessorOptions.layerConfigs
+import corp.tbm.cleanwizard.foundation.codegen.exceptions.references.PropertyAlreadyMarkedWithEnumException
+import corp.tbm.cleanwizard.foundation.codegen.extensions.*
+import corp.tbm.cleanwizard.foundation.codegen.extensions.kotlinpoet.writeNewFile
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.getAnnotatedSymbols
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.*
+import corp.tbm.cleanwizard.foundation.codegen.processor.DataClassGenerationPattern
+import corp.tbm.cleanwizard.foundation.codegen.processor.Logger
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dataClassGenerationPattern
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.jsonSerializer
+import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
 import corp.tbm.cleanwizard.visitors.enums.EnumGenerateVisitor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -38,7 +39,8 @@ import kotlin.reflect.KClass
 const val PARAMETER_SEPARATOR = ", \n    "
 const val PARAMETER_PREFIX = "\n    "
 
-class DataClassProcessor(
+@OptIn(KspExperimental::class)
+private class DataClassProcessor(
     private val codeGenerator: CodeGenerator,
     processorOptions: Map<String, String>,
     private val logger: KSPLogger
@@ -46,12 +48,13 @@ class DataClassProcessor(
 
     init {
         ProcessorOptions.generateConfigs(processorOptions)
+        Logger.getInstance(logger)
     }
 
     private var processingRound = 0
 
     private val enumGenerateVisitor by lazy {
-        EnumGenerateVisitor(codeGenerator, logger)
+        EnumGenerateVisitor(codeGenerator)
     }
 
     private val statementListFormatMapping: (functionName: String, packageName: String, properties: List<KSPropertyDeclaration>) -> String =
@@ -92,317 +95,347 @@ class DataClassProcessor(
             ) else ClassName(packageName, simpleName)
     }
 
-    @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        val symbols = resolver.getAnnotatedSymbols<KSClassDeclaration>(DTO::class.qualifiedName!!)
+        return reprocess(resolver, symbols)
+    }
+
+    private fun reprocess(resolver: Resolver, symbols: List<KSClassDeclaration>): List<KSAnnotated> {
         processingRound++
-
-        if (resolver.getModuleName().asString() == "clean-wizard")
-            try {
-                val typeVariable = TypeVariableName(layerConfigs.domain.classSuffix)
-                val interfaceBuilder = TypeSpec.interfaceBuilder(
-                    ClassName(
-                        "corp.tbm.cleanwizard.${layerConfigs.data.interfaceMapperName}",
-                        layerConfigs.data.interfaceMapperName
-                    )
-                ).addTypeVariable(typeVariable)
-                    .addFunction(
-                        FunSpec.builder(layerConfigs.data.toDomainMapFunctionName).addModifiers(KModifier.ABSTRACT)
-                            .returns(
-                                typeVariable
-                            ).build()
-                    )
-                val fileSpec = FileSpec.builder(
-                    "corp.tbm.cleanwizard",
-                    layerConfigs.data.interfaceMapperName
-                ).apply {
-                    addType(
-                        interfaceBuilder.build()
-                    ).addFunction(
-                        FunSpec.builder(layerConfigs.data.toDomainMapFunctionName).addTypeVariable(typeVariable)
-                            .receiver(
-                                List::class.asClassName()
-                                    .parameterizedBy(
-                                        ClassName(
-                                            "corp.tbm.cleanwizard",
-                                            layerConfigs.data.interfaceMapperName
-                                        ).plusParameter(typeVariable)
-                                    )
-                            )
-                            .returns(List::class.asClassName().plusParameter(typeVariable))
-                            .addStatement(
-                                "return map { dto -> dto.${layerConfigs.data.toDomainMapFunctionName}() }"
-                            ).build()
-                    )
-                        .build()
-                }.build()
-
-                fileSpec.writeTo(codeGenerator, true)
-            } catch (_: FileAlreadyExistsException) {
+        val deferredSymbols by lazy {
+            mutableSetOf<KSAnnotated>()
+        }
+        val classesWithEnums =
+            symbols.filter {
+                it.getDeclaredProperties().filter { it.annotations.filter { it.isEnum }.toList().isNotEmpty() }.toList()
+                    .isNotEmpty()
             }
 
-        val symbols = resolver.getAnnotatedSymbols<KSClassDeclaration>(DTO::class.qualifiedName!!)
-
-        symbols.forEach { symbol ->
-
-            if (symbol.getDeclaredProperties()
-                    .any { property -> property.annotations.filter { it.name.endsWith("Enum") }.toList().isNotEmpty() }
-            ) {
-                if (processingRound == 1) {
-                    symbol.getDeclaredProperties().forEach { property ->
-                        val enumPackageName =
-                            "${dataClassGenerationPattern.generatePackageName(symbol, layerConfigs.domain)}.enums"
-
-                        val propertyAnnotations = property.annotations.filter { it.name.endsWith("Enum") }.toList()
-
-                        if (propertyAnnotations.isNotEmpty()) {
-
-                            if (propertyAnnotations.size >= 2) {
-                                throw PropertyAlreadyMarkedWithEnumException(
-                                    "Property [${property.name}] in \n[${property.parentDeclaration?.fullyQualifiedName}] has the following $propertyAnnotations enums annotations. Only 1 is allowed"
+        when (processingRound) {
+            1 -> {
+                if (resolver.getModuleName().asString() == "clean-wizard") {
+                    val typeVariable = TypeVariableName(layerConfigs.domain.classSuffix)
+                    val interfaceBuilder = TypeSpec.interfaceBuilder(
+                        ClassName(
+                            "corp.tbm.cleanwizard.${layerConfigs.data.interfaceMapperName}",
+                            layerConfigs.data.interfaceMapperName
+                        )
+                    ).addTypeVariable(typeVariable)
+                        .addFunction(
+                            FunSpec.builder(layerConfigs.data.toDomainMapFunctionName).addModifiers(KModifier.ABSTRACT)
+                                .returns(
+                                    typeVariable
+                                ).build()
+                        )
+                    val fileSpec = FileSpec.builder(
+                        "corp.tbm.cleanwizard",
+                        layerConfigs.data.interfaceMapperName
+                    ).apply {
+                        addType(
+                            interfaceBuilder.build()
+                        ).addFunction(
+                            FunSpec.builder(layerConfigs.data.toDomainMapFunctionName).addTypeVariable(typeVariable)
+                                .receiver(
+                                    List::class.asClassName()
+                                        .parameterizedBy(
+                                            ClassName(
+                                                "corp.tbm.cleanwizard",
+                                                layerConfigs.data.interfaceMapperName
+                                            ).plusParameter(typeVariable)
+                                        )
                                 )
-                            }
+                                .returns(List::class.asClassName().plusParameter(typeVariable))
+                                .addStatement(
+                                    "return map { ${layerConfigs.data.classSuffix.lowercase()} -> ${layerConfigs.data.classSuffix.lowercase()}.${layerConfigs.data.toDomainMapFunctionName}() }"
+                                ).build()
+                        )
+                            .build()
+                    }.build()
 
-                            property.accept(enumGenerateVisitor, enumPackageName)
+                    fileSpec.writeNewFile(codeGenerator)
+                }
+                return reprocess(resolver, symbols)
+            }
+
+            2 -> {
+                deferredSymbols.addAll(symbols)
+
+                classesWithEnums.ifEmpty {
+                    return reprocess(resolver, symbols)
+                }
+
+                classesWithEnums.forEach { symbol ->
+                    val properties = symbol.getDeclaredProperties().toList()
+                    if (properties
+                            .any { property ->
+                                property.annotations.find { it.name.endsWith("Enum") } != null
+                            }
+                    ) {
+                        properties.forEach { property ->
+                            val enumPackageName =
+                                "${dataClassGenerationPattern.generatePackageName(symbol, layerConfigs.domain)}.enums"
+
+                            val propertyAnnotations = property.annotations.filter { it.name.endsWith("Enum") }.toList()
+
+                            propertyAnnotations.ifNotEmpty {
+                                if (propertyAnnotations.size >= 2) {
+                                    throw PropertyAlreadyMarkedWithEnumException(
+                                        "Property [${property.name}] in \n[${property.parentDeclaration?.fullyQualifiedName}] has the following $propertyAnnotations enums annotations. Only 1 is allowed"
+                                    )
+                                }
+                                property.accept(enumGenerateVisitor, enumPackageName)
+                            }
                         }
                     }
-                    return symbols.filter { it.validate() }
                 }
             }
 
-            generateClass(resolver, symbol, layerConfigs.domain)
+            3 -> {
+                symbols.forEach { symbol ->
+                    startGeneratingClasses(symbol, resolver)
+                    deferredSymbols.clear()
+                }
+            }
+        }
+        return deferredSymbols.toList()
+    }
 
-            generateClass(
-                resolver,
-                symbol,
-                layerConfigs.data,
-                classBuilder = { packageName, className, properties ->
+    private fun startGeneratingClasses(
+        symbol: KSClassDeclaration,
+        resolver: Resolver
+    ) {
+        generateClass(resolver, symbol, layerConfigs.domain)
 
-                    val domainClassName =
-                        generateDomainClassName(
-                            dataClassGenerationPattern.classNameReplacement(
-                                packageName,
-                                className,
-                                layerConfigs.data
+        generateClass(
+            resolver,
+            symbol,
+            layerConfigs.data,
+            classBuilder = { packageName, className, properties ->
+
+                val domainClassName =
+                    generateDomainClassName(
+                        dataClassGenerationPattern.classNameReplacement(
+                            packageName,
+                            className,
+                            layerConfigs.data
+                        )
+                    )
+
+                if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
+                    addSuperinterface(
+                        ClassName("corp.tbm.cleanwizard", layerConfigs.data.interfaceMapperName)
+                            .parameterizedBy(
+                                domainClassName
                             )
-                        )
+                    )
+                    addFunction(
+                        FunSpec.builder(layerConfigs.data.toDomainMapFunctionName)
+                            .addModifiers(KModifier.OVERRIDE)
+                            .returns(
+                                domainClassName
+                            )
+                            .addStatement(
+                                "return %T(${
+                                    properties.map { it.name }
+                                        .joinToString(
+                                            separator = PARAMETER_SEPARATOR,
+                                            prefix = PARAMETER_PREFIX
+                                        ) { parameter ->
+                                            if (properties.filter { it.name == parameter }
+                                                    .any { it.type.resolve().isMappable })
+                                                "$parameter.${layerConfigs.data.toDomainMapFunctionName}()" else parameter
+                                        }
+                                }\n)",
+                                domainClassName
+                            ).build()
+                    )
+                }
+                addAnnotationsForDTO(symbol)
 
-                    if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
-                        addSuperinterface(
-                            ClassName("corp.tbm.cleanwizard", layerConfigs.data.interfaceMapperName)
-                                .parameterizedBy(
-                                    domainClassName
-                                )
+                if (symbol.isAnnotationPresent(Entity::class)) {
+                    generateTypeConvertersAndFile(symbol, packageName, className, resolver)
+                }
+                this
+            },
+            fileSpecBuilder = { packageName, className, properties ->
+                val dtoAnnotation = symbol.getAnnotationsByType(DTO::class).first()
+                val domainClassName =
+                    generateDomainClassName(
+                        dataClassGenerationPattern.classNameReplacement(
+                            packageName,
+                            className,
+                            layerConfigs.data
                         )
+                    )
+                when {
+
+                    !dtoAnnotation.toDomainAsTopLevel -> {
+                        addImport(
+                            "corp.tbm.cleanwizard",
+                            ".${layerConfigs.data.toDomainMapFunctionName}"
+                        )
+                    }
+
+                    dtoAnnotation.toDomainAsTopLevel -> {
+                        val mappingFunctionName = layerConfigs.data.toDomainMapFunctionName
                         addFunction(
-                            FunSpec.builder(layerConfigs.data.toDomainMapFunctionName)
-                                .addModifiers(KModifier.OVERRIDE)
-                                .returns(
-                                    domainClassName
+                            generateTopLevelMappingFunctions(
+                                mappingFunctionName,
+                                properties,
+                                ClassName(
+                                    packageName,
+                                    className
+                                ),
+                                domainClassName,
+                                statementFormat = statementListFormatMapping(
+                                    mappingFunctionName,
+                                    packageName,
+                                    properties
                                 )
-                                .addStatement(
-                                    "return %T(${
-                                        properties.map { it.name }
-                                            .joinToString(
-                                                separator = PARAMETER_SEPARATOR,
-                                                prefix = PARAMETER_PREFIX
-                                            ) { parameter ->
-                                                if (properties.filter { it.name == parameter }
-                                                        .any { it.type.resolve().isMappable })
-                                                    "$parameter.${layerConfigs.data.toDomainMapFunctionName}()" else parameter
-                                            }
-                                    }\n)",
-                                    domainClassName
-                                ).build()
-                        )
-                    }
-                    addAnnotationsForDTO(symbol)
-
-                    if (symbol.isAnnotationPresent(Entity::class)) {
-                        generateTypeConvertersAndFile(symbol, packageName, className, resolver)
-                    }
-                    this
-                },
-                fileSpecBuilder = { packageName, className, properties ->
-                    val dtoAnnotation = symbol.getAnnotationsByType(DTO::class).first()
-                    val domainClassName =
-                        generateDomainClassName(
-                            dataClassGenerationPattern.classNameReplacement(
-                                packageName,
-                                className,
-                                layerConfigs.data
                             )
                         )
+                    }
+                }
+                properties.forEach { property ->
                     when {
 
-                        !dtoAnnotation.toDomainAsTopLevel -> {
-                            addImport(
-                                "corp.tbm.cleanwizard",
-                                ".${layerConfigs.data.toDomainMapFunctionName}"
-                            )
-                        }
-
                         dtoAnnotation.toDomainAsTopLevel -> {
-                            val mappingFunctionName = layerConfigs.data.toDomainMapFunctionName
-                            addFunction(
-                                generateTopLevelMappingFunctions(
-                                    mappingFunctionName,
-                                    properties,
-                                    ClassName(
-                                        packageName,
-                                        className
-                                    ),
-                                    domainClassName,
-                                    statementFormat = statementListFormatMapping(
-                                        mappingFunctionName,
-                                        packageName,
-                                        properties
+                            when {
+                                property.type.resolve().isClassMappable -> {
+                                    addImport(
+                                        property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                        ".${layerConfigs.data.toDomainMapFunctionName}"
                                     )
-                                )
-                            )
-                        }
-                    }
-                    properties.forEach { property ->
-                        when {
+                                }
 
-                            dtoAnnotation.toDomainAsTopLevel -> {
-                                when {
-                                    property.type.resolve().isClassMappable -> {
-                                        addImport(
-                                            property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                            ".${layerConfigs.data.toDomainMapFunctionName}"
-                                        )
-                                    }
-
-                                    property.type.resolve().isListMappable -> {
-                                        addImport(
-                                            property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                            ".${layerConfigs.data.toDomainMapFunctionName}"
-                                        )
-                                    }
+                                property.type.resolve().isListMappable -> {
+                                    addImport(
+                                        property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                        ".${layerConfigs.data.toDomainMapFunctionName}"
+                                    )
                                 }
                             }
                         }
                     }
-                    if (dtoAnnotation.backwardsMappingConfig == BackwardsMappingConfig.DOMAIN_TO_DATA ||
-                        dtoAnnotation.backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
-                    ) {
-                        val backWardMappingFunctionName = layerConfigs.domain.toDTOMapFunctionName
-                        properties.forEach { property ->
-                            if (property.type.resolve().isMappable) {
-                                addImport(
-                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                    ".$backWardMappingFunctionName"
-                                )
-                            }
-                        }
-
-
-                        addFunction(
-                            generateTopLevelMappingFunctions(
-                                backWardMappingFunctionName,
-                                properties,
-                                domainClassName,
-                                ClassName(
-                                    packageName,
-                                    className
-                                ),
-                                statementFormat = statementListFormatMapping(
-                                    backWardMappingFunctionName,
-                                    packageName.replace(layerConfigs.data.packageName, layerConfigs.domain.packageName),
-                                    properties
-                                )
+                }
+                if (dtoAnnotation.backwardsMappingConfig == BackwardsMappingConfig.DOMAIN_TO_DATA ||
+                    dtoAnnotation.backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
+                ) {
+                    val backWardMappingFunctionName = layerConfigs.domain.toDTOMapFunctionName
+                    properties.forEach { property ->
+                        if (property.type.resolve().isMappable) {
+                            addImport(
+                                property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                ".$backWardMappingFunctionName"
                             )
-                        )
-                    }
-                    this
-                }, propertyBuilder = { _, _, property ->
-                    if (!property.hasAnnotation(jsonSerializer.annotation)) {
-                        addAnnotation(
-                            AnnotationSpec.builder(
-                                jsonSerializer.annotation
-                            ).addMember("${jsonSerializer.nameProperty} = %S", property.name).build()
-                        )
-                    } else {
-                        val existingAnnotation = property.annotations
-                            .find { it.shortName.asString() == jsonSerializer.annotation.simpleName }
-                        existingAnnotation?.let { ann ->
-                            addAnnotation(ann.toAnnotationSpec())
                         }
                     }
-                    if (property.hasAnnotation(PrimaryKey::class)) {
 
-                    }
-                    this
-                })
 
-            generateClass(
-                resolver,
-                symbol,
-                layerConfigs.presentation,
-                fileSpecBuilder = { packageName, className, properties ->
-                    val domainClassName =
-                        generateDomainClassName(
-                            dataClassGenerationPattern.classNameReplacement(
-                                packageName,
-                                className,
-                                layerConfigs.presentation
-                            )
-                        )
                     addFunction(
                         generateTopLevelMappingFunctions(
-                            layerConfigs.domain.toUIMapFunctionName, properties, domainClassName,
-                            ClassName(packageName, className),
+                            backWardMappingFunctionName,
+                            properties,
+                            domainClassName,
+                            ClassName(
+                                packageName,
+                                className
+                            ),
                             statementFormat = statementListFormatMapping(
-                                layerConfigs.domain.toUIMapFunctionName,
-                                dataClassGenerationPattern.packageNameReplacement(
-                                    packageName,
-                                    layerConfigs.presentation
-                                ),
+                                backWardMappingFunctionName,
+                                packageName.replace(layerConfigs.data.packageName, layerConfigs.domain.packageName),
                                 properties
                             )
                         )
                     )
+                }
+                this
+            }, propertyBuilder = { _, _, property ->
+                if (!property.hasAnnotation(jsonSerializer.annotation)) {
+                    addAnnotation(
+                        AnnotationSpec.builder(
+                            jsonSerializer.annotation
+                        ).addMember("${jsonSerializer.nameProperty} = %S", property.name).build()
+                    )
+                } else {
+                    val existingAnnotation = property.annotations
+                        .find { it.shortName.asString() == jsonSerializer.annotation.simpleName }
+                    existingAnnotation?.let { ann ->
+                        addAnnotation(ann.toAnnotationSpec())
+                    }
+                }
+                if (property.hasAnnotation(PrimaryKey::class)) {
+
+                }
+                this
+            })
+
+        generateClass(
+            resolver,
+            symbol,
+            layerConfigs.presentation,
+            fileSpecBuilder = { packageName, className, properties ->
+                val domainClassName =
+                    generateDomainClassName(
+                        dataClassGenerationPattern.classNameReplacement(
+                            packageName,
+                            className,
+                            layerConfigs.presentation
+                        )
+                    )
+                addFunction(
+                    generateTopLevelMappingFunctions(
+                        layerConfigs.domain.toUIMapFunctionName, properties, domainClassName,
+                        ClassName(packageName, className),
+                        statementFormat = statementListFormatMapping(
+                            layerConfigs.domain.toUIMapFunctionName,
+                            dataClassGenerationPattern.packageNameReplacement(
+                                packageName,
+                                layerConfigs.presentation
+                            ),
+                            properties
+                        )
+                    )
+                )
+                properties.forEach { property ->
+                    if (property.type.resolve().isMappable)
+                        addImport(
+                            property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                            ".${layerConfigs.domain.toUIMapFunctionName}"
+                        )
+                }
+                if (symbol.getAnnotationsByType(DTO::class)
+                        .first().backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
+                ) {
+                    val backWardMappingFunctionName = layerConfigs.presentation.toDomainMapFunctionName
                     properties.forEach { property ->
-                        if (property.type.resolve().isMappable)
+                        if (property.type.resolve().isMappable) {
                             addImport(
                                 property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                ".${layerConfigs.domain.toUIMapFunctionName}"
+                                ".${backWardMappingFunctionName}"
                             )
-                    }
-                    if (symbol.getAnnotationsByType(DTO::class)
-                            .first().backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
-                    ) {
-                        val backWardMappingFunctionName = layerConfigs.presentation.toDomainMapFunctionName
-                        properties.forEach { property ->
-                            if (property.type.resolve().isMappable) {
-                                addImport(
-                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                    ".${backWardMappingFunctionName}"
-                                )
-                            }
                         }
+                    }
 
-                        addFunction(
-                            generateTopLevelMappingFunctions(
+                    addFunction(
+                        generateTopLevelMappingFunctions(
+                            backWardMappingFunctionName,
+                            properties,
+                            ClassName(
+                                packageName,
+                                className
+                            ),
+                            domainClassName,
+                            statementFormat = statementListFormatMapping(
                                 backWardMappingFunctionName,
-                                properties,
-                                ClassName(
-                                    packageName,
-                                    className
-                                ),
-                                domainClassName,
-                                statementFormat = statementListFormatMapping(
-                                    backWardMappingFunctionName,
-                                    packageName,
-                                    properties
-                                )
+                                packageName,
+                                properties
                             )
                         )
-                    }
-                    this
-                })
-        }
-        return emptyList()
+                    )
+                }
+                this
+            })
     }
 
     @OptIn(KspExperimental::class)
@@ -523,7 +556,7 @@ class DataClassProcessor(
 
         val properties = symbol.getDeclaredProperties().toList()
 
-        val className = symbol.name.replace(dtoRegex, "") + layerConfig.classSuffix
+        val className = symbol.name.withoutDTOSchemaSuffix + layerConfig.classSuffix
 
         val packageName = "${
             dataClassGenerationPattern.generatePackageName(
@@ -559,36 +592,26 @@ class DataClassProcessor(
                             it.mutable(property.isMutable)
                             it.addModifiers(property.modifiers.toList().map { modifier -> modifier.toKModifier() }
                                 .filter { modifier ->
-                                    modifier?.name in allowedDataClassPropertiesModifiers.map { allowedModifier ->
+                                    modifier?.name in listOf(
+                                        KModifier.PUBLIC,
+                                        KModifier.OVERRIDE,
+                                        KModifier.FINAL
+                                    ).map { allowedModifier ->
                                         allowedModifier.name
                                     }
                                 }
                                 .filterNotNull())
                             it.initializer(property.name)
-
                             propertyBuilder(it, packageName, className, property)
 
                         }.build()
                     }), packageName, className, properties
         ).build()
 
-        val fileSpec = fileSpecBuilder(
+        fileSpecBuilder(
             FileSpec.builder(packageName, className)
                 .addType(classToBuild), packageName, className, properties
-        ).build()
-
-        try {
-            val file = codeGenerator.createNewFile(
-                Dependencies(true, symbol.containingFile!!),
-                packageName,
-                className
-            )
-
-            OutputStreamWriter(file).use { writer ->
-                fileSpec.writeTo(writer)
-            }
-        } catch (_: FileAlreadyExistsException) {
-        }
+        ).build().writeNewFile(codeGenerator, Dependencies(true, symbol.containingFile!!))
     }
 
     private fun KSPropertyDeclaration.hasAnnotation(
@@ -616,11 +639,22 @@ class DataClassProcessor(
             }
             .forEach { arg ->
                 builder.addMember(
-                    "${arg.name?.asString()} = ${if (arg.value is String) "%S" else "%L"}",
+                    "${
+                        if (jsonSerializer.delimiter.isNotEmpty()) camelToSnake(
+                            arg.name?.asString().toString()
+                        ) else arg.name?.asString()
+                    } = ${if (arg.value is String) "%S" else "%L"}",
                     arg.value.toString()
                 )
             }
         return builder.build()
+    }
+
+    private fun camelToSnake(camelCase: String): String {
+        val regex = "(?<=[a-zA-Z])[A-Z]".toRegex()
+        return regex.replace(camelCase) {
+            "${jsonSerializer.delimiter}${it.value}"
+        }.lowercase()
     }
 }
 

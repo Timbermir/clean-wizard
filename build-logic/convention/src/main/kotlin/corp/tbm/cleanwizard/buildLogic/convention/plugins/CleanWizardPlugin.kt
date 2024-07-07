@@ -4,7 +4,7 @@ import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.cleanWiz
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.createTempFileWithEncodedString
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.json
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.ksp
-import corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions.CleanWizardExtension
+import corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions.CleanWizardExtensionImplementation
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -12,7 +12,7 @@ internal class CleanWizardPlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
         with(target) {
-            extensions.create("clean-wizard", CleanWizardExtension::class.java)
+            extensions.create("clean-wizard", CleanWizardExtensionImplementation::class.java)
             allprojects {
                 pluginManager.withPlugin("com.google.devtools.ksp") {
                     afterEvaluate {

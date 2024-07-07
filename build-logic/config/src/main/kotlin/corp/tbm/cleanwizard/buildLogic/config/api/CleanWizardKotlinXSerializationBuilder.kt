@@ -17,103 +17,103 @@ abstract class CleanWizardKotlinXSerializationBuilder {
          * Similar to [JsonBuilder.encodeDefaults]
          * @see [JsonBuilder.encodeDefaults]
          */
-        var encodeDefaults: Boolean = false
+        abstract var encodeDefaults: Boolean
 
         /**
          * Similar to [JsonBuilder.ignoreUnknownKeys]
          * @see [JsonBuilder.ignoreUnknownKeys]
          */
-        var ignoreUnknownKeys: Boolean = false
+        abstract var ignoreUnknownKeys: Boolean
 
         /**
          * Similar to [JsonBuilder.isLenient]
          * @see [JsonBuilder.isLenient]
          */
-        var isLenient: Boolean = false
+        abstract var isLenient: Boolean
 
         /**
          * Similar to [JsonBuilder.allowStructuredMapKeys]
          * @see [JsonBuilder.allowStructuredMapKeys]
          */
-        var allowStructuredMapKeys: Boolean = false
+        abstract var allowStructuredMapKeys: Boolean
 
         /**
          * Similar to [JsonBuilder.prettyPrint]
          * @see [JsonBuilder.prettyPrint]
          */
-        var prettyPrint: Boolean = false
+        abstract var prettyPrint: Boolean
 
         /**
          * Similar to [JsonBuilder.explicitNulls]
          * @see [JsonBuilder.explicitNulls]
          */
-        var explicitNulls: Boolean = true
+        abstract var explicitNulls: Boolean
 
         /**
          * Similar to [JsonBuilder.prettyPrintIndent]
          * @see [JsonBuilder.prettyPrintIndent]
          */
-        var prettyPrintIndent: String = "    "
+        abstract var prettyPrintIndent: String
 
         /**
          * Similar to [JsonBuilder.coerceInputValues]
          * @see [JsonBuilder.coerceInputValues]
          */
-        var coerceInputValues: Boolean = false
+        abstract var coerceInputValues: Boolean
 
         /**
          * Similar to [JsonBuilder.useArrayPolymorphism]
          * @see [JsonBuilder.useArrayPolymorphism]
          */
-        var useArrayPolymorphism: Boolean = false
+        abstract var useArrayPolymorphism: Boolean
 
         /**
          * Similar to [JsonBuilder.classDiscriminator]
          * @see [JsonBuilder.classDiscriminator]
          */
-        var classDiscriminator: String = "type"
+        abstract var classDiscriminator: String
 
         /**
          * Similar to [JsonBuilder.allowSpecialFloatingPointValues]
          * @see [JsonBuilder.allowSpecialFloatingPointValues]
          */
-        var allowSpecialFloatingPointValues: Boolean = false
+        abstract var allowSpecialFloatingPointValues: Boolean
 
         /**
          * Similar to [JsonBuilder.useAlternativeNames]
          * @see [JsonBuilder.useAlternativeNames]
          */
-        var useAlternativeNames: Boolean = true
+        abstract var useAlternativeNames: Boolean
 
         @OptIn(ExperimentalSerializationApi::class)
-                /**
-                 * Similar to [JsonBuilder.namingStrategy]
-                 * @see [JsonBuilder.namingStrategy]
-                 */
-        var namingStrategy: JsonNamingStrategy? = null
+        /**
+         * Similar to [JsonBuilder.namingStrategy]
+         * @see [JsonBuilder.namingStrategy]
+         */
+        abstract var namingStrategy: JsonNamingStrategy?
 
         /**
          * Similar to [JsonBuilder.decodeEnumsCaseInsensitive]
          * @see [JsonBuilder.decodeEnumsCaseInsensitive]
          */
-        var decodeEnumsCaseInsensitive: Boolean = false
+        abstract var decodeEnumsCaseInsensitive: Boolean
 
         /**
          * Similar to [JsonBuilder.allowTrailingComma]
          * @see [JsonBuilder.allowTrailingComma]
          */
-        var allowTrailingComma: Boolean = false
+        abstract var allowTrailingComma: Boolean
 
         /**
          * Similar to [JsonBuilder.allowComments]
          * @see [JsonBuilder.allowComments]
          */
-        var allowComments: Boolean = false
+        abstract var allowComments: Boolean
 
         /**
          * Similar to [JsonBuilder.classDiscriminatorMode]
          * @see [JsonBuilder.classDiscriminatorMode]
          */
-        var classDiscriminatorMode: ClassDiscriminatorMode = ClassDiscriminatorMode.POLYMORPHIC
+        abstract var classDiscriminatorMode: ClassDiscriminatorMode
     }
 }

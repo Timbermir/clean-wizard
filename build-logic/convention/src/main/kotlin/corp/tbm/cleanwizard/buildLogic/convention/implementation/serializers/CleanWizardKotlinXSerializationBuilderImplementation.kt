@@ -3,7 +3,6 @@ package corp.tbm.cleanwizard.buildLogic.convention.implementation.serializers
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardKotlinXSerializationConfig
 import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardKotlinXSerializationBuilder
-import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardKotlinXSerializationConfigBuilder
 import corp.tbm.cleanwizard.buildLogic.config.toCleanWizardKotlinXSerializationJsonNamingStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
 

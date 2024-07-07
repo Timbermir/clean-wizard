@@ -1,6 +1,7 @@
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDataClassGenerationPattern
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
+import kotlinx.serialization.json.JsonNamingStrategy
 
 plugins {
     `java-library`
@@ -21,7 +22,12 @@ buildscript {
 
     jsonSerializer {
         kotlinXSerialization {
-            delimiter = "_"
+            json {
+                encodeDefaults = true
+                prettyPrint = true
+                explicitNulls = false
+                namingStrategy = JsonNamingStrategy.KebabCase
+            }
         }
     }
 

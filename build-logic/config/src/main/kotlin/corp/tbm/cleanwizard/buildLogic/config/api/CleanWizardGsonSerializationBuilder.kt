@@ -1,7 +1,6 @@
 package corp.tbm.cleanwizard.buildLogic.config.api
 
 import com.google.gson.*
-import com.google.gson.internal.Excluder
 import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardConfigDsl
 import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardIncubatingAPI
 import java.text.DateFormat
@@ -17,7 +16,6 @@ abstract class CleanWizardGsonSerializationBuilder {
      *
      * However, it is **not recommended to use** because of reflection under the hood as it is not reliable.
      *
-     * @see [toCleanWizardGsonSerializationConfig]
      * @see longSerializationPolicy
      * @see fieldNamingPolicy
      * @see serializeNulls
@@ -34,8 +32,6 @@ abstract class CleanWizardGsonSerializationBuilder {
      */
     @CleanWizardIncubatingAPI
     var gson: Gson? = null
-
-    var excluder: Excluder = Excluder.DEFAULT
 
     /**
      * Alternative to [GsonBuilder.setLongSerializationPolicy].

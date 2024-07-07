@@ -12,7 +12,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlin.reflect.KClass
 
-object KClassSerializer : KSerializer<KClass<out Annotation>> {
+private object KClassSerializer : KSerializer<KClass<out Annotation>> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KClass", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: KClass<out Annotation>) {

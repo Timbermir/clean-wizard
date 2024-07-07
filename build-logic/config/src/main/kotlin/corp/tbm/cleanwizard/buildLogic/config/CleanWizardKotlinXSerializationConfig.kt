@@ -30,9 +30,10 @@ data class CleanWizardKotlinXSerializationConfig(
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
-abstract class CleanWizardKotlinXSerializationJsonNamingStrategy : JsonNamingStrategy {
-    @Serializable
-    companion object
+open class CleanWizardKotlinXSerializationJsonNamingStrategy : JsonNamingStrategy {
+    override fun serialNameForJson(descriptor: SerialDescriptor, elementIndex: Int, serialName: String): String {
+        return ""
+    }
 }
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -40,7 +41,11 @@ fun JsonNamingStrategy.toCleanWizardKotlinXSerializationJsonNamingStrategy(): Cl
 
     return object : CleanWizardKotlinXSerializationJsonNamingStrategy() {
 
-        override fun serialNameForJson(descriptor: SerialDescriptor, elementIndex: Int, serialName: String): String {
+        override fun serialNameForJson(
+            descriptor: SerialDescriptor,
+            elementIndex: Int,
+            serialName: String
+        ): String {
             return this@toCleanWizardKotlinXSerializationJsonNamingStrategy.serialNameForJson(
                 descriptor,
                 elementIndex,

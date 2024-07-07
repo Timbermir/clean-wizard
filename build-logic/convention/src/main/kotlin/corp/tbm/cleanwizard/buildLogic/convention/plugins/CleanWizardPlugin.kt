@@ -32,7 +32,9 @@ internal class CleanWizardPlugin : Plugin<Project> {
                                 )
                                 arg(
                                     "LAYER_CONFIGS",
-                                    json.createTempFileWithEncodedString(layerConfigs).absolutePath
+                                    json.createTempFileWithEncodedString(
+                                        layerConfigs
+                                    ).absolutePath
                                 )
                             }
                         }

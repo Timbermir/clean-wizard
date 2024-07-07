@@ -5,5 +5,5 @@ import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
 abstract class CleanWizardPresentationLayerConfigBuilder(presentation: CleanWizardLayerConfig.Presentation) :
     CleanWizardLayerConfigBuilder<CleanWizardLayerConfig.Presentation>(presentation) {
 
-    abstract var toDomainMapFunctionName: String
+    var toDomainMapFunctionName: String = presentation.toDomainMapFunctionName
 }

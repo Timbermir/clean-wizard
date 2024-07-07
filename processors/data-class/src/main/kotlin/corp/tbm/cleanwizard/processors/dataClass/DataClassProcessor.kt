@@ -543,21 +543,12 @@ private class DataClassProcessor(
             .forEach { arg ->
                 builder.addMember(
                     "${
-                        if (jsonSerializer.delimiter.isNotEmpty()) camelToSnake(
-                            arg.name?.asString().toString()
-                        ) else arg.name?.asString()
+                        arg.name?.asString()
                     } = ${if (arg.value is String) "%S" else "%L"}",
                     arg.value.toString()
                 )
             }
         return builder.build()
-    }
-
-    private fun camelToSnake(camelCase: String): String {
-        val regex = "(?<=[a-zA-Z])[A-Z]".toRegex()
-        return regex.replace(camelCase) {
-            "${jsonSerializer.delimiter}${it.value}"
-        }.lowercase()
     }
 }
 

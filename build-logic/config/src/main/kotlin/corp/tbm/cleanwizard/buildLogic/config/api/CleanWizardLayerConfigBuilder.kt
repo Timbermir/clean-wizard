@@ -4,23 +4,11 @@ import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
 import corp.tbm.cleanwizard.buildLogic.config.annotations.CleanWizardConfigDsl
 
 @CleanWizardConfigDsl
-abstract class CleanWizardLayerConfigBuilder<T : CleanWizardLayerConfig>(private val layerConfig: T) {
+abstract class CleanWizardLayerConfigBuilder<C : CleanWizardLayerConfig>(protected val layerConfig: C) {
 
-    var moduleName: String
-        get() = layerConfig.moduleName
-        set(value) {
-            layerConfig.moduleName = value
-        }
+    var moduleName: String = layerConfig.moduleName
 
-    var classSuffix: String
-        get() = layerConfig.classSuffix
-        set(value) {
-            layerConfig.classSuffix = value
-        }
+    var classSuffix: String = layerConfig.classSuffix
 
-    var packageName: String
-        get() = layerConfig.packageName
-        set(value) {
-            layerConfig.packageName = value
-        }
+    var packageName: String = layerConfig.packageName
 }

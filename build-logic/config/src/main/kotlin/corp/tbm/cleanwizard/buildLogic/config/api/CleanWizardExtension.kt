@@ -8,7 +8,7 @@ abstract class CleanWizardExtension {
 
     abstract var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern
 
-    abstract fun `json-serializer`(block: CleanWizardJsonSerializerBuilder.() -> Unit)
+    abstract fun jsonSerializer(block: CleanWizardJsonSerializerBuilder.() -> Unit)
 
     abstract fun data(block: CleanWizardDataLayerConfigBuilder.() -> Unit)
 
@@ -16,5 +16,5 @@ abstract class CleanWizardExtension {
 
     abstract fun presentation(block: CleanWizardPresentationLayerConfigBuilder.() -> Unit)
 
-    abstract fun `dependency-injection`(block: CleanWizardDependencyInjectionFrameworkBuilder.() -> Unit)
+    abstract fun dependencyInjection(block: CleanWizardDependencyInjectionFrameworkBuilder.() -> Unit)
 }

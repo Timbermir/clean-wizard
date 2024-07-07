@@ -1,6 +1,7 @@
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDataClassGenerationPattern
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
+import kotlinx.serialization.json.JsonNamingStrategy
 
 plugins {
     `java-library`
@@ -19,15 +20,20 @@ buildscript {
 
 `clean-wizard` {
 
-    `json-serializer` {
-        `kotlinx-serialization` {
-            delimiter = "_"
+    jsonSerializer {
+        kotlinXSerialization {
+            json {
+                encodeDefaults = true
+                prettyPrint = true
+                explicitNulls = false
+                namingStrategy = JsonNamingStrategy.KebabCase
+            }
         }
     }
 
     dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER
 
-    `dependency-injection` {
+    dependencyInjection {
         kodein {
             useSimpleFunctions = true
             binding = CleanWizardDependencyInjectionFramework.Kodein.KodeinBinding.Multiton()

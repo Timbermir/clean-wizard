@@ -2,19 +2,29 @@ package corp.tbm.cleanwizard.buildLogic.convention.implementation
 
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardDependencyInjectionFrameworkBuilder
+import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardKodeinDependencyInjectionFrameworkBuilder
+import corp.tbm.cleanwizard.buildLogic.config.api.CleanWizardKoinDependencyInjectionFrameworkBuilder
+import corp.tbm.cleanwizard.buildLogic.convention.implementation.dependencyInjectionFrameworks.CleanWizardKodeinDependencyInjectionFrameworkBuilderImplementation
+import corp.tbm.cleanwizard.buildLogic.convention.implementation.dependencyInjectionFrameworks.CleanWizardKoinDependencyInjectionFrameworkBuilderImplementation
 
-internal class CleanWizardDependencyInjectionFrameworkBuilderImplementation internal constructor() :
+internal class CleanWizardDependencyInjectionFrameworkBuilderImplementation :
     CleanWizardDependencyInjectionFrameworkBuilder() {
 
     override var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework =
         CleanWizardDependencyInjectionFramework.None
 
-    override fun koin(block: KoinBuilder.() -> Unit) {
-        KoinBuilderImplementation().apply(block)
+    private val koinBuilder =
+        CleanWizardKoinDependencyInjectionFrameworkBuilderImplementation()
+
+    private val kodeinBuilder =
+        CleanWizardKodeinDependencyInjectionFrameworkBuilderImplementation()
+
+    override fun koin(block: CleanWizardKoinDependencyInjectionFrameworkBuilder.() -> Unit) {
+        dependencyInjectionFramework = koinBuilder.apply(block).build()
     }
 
-    override fun kodein(block: CleanWizardDependencyInjectionFramework.Kodein.() -> Unit) {
-        dependencyInjectionFramework = CleanWizardDependencyInjectionFramework.Kodein().apply(block)
+    override fun kodein(block: CleanWizardKodeinDependencyInjectionFrameworkBuilder.() -> Unit) {
+        dependencyInjectionFramework = kodeinBuilder.apply(block).build()
     }
 
     override fun dagger() {
@@ -23,18 +33,5 @@ internal class CleanWizardDependencyInjectionFrameworkBuilderImplementation inte
 
     internal fun build(): CleanWizardDependencyInjectionFramework {
         return dependencyInjectionFramework
-    }
-
-    private inner class KoinBuilderImplementation : KoinBuilder() {
-
-        override fun core(block: CleanWizardDependencyInjectionFramework.Koin.Core.() -> Unit) {
-            this@CleanWizardDependencyInjectionFrameworkBuilderImplementation.dependencyInjectionFramework =
-                CleanWizardDependencyInjectionFramework.Koin.Core().apply(block)
-        }
-
-        override fun annotations(block: CleanWizardDependencyInjectionFramework.Koin.Annotations.() -> Unit) {
-            this@CleanWizardDependencyInjectionFrameworkBuilderImplementation.dependencyInjectionFramework =
-                CleanWizardDependencyInjectionFramework.Koin.Annotations().apply(block)
-        }
     }
 }

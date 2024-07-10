@@ -4,7 +4,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 
-val json = Json {
+internal val json = Json {
     classDiscriminator = "type"
     encodeDefaults = true
 }

@@ -20,6 +20,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.ksp.toKModifier
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
+import corp.tbm.cleanwizard.buildLogic.config.toJson
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 import corp.tbm.cleanwizard.foundation.codegen.exceptions.references.PropertyAlreadyMarkedWithEnumException
@@ -485,17 +486,17 @@ private class DataClassProcessor(
         val fileSpecBuilder = FileSpec.builder(converterPackageName, converterClassName)
 
         when (jsonSerializer) {
-            CleanWizardJsonSerializer.KotlinXSerialization -> {
+            is CleanWizardJsonSerializer.KotlinXSerialization -> {
                 fileSpecBuilder
                     .addImport(Json::class, "")
                     .addImport("kotlinx.serialization", "encodeToString")
             }
 
-            CleanWizardJsonSerializer.Gson -> {
+            is CleanWizardJsonSerializer.Gson -> {
                 fileSpecBuilder.addImport(TypeToken::class, "")
             }
 
-            CleanWizardJsonSerializer.Moshi -> {
+            is CleanWizardJsonSerializer.Moshi -> {
 
             }
         }
@@ -509,6 +510,7 @@ private class DataClassProcessor(
         converterClassBuilder: TypeSpec.Builder
     ) {
         var gsonAdded = false
+        var kotlinxAdded = false
 
         symbol.getDeclaredProperties().forEach { property ->
             if (property.type.resolve().isMappable) {
@@ -516,13 +518,27 @@ private class DataClassProcessor(
                 val propertyType = property.determineParameterType(symbol, resolver, packageName)
 
                 when (jsonSerializer) {
-                    CleanWizardJsonSerializer.KotlinXSerialization -> {
+                    is CleanWizardJsonSerializer.KotlinXSerialization -> {
+                        if (!kotlinxAdded) {
+                            kotlinxAdded = true
+                            val serializerConfig =
+                                Json {
+                                    (jsonSerializer as CleanWizardJsonSerializer.KotlinXSerialization).serializerConfig.toJson()
+                                }
+                            converterClassBuilder.addProperty(
+                                PropertySpec.builder("serializerConfig", Json::class)
+                                    .initializer("Json{%L}", serializerConfig)
+                                    .build()
+                            )
+                        }
                         converterClassBuilder.addFunction(
                             FunSpec.builder("from${propertyName.firstCharUppercase()}")
                                 .returns(String::class)
                                 .addAnnotation(TypeConverter::class)
                                 .addParameter(propertyName, propertyType)
-                                .addStatement("return Json.encodeToString($propertyName)")
+                                .addStatement(
+                                    "return serializerConfig.encodeToString($propertyName)"
+                                )
                                 .build()
                         )
                         converterClassBuilder.addFunction(
@@ -535,7 +551,7 @@ private class DataClassProcessor(
                         )
                     }
 
-                    CleanWizardJsonSerializer.Gson -> {
+                    is CleanWizardJsonSerializer.Gson -> {
                         if (!gsonAdded) {
                             gsonAdded = true
                             converterClassBuilder.addProperty(
@@ -550,6 +566,12 @@ private class DataClassProcessor(
                                 .addAnnotation(TypeConverter::class)
                                 .addParameter(propertyName, propertyType)
                                 .addStatement("return gson.toJson($propertyName)")
+                                .addStatement(
+                                    "return ${
+                                        (jsonSerializer as CleanWizardJsonSerializer.Gson).serializerConfig.toGson()
+                                            .toJson(propertyName)
+                                    }"
+                                )
                                 .build()
                         )
                         converterClassBuilder.addFunction(
@@ -560,12 +582,12 @@ private class DataClassProcessor(
                                 .addStatement(
                                     """val type = object : TypeToken<$propertyType>() {}.type""".trimIndent()
                                 )
-                                .addStatement("return gson.fromJson(json, type)")
+                                .addStatement("return ${(jsonSerializer as CleanWizardJsonSerializer.Gson).serializerConfig.toGson()}.fromJson(json, type)")
                                 .build()
                         )
                     }
 
-                    CleanWizardJsonSerializer.Moshi -> {
+                    is CleanWizardJsonSerializer.Moshi -> {
                         val adapterClassName =
                             ClassName("com.squareup.moshi", "JsonAdapter").parameterizedBy(propertyType)
                         val moshiType = ClassName("com.squareup.moshi", "Moshi")
@@ -728,21 +750,12 @@ private class DataClassProcessor(
             .forEach { arg ->
                 builder.addMember(
                     "${
-                        if (jsonSerializer.delimiter.isNotEmpty()) camelToSnake(
-                            arg.name?.asString().toString()
-                        ) else arg.name?.asString()
+                        arg.name?.asString()
                     } = ${if (arg.value is String) "%S" else "%L"}",
                     arg.value.toString()
                 )
             }
         return builder.build()
-    }
-
-    private fun camelToSnake(camelCase: String): String {
-        val regex = "(?<=[a-zA-Z])[A-Z]".toRegex()
-        return regex.replace(camelCase) {
-            "${jsonSerializer.delimiter}${it.value}"
-        }.lowercase()
     }
 }
 

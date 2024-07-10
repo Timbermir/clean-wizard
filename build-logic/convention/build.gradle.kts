@@ -12,6 +12,7 @@ plugins {
 dependencies {
     implementation(projects.config)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.google.gson)
     implementation(libs.vanniktech.maven.publish)
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.google.devtools.ksp)
@@ -23,7 +24,6 @@ dependencies {
 
 group = projectConfig.versions.group.get()
 version = projectConfig.versions.version.get()
-println(path)
 mavenPublishing {
 
     coordinates(

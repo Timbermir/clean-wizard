@@ -2,6 +2,7 @@ package corp.tbm.cleanwizard.processors.dataClass
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverter
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getDeclaredProperties
@@ -11,6 +12,8 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
@@ -252,7 +255,9 @@ private class DataClassProcessor(
                 }
                 addAnnotationsForDTO(symbol)
 
-                if (symbol.isAnnotationPresent(Entity::class)) {
+                if (symbol.isAnnotationPresent(Entity::class) && symbol.getDeclaredProperties()
+                        .any { it.type.resolve().isClassMappable }
+                ) {
                     generateTypeConvertersAndFile(symbol, packageName, className, resolver)
                 }
                 this
@@ -351,24 +356,22 @@ private class DataClassProcessor(
                 }
                 this
             }, propertyBuilder = { _, _, property ->
-                if (!property.hasAnnotation(jsonSerializer.annotation)) {
-                    addAnnotation(
-                        AnnotationSpec.builder(
-                            jsonSerializer.annotation
-                        ).addMember("${jsonSerializer.nameProperty} = %S", property.name).build()
-                    )
-                } else {
-                    val existingAnnotation = property.annotations
-                        .find { it.shortName.asString() == jsonSerializer.annotation.simpleName }
-                    existingAnnotation?.let { ann ->
-                        addAnnotation(ann.toAnnotationSpec())
-                    }
-                }
-                if (property.hasAnnotation(PrimaryKey::class)) {
+                val jsonAnnotationSpec =
+                    property.annotations.find { it.shortName.asString() == jsonSerializer.annotation.simpleName }
+                        ?.toAnnotationSpec()
+                        ?: AnnotationSpec.builder(jsonSerializer.annotation)
+                            .addMember("${jsonSerializer.nameProperty} = %S", property.name)
+                            .build()
+                addAnnotation(jsonAnnotationSpec)
 
-                }
+                property.annotations.find { it.shortName.asString() == PrimaryKey::class.simpleName }
+                    ?.let { primaryKeyAnnotation ->
+                        addAnnotation(primaryKeyAnnotation.toAnnotationSpec())
+                    }
+
                 this
-            })
+            }
+        )
 
         generateClass(
             resolver,
@@ -469,15 +472,34 @@ private class DataClassProcessor(
 
         generateTypeConverters(symbol, resolver, packageName, converterClassBuilder)
 
-        val converterFileSpec = FileSpec.builder(converterPackageName, converterClassName)
-            .addImport(Json::class, "")
-            .addImport("kotlinx.serialization", "encodeToString")
-            .addType(converterClassBuilder.build())
-            .build()
-
         OutputStreamWriter(converterFile).use { writer ->
-            converterFileSpec.writeTo(writer)
+            generateConverterFile(converterPackageName, converterClassName, converterClassBuilder).writeTo(writer)
         }
+    }
+
+    private fun generateConverterFile(
+        converterPackageName: String,
+        converterClassName: String,
+        converterClassBuilder: TypeSpec.Builder,
+    ): FileSpec {
+        val fileSpecBuilder = FileSpec.builder(converterPackageName, converterClassName)
+
+        when (jsonSerializer) {
+            CleanWizardJsonSerializer.KotlinXSerialization -> {
+                fileSpecBuilder
+                    .addImport(Json::class, "")
+                    .addImport("kotlinx.serialization", "encodeToString")
+            }
+
+            CleanWizardJsonSerializer.Gson -> {
+                fileSpecBuilder.addImport(TypeToken::class, "")
+            }
+
+            CleanWizardJsonSerializer.Moshi -> {
+
+            }
+        }
+        return fileSpecBuilder.addType(converterClassBuilder.build()).build()
     }
 
     private fun generateTypeConverters(
@@ -486,6 +508,8 @@ private class DataClassProcessor(
         packageName: String,
         converterClassBuilder: TypeSpec.Builder
     ) {
+        var gsonAdded = false
+
         symbol.getDeclaredProperties().forEach { property ->
             if (property.type.resolve().isMappable) {
                 val propertyName = property.simpleName.asString()
@@ -496,7 +520,7 @@ private class DataClassProcessor(
                         converterClassBuilder.addFunction(
                             FunSpec.builder("from${propertyName.firstCharUppercase()}")
                                 .returns(String::class)
-                                .addAnnotation(ClassName("androidx.room", "TypeConverter"))
+                                .addAnnotation(TypeConverter::class)
                                 .addParameter(propertyName, propertyType)
                                 .addStatement("return Json.encodeToString($propertyName)")
                                 .build()
@@ -504,9 +528,73 @@ private class DataClassProcessor(
                         converterClassBuilder.addFunction(
                             FunSpec.builder("to${propertyName.firstCharUppercase()}")
                                 .returns(propertyType)
-                                .addAnnotation(ClassName("androidx.room", "TypeConverter"))
+                                .addAnnotation(TypeConverter::class)
                                 .addParameter("json", String::class)
                                 .addStatement("return Json.decodeFromString(json)")
+                                .build()
+                        )
+                    }
+
+                    CleanWizardJsonSerializer.Gson -> {
+                        if (!gsonAdded) {
+                            gsonAdded = true
+                            converterClassBuilder.addProperty(
+                                PropertySpec.builder("gson", Gson::class)
+                                    .initializer("Gson()")
+                                    .build()
+                            )
+                        }
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("from${propertyName.firstCharUppercase()}")
+                                .returns(String::class)
+                                .addAnnotation(TypeConverter::class)
+                                .addParameter(propertyName, propertyType)
+                                .addStatement("return gson.toJson($propertyName)")
+                                .build()
+                        )
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("to${propertyName.firstCharUppercase()}")
+                                .returns(propertyType)
+                                .addAnnotation(TypeConverter::class)
+                                .addParameter("json", String::class)
+                                .addStatement(
+                                    """val type = object : TypeToken<$propertyType>() {}.type""".trimIndent()
+                                )
+                                .addStatement("return gson.fromJson(json, type)")
+                                .build()
+                        )
+                    }
+
+                    CleanWizardJsonSerializer.Moshi -> {
+                        val adapterClassName =
+                            ClassName("com.squareup.moshi", "JsonAdapter").parameterizedBy(propertyType)
+                        val moshiType = ClassName("com.squareup.moshi", "Moshi")
+
+                        converterClassBuilder.addProperty(
+                            PropertySpec.builder("${propertyName}Adapter", adapterClassName)
+                                .initializer(
+                                    "%T.Builder().add(%T()).build().adapter(%T::class.java)",
+                                    moshiType,
+                                    ClassName("com.squareup.moshi.kotlin.reflect", "KotlinJsonAdapterFactory"),
+                                    propertyType
+                                )
+                                .build()
+                        )
+
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("from${propertyName.firstCharUppercase()}")
+                                .returns(String::class)
+                                .addAnnotation(TypeConverter::class)
+                                .addParameter(propertyName, propertyType)
+                                .addStatement("return ${propertyName}Adapter.toJson($propertyName)")
+                                .build()
+                        )
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("to${propertyName.firstCharUppercase()}")
+                                .returns(propertyType)
+                                .addAnnotation(TypeConverter::class)
+                                .addParameter("json", String::class)
+                                .addStatement("return ${propertyName}Adapter.fromJson(json) ?: throw IllegalArgumentException(\"Cannot parse json\")")
                                 .build()
                         )
                     }

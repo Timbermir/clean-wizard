@@ -20,9 +20,12 @@ buildscript {
 `clean-wizard` {
 
     `json-serializer` {
-        `kotlinx-serialization` {
-            delimiter = "_"
+        gson {
+
         }
+//        `kotlinx-serialization` {
+//            delimiter = "_"
+//        }
     }
 
     dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER

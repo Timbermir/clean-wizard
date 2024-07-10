@@ -7,6 +7,7 @@ dependencies {
     implementation(projects.workloads.multiModule.domain)
     implementation(libs.bundles.kotlinx)
     implementation(libs.kodein)
+    implementation(libs.room.common)
 }
 
 `clean-wizard-codegen` {

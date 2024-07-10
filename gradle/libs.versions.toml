@@ -25,8 +25,6 @@ kodein = "7.22.0"
 javax-inject = "1"
 # Room
 room = "2.6.1"
-# AGP
-agp = "8.1.4"
 [libraries]
 # Vanniktech Maven Publish
 vanniktech-maven-publish = { group = "com.vanniktech", name = "gradle-maven-publish-plugin", version.ref = "vanniktech-maven-publish" }
@@ -43,6 +41,7 @@ google-gson = { group = "com.google.code.gson", name = "gson", version.ref = "go
 # Squareup
 squareup-kotlinpoet-ksp = { group = "com.squareup", name = "kotlinpoet-ksp", version.ref = "squareup-kotlinpoet" }
 squareup-moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "squareup-moshi" }
+squareup-moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "squareup-moshi" }
 # Koin
 koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
 koin-annotations = { group = "io.insert-koin", name = "koin-annotations", version.ref = "koin-annotations" }
@@ -79,4 +78,3 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 # KSP
 google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "google-devtools-ksp" }
-agp-library = { id = "com.android.library", version.ref = "agp" }

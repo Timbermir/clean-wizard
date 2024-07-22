@@ -13,14 +13,16 @@ import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.ksp.toKModifier
+import corp.tbm.cleanwizard.buildLogic.config.CleanWizardGsonSerializationConfig
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
-import corp.tbm.cleanwizard.buildLogic.config.toJson
+import corp.tbm.cleanwizard.buildLogic.config.toCleanWizardToNumberStrategy
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 import corp.tbm.cleanwizard.foundation.codegen.exceptions.references.PropertyAlreadyMarkedWithEnumException
@@ -36,6 +38,7 @@ import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.jsonSe
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
 import corp.tbm.cleanwizard.visitors.enums.EnumGenerateVisitor
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
 import java.io.OutputStreamWriter
 import kotlin.reflect.KClass
@@ -488,12 +491,14 @@ private class DataClassProcessor(
         when (jsonSerializer) {
             is CleanWizardJsonSerializer.KotlinXSerialization -> {
                 fileSpecBuilder
+                    .addImport(ClassDiscriminatorMode::class, "")
                     .addImport(Json::class, "")
                     .addImport("kotlinx.serialization", "encodeToString")
             }
 
             is CleanWizardJsonSerializer.Gson -> {
                 fileSpecBuilder.addImport(TypeToken::class, "")
+                fileSpecBuilder.addImport(GsonBuilder::class, "")
             }
 
             is CleanWizardJsonSerializer.Moshi -> {
@@ -522,12 +527,31 @@ private class DataClassProcessor(
                         if (!kotlinxAdded) {
                             kotlinxAdded = true
                             val serializerConfig =
-                                Json {
-                                    (jsonSerializer as CleanWizardJsonSerializer.KotlinXSerialization).serializerConfig.toJson()
-                                }
+                                (jsonSerializer as CleanWizardJsonSerializer.KotlinXSerialization).serializerConfig
+
+                            val jsonConfigString = buildString {
+                                append("Json { \n")
+                                append("encodeDefaults = ${serializerConfig.encodeDefaults}\n")
+                                append("ignoreUnknownKeys = ${serializerConfig.ignoreUnknownKeys}\n")
+                                append("isLenient = ${serializerConfig.isLenient}\n")
+                                append("allowStructuredMapKeys = ${serializerConfig.allowStructuredMapKeys}\n")
+                                append("prettyPrint = ${serializerConfig.prettyPrint}\n")
+                                append("explicitNulls = ${serializerConfig.explicitNulls}\n")
+                                append("prettyPrintIndent = \"${serializerConfig.prettyPrintIndent}\"\n")
+                                append("coerceInputValues = ${serializerConfig.coerceInputValues}\n")
+                                append("useArrayPolymorphism = ${serializerConfig.useArrayPolymorphism}\n")
+                                append("classDiscriminator = \"${serializerConfig.classDiscriminator}\"\n")
+                                append("allowSpecialFloatingPointValues = ${serializerConfig.allowSpecialFloatingPointValues}\n")
+                                append("useAlternativeNames = ${serializerConfig.useAlternativeNames}\n")
+                                append("decodeEnumsCaseInsensitive = ${serializerConfig.decodeEnumsCaseInsensitive}\n")
+                                append("allowTrailingComma = ${serializerConfig.allowTrailingComma}\n")
+                                append("allowComments = ${serializerConfig.allowComments}\n")
+                                append("}")
+                            }
+
                             converterClassBuilder.addProperty(
                                 PropertySpec.builder("serializerConfig", Json::class)
-                                    .initializer("Json{%L}", serializerConfig)
+                                    .initializer(jsonConfigString)
                                     .build()
                             )
                         }
@@ -546,7 +570,7 @@ private class DataClassProcessor(
                                 .returns(propertyType)
                                 .addAnnotation(TypeConverter::class)
                                 .addParameter("json", String::class)
-                                .addStatement("return Json.decodeFromString(json)")
+                                .addStatement("return serializerConfig.decodeFromString(json)")
                                 .build()
                         )
                     }
@@ -554,9 +578,29 @@ private class DataClassProcessor(
                     is CleanWizardJsonSerializer.Gson -> {
                         if (!gsonAdded) {
                             gsonAdded = true
+                            // Create the Gson configuration directly in the generated code
+                            val gsonConfig = (jsonSerializer as CleanWizardJsonSerializer.Gson).serializerConfig
+                            val gsonBuilderCode = buildString {
+                                append("GsonBuilder().apply {\n")
+                                append("    setLongSerializationPolicy(com.google.gson.LongSerializationPolicy.${gsonConfig.longSerializationPolicy.name})\n")
+                                append("    setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.${gsonConfig.fieldNamingPolicy.name})\n")
+                                if (gsonConfig.serializeNulls) append("    serializeNulls()\n")
+                                gsonConfig.datePattern?.let { append("    setDateFormat(\"$it\")\n") }
+                                append("    setDateFormat(${gsonConfig.dateStyle}, ${gsonConfig.timeStyle})\n")
+                                if (gsonConfig.complexMapKeySerialization) append("    enableComplexMapKeySerialization()\n")
+                                if (gsonConfig.serializeSpecialFloatingPointValues) append("    serializeSpecialFloatingPointValues()\n")
+                                if (!gsonConfig.htmlSafe) append("    disableHtmlEscaping()\n")
+                                if (gsonConfig.generateNonExecutableJson) append("    generateNonExecutableJson()\n")
+                                gsonConfig.strictness?.let { append("    setStrictness(com.google.gson.Strictness.${it.name})\n") }
+                                if (!gsonConfig.useJdkUnsafe) append("    disableJdkUnsafe()\n")
+//                                append("    setObjectToNumberStrategy(${gsonConfig.objectToNumberStrategy.toCleanWizardToNumberStrategy()}())\n")
+//                                append("    setNumberToNumberStrategy(${gsonConfig.numberToNumberStrategy.toCleanWizardToNumberStrategy()}())\n")
+                                append("}.create()")
+                            }
+
                             converterClassBuilder.addProperty(
                                 PropertySpec.builder("gson", Gson::class)
-                                    .initializer("Gson()")
+                                    .initializer(gsonBuilderCode)
                                     .build()
                             )
                         }
@@ -566,12 +610,6 @@ private class DataClassProcessor(
                                 .addAnnotation(TypeConverter::class)
                                 .addParameter(propertyName, propertyType)
                                 .addStatement("return gson.toJson($propertyName)")
-                                .addStatement(
-                                    "return ${
-                                        (jsonSerializer as CleanWizardJsonSerializer.Gson).serializerConfig.toGson()
-                                            .toJson(propertyName)
-                                    }"
-                                )
                                 .build()
                         )
                         converterClassBuilder.addFunction(
@@ -582,7 +620,7 @@ private class DataClassProcessor(
                                 .addStatement(
                                     """val type = object : TypeToken<$propertyType>() {}.type""".trimIndent()
                                 )
-                                .addStatement("return ${(jsonSerializer as CleanWizardJsonSerializer.Gson).serializerConfig.toGson()}.fromJson(json, type)")
+                                .addStatement("return gson.fromJson(json, type)")
                                 .build()
                         )
                     }

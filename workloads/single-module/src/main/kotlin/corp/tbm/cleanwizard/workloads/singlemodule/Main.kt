@@ -2,6 +2,7 @@ package corp.tbm.cleanwizard.workloads.singlemodule
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 import kotlinx.serialization.Serializable
@@ -11,7 +12,6 @@ fun main() {
 }
 
 @Entity
-@Serializable
 @DTO(backwardsMappingConfig = BackwardsMappingConfig.FULL_MAPPING)
 data class ComplexDTOSchema(
     @PrimaryKey(true)
@@ -23,7 +23,6 @@ data class ComplexDTOSchema(
 )
 
 @Entity
-@Serializable
 @DTO(backwardsMappingConfig = BackwardsMappingConfig.FULL_MAPPING)
 data class ProfileDTOSchema(
     val firstName: String,
@@ -33,7 +32,6 @@ data class ProfileDTOSchema(
 )
 
 @Entity
-@Serializable
 @DTO(backwardsMappingConfig = BackwardsMappingConfig.FULL_MAPPING)
 data class AddressDTOSchema(
     val street: String,

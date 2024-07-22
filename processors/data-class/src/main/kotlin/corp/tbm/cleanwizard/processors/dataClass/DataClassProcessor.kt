@@ -19,10 +19,8 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.ksp.toKModifier
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardGsonSerializationConfig
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
-import corp.tbm.cleanwizard.buildLogic.config.toCleanWizardToNumberStrategy
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 import corp.tbm.cleanwizard.foundation.codegen.exceptions.references.PropertyAlreadyMarkedWithEnumException
@@ -543,9 +541,11 @@ private class DataClassProcessor(
                                 append("classDiscriminator = \"${serializerConfig.classDiscriminator}\"\n")
                                 append("allowSpecialFloatingPointValues = ${serializerConfig.allowSpecialFloatingPointValues}\n")
                                 append("useAlternativeNames = ${serializerConfig.useAlternativeNames}\n")
+//                              TODO append("namingStrategy = ${serializerConfig.namingStrategy}\n")
                                 append("decodeEnumsCaseInsensitive = ${serializerConfig.decodeEnumsCaseInsensitive}\n")
                                 append("allowTrailingComma = ${serializerConfig.allowTrailingComma}\n")
                                 append("allowComments = ${serializerConfig.allowComments}\n")
+                                append("classDiscriminatorMode = ClassDiscriminatorMode.${serializerConfig.classDiscriminatorMode}\n")
                                 append("}")
                             }
 
@@ -593,8 +593,8 @@ private class DataClassProcessor(
                                 if (gsonConfig.generateNonExecutableJson) append("    generateNonExecutableJson()\n")
                                 gsonConfig.strictness?.let { append("    setStrictness(com.google.gson.Strictness.${it.name})\n") }
                                 if (!gsonConfig.useJdkUnsafe) append("    disableJdkUnsafe()\n")
-//                                append("    setObjectToNumberStrategy(${gsonConfig.objectToNumberStrategy.toCleanWizardToNumberStrategy()}())\n")
-//                                append("    setNumberToNumberStrategy(${gsonConfig.numberToNumberStrategy.toCleanWizardToNumberStrategy()}())\n")
+//                              TODO append("    setObjectToNumberStrategy(${gsonConfig.objectToNumberStrategy}())\n")
+//                              TODO append("    setNumberToNumberStrategy(${gsonConfig.numberToNumberStrategy}())\n")
                                 append("}.create()")
                             }
 

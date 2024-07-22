@@ -1,8 +1,6 @@
-import com.google.gson.Strictness
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDataClassGenerationPattern
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
-import okhttp3.internal.userAgent
 
 plugins {
     `java-library`
@@ -23,22 +21,8 @@ buildscript {
 
     jsonSerializer {
         gson {
-            serializeNulls = true
-            complexMapKeySerialization = true
-            htmlSafe = false
-            generateNonExecutableJson = true
-            strictness = Strictness.LENIENT
-            serializeSpecialFloatingPointValues = true
-            useJdkUnsafe = false
+
         }
-//        kotlinXSerialization {
-//            json {
-//                encodeDefaults = true
-//                prettyPrint = true
-//                explicitNulls = false
-//                namingStrategy = JsonNamingStrategy.KebabCase
-//            }
-//        }
     }
 
     dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER

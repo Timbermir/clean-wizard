@@ -12,7 +12,6 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.ksp.toKModifier
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 import corp.tbm.cleanwizard.foundation.codegen.exceptions.references.PropertyAlreadyMarkedWithEnumException
@@ -29,7 +28,8 @@ import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.jsonSerializer
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
-import corp.tbm.cleanwizard.visitors.enums.EnumGenerateVisitor
+import corp.tbm.cleanwizard.gradle.api.config.layerConfigs.CleanWizardLayerConfig
+import corp.tbm.cleanwizard.processors.dataClass.visitors.EnumGenerateVisitor
 import kotlin.reflect.KClass
 
 const val PARAMETER_SEPARATOR = ", \n    "
@@ -103,18 +103,22 @@ private class DataClassProcessor(
         }
         val classesWithEnums =
             symbols.filter {
-                it.getDeclaredProperties().filter { it.annotations.filter { it.isEnum }.toList().isNotEmpty() }.toList()
+                it.getDeclaredProperties().filter { property ->
+                    property.annotations.filter { annotation -> annotation.isEnum }.toList().isNotEmpty()
+                }.toList()
                     .isNotEmpty()
             }
 
         when (processingRound) {
             1 -> {
-                if (resolver.getModuleName().asString() == "clean-wizard") {
+                if (resolver.getModuleName()
+                        .asString() == layerConfigs.data.interfaceMapperConfig.pathToModuleToGenerateInterfaceMapper
+                ) {
                     val typeVariable = TypeVariableName(layerConfigs.domain.classSuffix)
                     val interfaceBuilder = TypeSpec.interfaceBuilder(
                         ClassName(
-                            "corp.tbm.cleanwizard.${layerConfigs.data.interfaceMapperName}",
-                            layerConfigs.data.interfaceMapperName
+                            "corp.tbm.cleanwizard.${layerConfigs.data.interfaceMapperConfig.className}",
+                            layerConfigs.data.interfaceMapperConfig.className
                         )
                     ).addTypeVariable(typeVariable)
                         .addFunction(
@@ -125,7 +129,7 @@ private class DataClassProcessor(
                         )
                     val fileSpec = FileSpec.builder(
                         "corp.tbm.cleanwizard",
-                        layerConfigs.data.interfaceMapperName
+                        layerConfigs.data.interfaceMapperConfig.className
                     ).apply {
                         addType(
                             interfaceBuilder.build()
@@ -136,7 +140,7 @@ private class DataClassProcessor(
                                         .parameterizedBy(
                                             ClassName(
                                                 "corp.tbm.cleanwizard",
-                                                layerConfigs.data.interfaceMapperName
+                                                layerConfigs.data.interfaceMapperConfig.className
                                             ).plusParameter(typeVariable)
                                         )
                                 )
@@ -219,7 +223,7 @@ private class DataClassProcessor(
 
                 if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
                     addSuperinterface(
-                        ClassName("corp.tbm.cleanwizard", layerConfigs.data.interfaceMapperName)
+                        ClassName("corp.tbm.cleanwizard", layerConfigs.data.interfaceMapperConfig.className)
                             .parameterizedBy(
                                 domainClassName
                             )
@@ -358,72 +362,74 @@ private class DataClassProcessor(
                 this
             })
 
-        generateClass(
-            resolver,
-            symbol,
-            layerConfigs.presentation,
-            fileSpecBuilder = { packageName, className, properties ->
-                val domainClassName =
-                    generateDomainClassName(
-                        dataClassGenerationPattern.classNameReplacement(
-                            packageName,
-                            className,
-                            layerConfigs.presentation
-                        )
-                    )
-                addFunction(
-                    generateTopLevelMappingFunctions(
-                        layerConfigs.domain.toUIMapFunctionName, properties, domainClassName,
-                        ClassName(packageName, className),
-                        statementFormat = statementListFormatMapping(
-                            layerConfigs.domain.toUIMapFunctionName,
-                            dataClassGenerationPattern.packageNameReplacement(
+        if (layerConfigs.presentation.shouldGenerate) {
+            generateClass(
+                resolver,
+                symbol,
+                layerConfigs.presentation,
+                fileSpecBuilder = { packageName, className, properties ->
+                    val domainClassName =
+                        generateDomainClassName(
+                            dataClassGenerationPattern.classNameReplacement(
                                 packageName,
+                                className,
                                 layerConfigs.presentation
-                            ),
-                            properties
-                        )
-                    )
-                )
-                properties.forEach { property ->
-                    if (property.type.resolve().isMappable)
-                        addImport(
-                            property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                            ".${layerConfigs.domain.toUIMapFunctionName}"
-                        )
-                }
-                if (symbol.getAnnotationsByType(DTO::class)
-                        .first().backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
-                ) {
-                    val backWardMappingFunctionName = layerConfigs.presentation.toDomainMapFunctionName
-                    properties.forEach { property ->
-                        if (property.type.resolve().isMappable) {
-                            addImport(
-                                property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                ".${backWardMappingFunctionName}"
                             )
-                        }
-                    }
-
+                        )
                     addFunction(
                         generateTopLevelMappingFunctions(
-                            backWardMappingFunctionName,
-                            properties,
-                            ClassName(
-                                packageName,
-                                className
-                            ),
-                            domainClassName,
+                            layerConfigs.domain.toUIMapFunctionName, properties, domainClassName,
+                            ClassName(packageName, className),
                             statementFormat = statementListFormatMapping(
-                                backWardMappingFunctionName,
-                                packageName,
+                                layerConfigs.domain.toUIMapFunctionName,
+                                dataClassGenerationPattern.packageNameReplacement(
+                                    packageName,
+                                    layerConfigs.presentation
+                                ),
                                 properties
                             )
                         )
                     )
-                }
-                this
-            })
+                    properties.forEach { property ->
+                        if (property.type.resolve().isMappable)
+                            addImport(
+                                property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                ".${layerConfigs.domain.toUIMapFunctionName}"
+                            )
+                    }
+                    if (symbol.getAnnotationsByType(DTO::class)
+                            .first().backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
+                    ) {
+                        val backWardMappingFunctionName = layerConfigs.presentation.toDomainMapFunctionName
+                        properties.forEach { property ->
+                            if (property.type.resolve().isMappable) {
+                                addImport(
+                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                    ".${backWardMappingFunctionName}"
+                                )
+                            }
+                        }
+
+                        addFunction(
+                            generateTopLevelMappingFunctions(
+                                backWardMappingFunctionName,
+                                properties,
+                                ClassName(
+                                    packageName,
+                                    className
+                                ),
+                                domainClassName,
+                                statementFormat = statementListFormatMapping(
+                                    backWardMappingFunctionName,
+                                    packageName,
+                                    properties
+                                )
+                            )
+                        )
+                    }
+                    this
+                })
+        }
     }
 
     private fun generateTopLevelMappingFunctions(

@@ -14,4 +14,3 @@ abstract class CleanWizardDependencyInjectionFrameworkBuilder {
 
     abstract fun dagger()
 }
-abstract class NewBuilder

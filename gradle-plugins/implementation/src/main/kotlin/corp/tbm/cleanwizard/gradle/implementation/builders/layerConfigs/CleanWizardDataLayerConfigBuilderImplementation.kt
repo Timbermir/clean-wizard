@@ -37,8 +37,8 @@ internal class CleanWizardDataLayerConfigBuilderImplementation(data: CleanWizard
 
         fun build(): CleanWizardInterfaceMapperConfig {
             return this@CleanWizardDataLayerConfigBuilderImplementation.layerConfig.interfaceMapperConfig.copy(
+                className,
                 pathToModuleToGenerateInterfaceMapper,
-                className
             )
         }
     }

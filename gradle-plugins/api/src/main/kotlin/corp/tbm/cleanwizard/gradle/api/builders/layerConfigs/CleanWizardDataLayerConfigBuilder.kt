@@ -18,9 +18,10 @@ abstract class CleanWizardDataLayerConfigBuilder(data: CleanWizardLayerConfig.Da
 
         val data = this@CleanWizardDataLayerConfigBuilder.layerConfig
 
+        var className: String = data.interfaceMapperConfig.className
+
         var pathToModuleToGenerateInterfaceMapper: String =
             data.interfaceMapperConfig.pathToModuleToGenerateInterfaceMapper
-        var className: String = data.interfaceMapperConfig.className
     }
 
     @CleanWizardConfigDsl

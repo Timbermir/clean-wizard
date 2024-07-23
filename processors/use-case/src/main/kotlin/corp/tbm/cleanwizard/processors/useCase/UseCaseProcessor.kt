@@ -9,8 +9,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
 import corp.tbm.cleanwizard.foundation.annotations.Repository
 import corp.tbm.cleanwizard.foundation.annotations.UseCase
 import corp.tbm.cleanwizard.foundation.codegen.extensions.asPackage
@@ -29,7 +27,8 @@ import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dependencyInjectionFramework
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
-import kotlinx.collections.immutable.toImmutableSet
+import corp.tbm.cleanwizard.gradle.api.config.CleanWizardDependencyInjectionFramework
+import corp.tbm.cleanwizard.gradle.api.config.CleanWizardUseCaseFunctionType
 import org.kodein.di.DI
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Factory
@@ -126,7 +125,7 @@ class UseCaseProcessor(
             val functionModifiers = declaredFunction.modifiers.mapNotNull { it.toKModifier() }.toMutableSet().also {
                 if (layerConfigs.domain.useCaseConfig.useCaseFunctionType is CleanWizardUseCaseFunctionType.Operator)
                     it.add(KModifier.OPERATOR)
-            }.toImmutableSet()
+            }.toSet()
 
             val function =
                 FunSpec.builder(

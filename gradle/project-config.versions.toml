@@ -1,6 +1,5 @@
 [versions]
 kotlin = "2.0"
 jdk = "19"
-group = "io.github.timbermir"
-artifact = "clean-wizard"
-version = "2.0.0-RC1"
+group = "io.github.timbermir.clean-wizard"
+version = "2.0.0-RC8"

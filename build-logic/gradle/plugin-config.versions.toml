@@ -1,8 +1,5 @@
 [versions]
-cleanwizard-root-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.CleanWizardPlugin"
-cleanwizard-multimodule-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.CleanWizardMultiModulePlugin"
-cleanwizard-kotlin-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.internal.KotlinPlugin"
-cleanwizard-codegen-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.internal.CodegenPlugin"
-cleanwizard-processor-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.internal.ProcessorPlugin"
-cleanwizard-visitor-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.internal.VisitorPlugin"
-cleanwizard-publish-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.internal.PublishPlugin"
+cleanwizard-kotlin-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.KotlinPlugin"
+cleanwizard-codegen-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.CodegenPlugin"
+cleanwizard-processor-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.ProcessorPlugin"
+cleanwizard-publish-implementation = "corp.tbm.cleanwizard.buildLogic.convention.plugins.PublishPlugin"

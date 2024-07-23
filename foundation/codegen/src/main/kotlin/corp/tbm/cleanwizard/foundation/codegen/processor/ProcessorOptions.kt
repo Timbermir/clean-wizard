@@ -1,10 +1,10 @@
 package corp.tbm.cleanwizard.foundation.codegen.processor
 
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardJsonSerializer
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfigWrapper
 import corp.tbm.cleanwizard.foundation.codegen.extensions.getFile
 import corp.tbm.cleanwizard.foundation.codegen.extensions.readJsonFromFile
+import corp.tbm.cleanwizard.gradle.api.config.CleanWizardDependencyInjectionFramework
+import corp.tbm.cleanwizard.gradle.api.config.layerConfigs.CleanWizardLayerConfigWrapper
+import corp.tbm.cleanwizard.gradle.api.config.serializer.CleanWizardJsonSerializer
 
 object ProcessorOptions {
     private var processorOptions = mapOf<String, String>()

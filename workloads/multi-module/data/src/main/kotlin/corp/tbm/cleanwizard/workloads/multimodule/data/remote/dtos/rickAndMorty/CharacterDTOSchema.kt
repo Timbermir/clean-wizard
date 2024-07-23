@@ -1,11 +1,15 @@
 package corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.rickAndMorty
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 import corp.tbm.cleanwizard.foundation.annotations.StringEnum
 
+@Entity
 @DTO(false, backwardsMappingConfig = BackwardsMappingConfig.FULL_MAPPING)
 data class CharacterDTOSchema(
+    @PrimaryKey(autoGenerate = true)
     val id: Int,
     val name: String,
     @StringEnum(enumEntries = ["Alive", "Dead", "Unknown"], enumEntryValues = ["Alive", "Dead", "unknown"])

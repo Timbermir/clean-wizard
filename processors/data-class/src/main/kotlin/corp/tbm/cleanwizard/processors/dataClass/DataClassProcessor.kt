@@ -1,35 +1,44 @@
 package corp.tbm.cleanwizard.processors.dataClass
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.room.TypeConverter
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getDeclaredProperties
+import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.ksp.toKModifier
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardLayerConfig
 import corp.tbm.cleanwizard.foundation.annotations.BackwardsMappingConfig
 import corp.tbm.cleanwizard.foundation.annotations.DTO
 import corp.tbm.cleanwizard.foundation.codegen.exceptions.references.PropertyAlreadyMarkedWithEnumException
-import corp.tbm.cleanwizard.foundation.codegen.extensions.firstCharLowercase
-import corp.tbm.cleanwizard.foundation.codegen.extensions.ifEmpty
-import corp.tbm.cleanwizard.foundation.codegen.extensions.ifNotEmpty
+import corp.tbm.cleanwizard.foundation.codegen.extensions.*
 import corp.tbm.cleanwizard.foundation.codegen.extensions.kotlinpoet.writeNewFile
 import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.*
-import corp.tbm.cleanwizard.foundation.codegen.extensions.withoutDTOSchemaSuffix
 import corp.tbm.cleanwizard.foundation.codegen.processor.DataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.processor.Logger
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.jsonSerializer
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
-import corp.tbm.cleanwizard.visitors.enums.EnumGenerateVisitor
+import corp.tbm.cleanwizard.gradle.api.config.layerConfigs.CleanWizardLayerConfig
+import corp.tbm.cleanwizard.gradle.api.config.serializer.CleanWizardJsonSerializer
+import corp.tbm.cleanwizard.processors.dataClass.visitors.EnumGenerateVisitor
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.ClassDiscriminatorMode
+import kotlinx.serialization.json.Json
+import java.io.OutputStreamWriter
 import kotlin.reflect.KClass
 
 const val PARAMETER_SEPARATOR = ", \n    "
@@ -103,18 +112,22 @@ private class DataClassProcessor(
         }
         val classesWithEnums =
             symbols.filter {
-                it.getDeclaredProperties().filter { it.annotations.filter { it.isEnum }.toList().isNotEmpty() }.toList()
+                it.getDeclaredProperties().filter { property ->
+                    property.annotations.filter { annotation -> annotation.isEnum }.toList().isNotEmpty()
+                }.toList()
                     .isNotEmpty()
             }
 
         when (processingRound) {
             1 -> {
-                if (resolver.getModuleName().asString() == "clean-wizard") {
+                if (layerConfigs.data.interfaceMapperConfig.pathToModuleToGenerateInterfaceMapper.isNotEmpty() && resolver.getModuleName()
+                        .asString() == layerConfigs.data.interfaceMapperConfig.pathToModuleToGenerateInterfaceMapper
+                ) {
                     val typeVariable = TypeVariableName(layerConfigs.domain.classSuffix)
                     val interfaceBuilder = TypeSpec.interfaceBuilder(
                         ClassName(
-                            "corp.tbm.cleanwizard.${layerConfigs.data.interfaceMapperName}",
-                            layerConfigs.data.interfaceMapperName
+                            "corp.tbm.cleanwizard.${layerConfigs.data.interfaceMapperConfig.className}",
+                            layerConfigs.data.interfaceMapperConfig.className
                         )
                     ).addTypeVariable(typeVariable)
                         .addFunction(
@@ -125,7 +138,7 @@ private class DataClassProcessor(
                         )
                     val fileSpec = FileSpec.builder(
                         "corp.tbm.cleanwizard",
-                        layerConfigs.data.interfaceMapperName
+                        layerConfigs.data.interfaceMapperConfig.className
                     ).apply {
                         addType(
                             interfaceBuilder.build()
@@ -136,7 +149,7 @@ private class DataClassProcessor(
                                         .parameterizedBy(
                                             ClassName(
                                                 "corp.tbm.cleanwizard",
-                                                layerConfigs.data.interfaceMapperName
+                                                layerConfigs.data.interfaceMapperConfig.className
                                             ).plusParameter(typeVariable)
                                         )
                                 )
@@ -219,7 +232,7 @@ private class DataClassProcessor(
 
                 if (!symbol.getAnnotationsByType(DTO::class).first().toDomainAsTopLevel) {
                     addSuperinterface(
-                        ClassName("corp.tbm.cleanwizard", layerConfigs.data.interfaceMapperName)
+                        ClassName("corp.tbm.cleanwizard", layerConfigs.data.interfaceMapperConfig.className)
                             .parameterizedBy(
                                 domainClassName
                             )
@@ -245,6 +258,13 @@ private class DataClassProcessor(
                                 domainClassName
                             ).build()
                     )
+                }
+                addAnnotationsForDTO(symbol)
+
+                if (symbol.isAnnotationPresent(Entity::class) && symbol.getDeclaredProperties()
+                        .any { it.type.resolve().isClassMappable }
+                ) {
+                    generateTypeConvertersAndFile(symbol, packageName, className, resolver)
                 }
                 this
             },
@@ -342,88 +362,312 @@ private class DataClassProcessor(
                 }
                 this
             }, propertyBuilder = { _, _, property ->
-                if (!property.hasAnnotation(jsonSerializer.annotation)) {
-                    addAnnotation(
-                        AnnotationSpec.builder(
-                            jsonSerializer.annotation
-                        ).addMember("${jsonSerializer.nameProperty} = %S", property.name).build()
-                    )
-                } else {
-                    val existingAnnotation = property.annotations
-                        .find { it.shortName.asString() == jsonSerializer.annotation.simpleName }
-                    existingAnnotation?.let { ann ->
-                        addAnnotation(ann.toAnnotationSpec())
+                val jsonAnnotationSpec =
+                    property.annotations.find { it.shortName.asString() == jsonSerializer.annotation.simpleName }
+                        ?.toAnnotationSpec()
+                        ?: AnnotationSpec.builder(jsonSerializer.annotation)
+                            .addMember("${jsonSerializer.nameProperty} = %S", property.name)
+                            .build()
+                addAnnotation(jsonAnnotationSpec)
+
+                property.annotations.find { it.shortName.asString() == PrimaryKey::class.simpleName }
+                    ?.let { primaryKeyAnnotation ->
+                        addAnnotation(primaryKeyAnnotation.toAnnotationSpec())
                     }
-                }
+
                 this
-            })
+            }
+        )
 
-        generateClass(
-            resolver,
-            symbol,
-            layerConfigs.presentation,
-            fileSpecBuilder = { packageName, className, properties ->
-                val domainClassName =
-                    generateDomainClassName(
-                        dataClassGenerationPattern.classNameReplacement(
-                            packageName,
-                            className,
-                            layerConfigs.presentation
-                        )
-                    )
-                addFunction(
-                    generateTopLevelMappingFunctions(
-                        layerConfigs.domain.toUIMapFunctionName, properties, domainClassName,
-                        ClassName(packageName, className),
-                        statementFormat = statementListFormatMapping(
-                            layerConfigs.domain.toUIMapFunctionName,
-                            dataClassGenerationPattern.packageNameReplacement(
+        if (layerConfigs.presentation.shouldGenerate) {
+            generateClass(
+                resolver,
+                symbol,
+                layerConfigs.presentation,
+                fileSpecBuilder = { packageName, className, properties ->
+                    val domainClassName =
+                        generateDomainClassName(
+                            dataClassGenerationPattern.classNameReplacement(
                                 packageName,
+                                className,
                                 layerConfigs.presentation
-                            ),
-                            properties
-                        )
-                    )
-                )
-                properties.forEach { property ->
-                    if (property.type.resolve().isMappable)
-                        addImport(
-                            property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                            ".${layerConfigs.domain.toUIMapFunctionName}"
-                        )
-                }
-                if (symbol.getAnnotationsByType(DTO::class)
-                        .first().backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
-                ) {
-                    val backWardMappingFunctionName = layerConfigs.presentation.toDomainMapFunctionName
-                    properties.forEach { property ->
-                        if (property.type.resolve().isMappable) {
-                            addImport(
-                                property.getQualifiedPackageNameBasedOnParameterName(packageName),
-                                ".${backWardMappingFunctionName}"
                             )
-                        }
-                    }
-
+                        )
                     addFunction(
                         generateTopLevelMappingFunctions(
-                            backWardMappingFunctionName,
-                            properties,
-                            ClassName(
-                                packageName,
-                                className
-                            ),
-                            domainClassName,
+                            layerConfigs.domain.toUIMapFunctionName, properties, domainClassName,
+                            ClassName(packageName, className),
                             statementFormat = statementListFormatMapping(
-                                backWardMappingFunctionName,
-                                packageName,
+                                layerConfigs.domain.toUIMapFunctionName,
+                                dataClassGenerationPattern.packageNameReplacement(
+                                    packageName,
+                                    layerConfigs.presentation
+                                ),
                                 properties
                             )
                         )
                     )
+                    properties.forEach { property ->
+                        if (property.type.resolve().isMappable)
+                            addImport(
+                                property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                ".${layerConfigs.domain.toUIMapFunctionName}"
+                            )
+                    }
+                    if (symbol.getAnnotationsByType(DTO::class)
+                            .first().backwardsMappingConfig == BackwardsMappingConfig.FULL_MAPPING
+                    ) {
+                        val backWardMappingFunctionName = layerConfigs.presentation.toDomainMapFunctionName
+                        properties.forEach { property ->
+                            if (property.type.resolve().isMappable) {
+                                addImport(
+                                    property.getQualifiedPackageNameBasedOnParameterName(packageName),
+                                    ".${backWardMappingFunctionName}"
+                                )
+                            }
+                        }
+
+                        addFunction(
+                            generateTopLevelMappingFunctions(
+                                backWardMappingFunctionName,
+                                properties,
+                                ClassName(
+                                    packageName,
+                                    className
+                                ),
+                                domainClassName,
+                                statementFormat = statementListFormatMapping(
+                                    backWardMappingFunctionName,
+                                    packageName,
+                                    properties
+                                )
+                            )
+                        )
+                    }
+                    this
+                })
+        }
+    }
+
+    @OptIn(KspExperimental::class)
+    private fun TypeSpec.Builder.addAnnotationsForDTO(symbol: KSClassDeclaration): TypeSpec.Builder {
+        if (symbol.isAnnotationPresent(DTO::class)) {
+            symbol.annotations.filter { it.shortName.asString() == "Serializable" }.forEach { _ ->
+                addAnnotation(AnnotationSpec.builder(Serializable::class).build())
+            }
+            symbol.annotations.filter { it.shortName.asString() == "Entity" }.forEach { entityAnnotation ->
+                addAnnotation(entityAnnotation.toAnnotationSpec())
+            }
+        }
+        return this
+    }
+
+    private fun generateTypeConvertersAndFile(
+        symbol: KSClassDeclaration,
+        packageName: String,
+        className: String,
+        resolver: Resolver
+    ) {
+        val converterClassName = "${className}Converter"
+        val converterPackageName = "$packageName.converters"
+        val converterClassBuilder = TypeSpec.objectBuilder(converterClassName)
+
+        val converterFile = codeGenerator.createNewFile(
+            Dependencies(true, symbol.containingFile!!),
+            converterPackageName,
+            converterClassName
+        )
+
+        generateTypeConverters(symbol, resolver, packageName, converterClassBuilder)
+
+        OutputStreamWriter(converterFile).use { writer ->
+            generateConverterFile(converterPackageName, converterClassName, converterClassBuilder).writeTo(writer)
+        }
+    }
+
+    private fun generateConverterFile(
+        converterPackageName: String,
+        converterClassName: String,
+        converterClassBuilder: TypeSpec.Builder,
+    ): FileSpec {
+        val fileSpecBuilder = FileSpec.builder(converterPackageName, converterClassName)
+
+        when (jsonSerializer) {
+            is CleanWizardJsonSerializer.KotlinXSerialization -> {
+                fileSpecBuilder
+                    .addImport(ClassDiscriminatorMode::class, "")
+                    .addImport(Json::class, "")
+                    .addImport("kotlinx.serialization", "encodeToString")
+            }
+
+            is CleanWizardJsonSerializer.Gson -> {
+                fileSpecBuilder.addImport(TypeToken::class, "")
+                fileSpecBuilder.addImport(GsonBuilder::class, "")
+            }
+
+            is CleanWizardJsonSerializer.Moshi -> {
+
+            }
+        }
+        return fileSpecBuilder.addType(converterClassBuilder.build()).build()
+    }
+
+    private fun generateTypeConverters(
+        symbol: KSClassDeclaration,
+        resolver: Resolver,
+        packageName: String,
+        converterClassBuilder: TypeSpec.Builder
+    ) {
+        var gsonAdded = false
+        var kotlinxAdded = false
+
+        symbol.getDeclaredProperties().forEach { property ->
+            if (property.type.resolve().isMappable) {
+                val propertyName = property.simpleName.asString()
+                val propertyType = property.determineParameterType(symbol, resolver, packageName)
+
+                when (jsonSerializer) {
+                    is CleanWizardJsonSerializer.KotlinXSerialization -> {
+                        if (!kotlinxAdded) {
+                            kotlinxAdded = true
+                            val serializerConfig =
+                                (jsonSerializer as CleanWizardJsonSerializer.KotlinXSerialization).serializerConfig
+
+                            val jsonConfigString = buildString {
+                                append("Json { \n")
+                                append("encodeDefaults = ${serializerConfig.encodeDefaults}\n")
+                                append("ignoreUnknownKeys = ${serializerConfig.ignoreUnknownKeys}\n")
+                                append("isLenient = ${serializerConfig.isLenient}\n")
+                                append("allowStructuredMapKeys = ${serializerConfig.allowStructuredMapKeys}\n")
+                                append("prettyPrint = ${serializerConfig.prettyPrint}\n")
+                                append("explicitNulls = ${serializerConfig.explicitNulls}\n")
+                                append("prettyPrintIndent = \"${serializerConfig.prettyPrintIndent}\"\n")
+                                append("coerceInputValues = ${serializerConfig.coerceInputValues}\n")
+                                append("useArrayPolymorphism = ${serializerConfig.useArrayPolymorphism}\n")
+                                append("classDiscriminator = \"${serializerConfig.classDiscriminator}\"\n")
+                                append("allowSpecialFloatingPointValues = ${serializerConfig.allowSpecialFloatingPointValues}\n")
+                                append("useAlternativeNames = ${serializerConfig.useAlternativeNames}\n")
+//                              TODO append("namingStrategy = ${serializerConfig.namingStrategy}\n")
+                                append("decodeEnumsCaseInsensitive = ${serializerConfig.decodeEnumsCaseInsensitive}\n")
+                                append("allowTrailingComma = ${serializerConfig.allowTrailingComma}\n")
+                                append("allowComments = ${serializerConfig.allowComments}\n")
+                                append("classDiscriminatorMode = ClassDiscriminatorMode.${serializerConfig.classDiscriminatorMode}\n")
+                                append("}")
+                            }
+
+                            converterClassBuilder.addProperty(
+                                PropertySpec.builder("serializerConfig", Json::class)
+                                    .initializer(jsonConfigString)
+                                    .build()
+                            )
+                        }
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("from${propertyName.firstCharUppercase()}")
+                                .returns(String::class)
+                                .addAnnotation(TypeConverter::class)
+                                .addParameter(propertyName, propertyType)
+                                .addStatement(
+                                    "return serializerConfig.encodeToString($propertyName)"
+                                )
+                                .build()
+                        )
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("to${propertyName.firstCharUppercase()}")
+                                .returns(propertyType)
+                                .addAnnotation(TypeConverter::class)
+                                .addParameter("json", String::class)
+                                .addStatement("return serializerConfig.decodeFromString(json)")
+                                .build()
+                        )
+                    }
+
+                    is CleanWizardJsonSerializer.Gson -> {
+                        if (!gsonAdded) {
+                            gsonAdded = true
+                            val gsonConfig = (jsonSerializer as CleanWizardJsonSerializer.Gson).serializerConfig
+                            val gsonBuilderCode = buildString {
+                                append("GsonBuilder().apply {\n")
+                                append("    setLongSerializationPolicy(com.google.gson.LongSerializationPolicy.${gsonConfig.longSerializationPolicy.name})\n")
+                                append("    setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.${gsonConfig.fieldNamingPolicy.name})\n")
+                                if (gsonConfig.serializeNulls) append("    serializeNulls()\n")
+                                gsonConfig.datePattern?.let { append("    setDateFormat(\"$it\")\n") }
+                                append("    setDateFormat(${gsonConfig.dateStyle}, ${gsonConfig.timeStyle})\n")
+                                if (gsonConfig.complexMapKeySerialization) append("    enableComplexMapKeySerialization()\n")
+                                if (gsonConfig.serializeSpecialFloatingPointValues) append("    serializeSpecialFloatingPointValues()\n")
+                                if (!gsonConfig.htmlSafe) append("    disableHtmlEscaping()\n")
+                                if (gsonConfig.generateNonExecutableJson) append("    generateNonExecutableJson()\n")
+                                gsonConfig.strictness?.let { append("    setStrictness(com.google.gson.Strictness.${it.name})\n") }
+                                if (!gsonConfig.useJdkUnsafe) append("    disableJdkUnsafe()\n")
+//                              TODO append("    setObjectToNumberStrategy(${gsonConfig.objectToNumberStrategy}())\n")
+//                              TODO append("    setNumberToNumberStrategy(${gsonConfig.numberToNumberStrategy}())\n")
+                                append("}.create()")
+                            }
+
+                            converterClassBuilder.addProperty(
+                                PropertySpec.builder("gson", Gson::class)
+                                    .initializer(gsonBuilderCode)
+                                    .build()
+                            )
+                        }
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("from${propertyName.firstCharUppercase()}")
+                                .returns(String::class)
+                                .addAnnotation(TypeConverter::class)
+                                .addParameter(propertyName, propertyType)
+                                .addStatement("return gson.toJson($propertyName)")
+                                .build()
+                        )
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("to${propertyName.firstCharUppercase()}")
+                                .returns(propertyType)
+                                .addAnnotation(TypeConverter::class)
+                                .addParameter("json", String::class)
+                                .addStatement(
+                                    """val type = object : TypeToken<$propertyType>() {}.type""".trimIndent()
+                                )
+                                .addStatement("return gson.fromJson(json, type)")
+                                .build()
+                        )
+                    }
+
+                    is CleanWizardJsonSerializer.Moshi -> {
+                        val adapterClassName =
+                            ClassName("com.squareup.moshi", "JsonAdapter").parameterizedBy(propertyType)
+                        val moshiType = ClassName("com.squareup.moshi", "Moshi")
+
+                        converterClassBuilder.addProperty(
+                            PropertySpec.builder("${propertyName}Adapter", adapterClassName)
+                                .initializer(
+                                    "%T.Builder().add(%T()).build().adapter(%T::class.java)",
+                                    moshiType,
+                                    ClassName("com.squareup.moshi.kotlin.reflect", "KotlinJsonAdapterFactory"),
+                                    propertyType
+                                )
+                                .build()
+                        )
+
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("from${propertyName.firstCharUppercase()}")
+                                .returns(String::class)
+                                .addAnnotation(TypeConverter::class)
+                                .addParameter(propertyName, propertyType)
+                                .addStatement("return ${propertyName}Adapter.toJson($propertyName)")
+                                .build()
+                        )
+                        converterClassBuilder.addFunction(
+                            FunSpec.builder("to${propertyName.firstCharUppercase()}")
+                                .returns(propertyType)
+                                .addAnnotation(TypeConverter::class)
+                                .addParameter("json", String::class)
+                                .addStatement("return ${propertyName}Adapter.fromJson(json) ?: throw IllegalArgumentException(\"Cannot parse json\")")
+                                .build()
+                        )
+                    }
+
+                    else -> {}
                 }
-                this
-            })
+            }
+        }
     }
 
     private fun generateTopLevelMappingFunctions(
@@ -537,8 +781,14 @@ private class DataClassProcessor(
             ClassName.bestGuess(this.annotationType.resolve().declaration.qualifiedName!!.asString())
         )
         this.arguments
-            .filterNot {
-                it.name?.asString() == "ignore" || (it.name?.asString() == "alternate" && (it.value as? List<*>)?.isEmpty() == true)
+            .filterNot { arg ->
+                when (val value = arg.value) {
+                    is String -> value.isEmpty()
+                    is List<*> -> value.isEmpty()
+                    is Boolean -> !value
+                    null -> true
+                    else -> false
+                }
             }
             .forEach { arg ->
                 builder.addMember(

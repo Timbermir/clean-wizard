@@ -1,14 +1,14 @@
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDataClassGenerationPattern
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardDependencyInjectionFramework
-import corp.tbm.cleanwizard.buildLogic.config.CleanWizardUseCaseFunctionType
+import corp.tbm.cleanwizard.gradle.api.config.CleanWizardDataClassGenerationPattern
+import corp.tbm.cleanwizard.gradle.api.config.CleanWizardDependencyInjectionFramework
+import corp.tbm.cleanwizard.gradle.api.config.CleanWizardUseCaseFunctionType
 import kotlinx.serialization.json.JsonNamingStrategy
 
 plugins {
-    `java-library`
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.google.devtools.ksp) apply false
     alias(libs.plugins.cleanwizard.core)
+    alias(libs.plugins.cleanwizard.multimodule) apply false
     alias(libs.plugins.vanniktech.maven.publish) apply false
 }
 
@@ -41,10 +41,13 @@ buildscript {
     }
 
     data {
-        classSuffix = "DTO"
+        classSuffix = "DTOsosok"
         packageName = "dtos"
-        interfaceMapperName = "DtoMapper"
         toDomainMapFunctionName = "toModel"
+        interfaceMapper {
+            className = "DTOMapper"
+            pathToModuleToGenerateInterfaceMapper = projects.cleanWizard.dependencyProject.name
+        }
     }
 
     domain {

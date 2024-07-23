@@ -5,7 +5,7 @@ import corp.tbm.cleanwizard.workloads.multimodule.data.remote.dtos.poke.PokemonR
 
 @DTO
 data class PokemonItemDTOSchema(
-    val item : PokemonReferenceDTOSchema,
-    val itemVersionDetails : PokemonItemVersionDetailsDTOSchema,
+    val item: PokemonReferenceDTOSchema,
+    val itemVersionDetails: PokemonItemVersionDetailsDTOSchema,
 
     )

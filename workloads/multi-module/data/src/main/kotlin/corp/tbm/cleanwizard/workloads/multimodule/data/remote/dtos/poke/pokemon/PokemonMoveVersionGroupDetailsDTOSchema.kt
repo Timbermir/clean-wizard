@@ -7,9 +7,9 @@ import kotlinx.serialization.SerialName
 @DTO
 data class PokemonMoveVersionGroupDetailsDTOSchema(
     @SerialName("level_learned_at")
-    val levelLearnedAt : Int,
+    val levelLearnedAt: Int,
     @SerialName("move_learn_method")
-    val moveLearnMethod : PokemonReferenceDTOSchema,
+    val moveLearnMethod: PokemonReferenceDTOSchema,
     @SerialName("version_group")
-    val versionGroup : PokemonReferenceDTOSchema
+    val versionGroup: PokemonReferenceDTOSchema
 )

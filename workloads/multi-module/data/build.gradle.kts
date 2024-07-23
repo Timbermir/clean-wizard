@@ -5,10 +5,12 @@ plugins {
 }
 
 dependencies {
+    implementation(projects.cleanWizard)
+    implementation(projects.foundation.annotations)
     implementation(projects.workloads.multiModule.domain)
     implementation(libs.kotlinx.collections.immutable)
-    implementation(libs.kodein)
     implementation(libs.room.common)
+    implementation(libs.kodein)
 }
 
 `clean-wizard-codegen` {

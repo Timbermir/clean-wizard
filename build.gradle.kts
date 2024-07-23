@@ -41,7 +41,7 @@ buildscript {
     }
 
     data {
-        classSuffix = "DTOsosok"
+        classSuffix = "DTO"
         packageName = "dtos"
         toDomainMapFunctionName = "toModel"
         interfaceMapper {

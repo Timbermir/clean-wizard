@@ -24,6 +24,8 @@ koin-annotations = "1.3.1"
 kodein = "7.22.0"
 # JavaX
 javax-inject = "1"
+# Room
+room = "2.6.1"
 [libraries]
 # Clean Wizard
 cleanwizard-gradle-plugins-api = { group = "io.github.timbermir.clean-wizard", name = "gradle-plugins-api", version.ref = "cleanwizard" }
@@ -40,6 +42,7 @@ google-gson = { group = "com.google.code.gson", name = "gson", version.ref = "go
 # Squareup
 squareup-kotlinpoet-ksp = { group = "com.squareup", name = "kotlinpoet-ksp", version.ref = "squareup-kotlinpoet" }
 squareup-moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "squareup-moshi" }
+squareup-moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "squareup-moshi" }
 # Koin
 koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
 koin-annotations = { group = "io.insert-koin", name = "koin-annotations", version.ref = "koin-annotations" }
@@ -48,6 +51,8 @@ koin-annotations-ksp = { group = "io.insert-koin", name = "koin-ksp-compiler", v
 kodein = { group = "org.kodein.di", name = "kodein-di", version.ref = "kodein" }
 # JavaX
 javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javax-inject" }
+# Room
+room-common = {group = "androidx.room", name = "room-common", version.ref = "room"}
 [bundles]
 di = ["kodein", "koin-core", "koin-annotations", "javax-inject"]
 [plugins]

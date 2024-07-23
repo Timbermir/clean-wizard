@@ -31,29 +31,26 @@ data class CleanWizardGsonSerializationConfig(
             datePattern?.let(::setDateFormat)
             if (complexMapKeySerialization) enableComplexMapKeySerialization()
             if (serializeSpecialFloatingPointValues) serializeSpecialFloatingPointValues()
-            if (!htmlSafe)
-                disableHtmlEscaping()
-            if (generateNonExecutableJson)
-                generateNonExecutableJson()
+            if (!htmlSafe) disableHtmlEscaping()
+            if (generateNonExecutableJson) generateNonExecutableJson()
             strictness?.let(::setStrictness)
             if (!useJdkUnsafe) disableJdkUnsafe()
             setObjectToNumberStrategy(objectToNumberStrategy)
             setNumberToNumberStrategy(numberToNumberStrategy)
         }.create()
     }
+}
 
-    @Serializable
-    abstract class CleanWizardToNumberStrategy : ToNumberStrategy {
-        abstract override fun readNumber(`in`: JsonReader): Number
-
-        @Serializable
-        companion object
+@Serializable
+open class CleanWizardToNumberStrategy : ToNumberStrategy {
+    override fun readNumber(`in`: JsonReader): Number {
+        return Int.MIN_VALUE
     }
 }
 
-fun ToNumberStrategy.toCleanWizardToNumberStrategy(): CleanWizardGsonSerializationConfig.CleanWizardToNumberStrategy {
+fun ToNumberStrategy.toCleanWizardToNumberStrategy(): CleanWizardToNumberStrategy {
 
-    return object : CleanWizardGsonSerializationConfig.CleanWizardToNumberStrategy() {
+    return object : CleanWizardToNumberStrategy() {
         override fun readNumber(`in`: JsonReader): Number {
             return this@toCleanWizardToNumberStrategy.readNumber(`in`)
         }

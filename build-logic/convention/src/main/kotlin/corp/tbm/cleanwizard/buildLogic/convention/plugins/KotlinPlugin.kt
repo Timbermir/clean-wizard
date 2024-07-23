@@ -19,6 +19,7 @@ internal class KotlinPlugin : Plugin<Project> {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.google.gson)
                 implementation(libs.squareup.moshi)
+                implementation(libs.squareup.moshi.kotlin)
             }
 
             sourceSets {

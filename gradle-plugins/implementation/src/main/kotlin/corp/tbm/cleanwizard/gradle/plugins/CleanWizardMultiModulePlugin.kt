@@ -165,8 +165,6 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
             configuration.dependencies.map { dependency -> "${dependency.group}:${dependency.name}" }
         }.toSet()
 
-        println(dataDependencies)
-
         if (codegenExtension.domainProjectPath.isEmpty())
             error("You have to specify path for your domain module")
         if (codegenExtension.presentationProjectPath.isEmpty())

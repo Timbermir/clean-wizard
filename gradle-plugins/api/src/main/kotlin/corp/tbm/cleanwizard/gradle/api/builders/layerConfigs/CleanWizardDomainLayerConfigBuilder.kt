@@ -1,8 +1,8 @@
 package corp.tbm.cleanwizard.gradle.api.builders.layerConfigs
 
 import corp.tbm.cleanwizard.gradle.api.annotations.CleanWizardConfigDsl
-import corp.tbm.cleanwizard.gradle.api.config.layerConfigs.CleanWizardLayerConfig
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardUseCaseFunctionType
+import corp.tbm.cleanwizard.gradle.api.config.layerConfigs.CleanWizardLayerConfig
 
 abstract class CleanWizardDomainLayerConfigBuilder(domain: CleanWizardLayerConfig.Domain) :
     CleanWizardLayerConfigBuilder<CleanWizardLayerConfig.Domain>(domain) {

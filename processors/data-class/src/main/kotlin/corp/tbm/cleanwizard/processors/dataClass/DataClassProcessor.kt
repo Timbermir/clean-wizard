@@ -12,6 +12,9 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
@@ -117,7 +120,7 @@ private class DataClassProcessor(
 
         when (processingRound) {
             1 -> {
-                if (resolver.getModuleName()
+                if (layerConfigs.data.interfaceMapperConfig.pathToModuleToGenerateInterfaceMapper.isNotEmpty() && resolver.getModuleName()
                         .asString() == layerConfigs.data.interfaceMapperConfig.pathToModuleToGenerateInterfaceMapper
                 ) {
                     val typeVariable = TypeVariableName(layerConfigs.domain.classSuffix)

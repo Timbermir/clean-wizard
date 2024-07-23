@@ -1,11 +1,12 @@
 plugins {
     alias(libs.plugins.cleanwizard.internal.kotlin)
+    alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.cleanwizard.multimodule)
 }
 
 dependencies {
     implementation(projects.workloads.multiModule.domain)
-    implementation(libs.bundles.kotlinx)
+    implementation(libs.kotlinx.collections.immutable)
     implementation(libs.kodein)
 }
 

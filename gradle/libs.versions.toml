@@ -52,7 +52,7 @@ kodein = { group = "org.kodein.di", name = "kodein-di", version.ref = "kodein" }
 # JavaX
 javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javax-inject" }
 # Room
-room-common = {group = "androidx.room", name = "room-common", version.ref = "room"}
+room-common = { group = "androidx.room", name = "room-common", version.ref = "room" }
 [bundles]
 di = ["kodein", "koin-core", "koin-annotations", "javax-inject"]
 [plugins]

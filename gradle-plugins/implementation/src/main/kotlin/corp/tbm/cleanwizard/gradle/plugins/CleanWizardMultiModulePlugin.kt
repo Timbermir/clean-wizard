@@ -2,14 +2,19 @@ package corp.tbm.cleanwizard.gradle.plugins
 
 import com.google.devtools.ksp.gradle.KspTask
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardDependencyInjectionFramework
-import corp.tbm.cleanwizard.gradle.foundation.extensions.*
+import corp.tbm.cleanwizard.gradle.foundation.extensions.cleanWizardExtension
+import corp.tbm.cleanwizard.gradle.foundation.extensions.jvmTarget
+import corp.tbm.cleanwizard.gradle.foundation.extensions.kspMainBuildDirectory
+import corp.tbm.cleanwizard.gradle.foundation.extensions.sourceSets
 import corp.tbm.cleanwizard.gradle.implementation.extensions.CleanWizardMultiModuleCodegenExtensionImplementation
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.CopySpec
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Delete
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 
@@ -32,7 +37,7 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
 
             configureGradleTasks(codegenExtension)
 
-            sourceSets{
+            sourceSets {
                 getByName("main") {
                     kotlin {
                         srcDirs.forEach { dir ->

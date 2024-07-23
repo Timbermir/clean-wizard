@@ -1,10 +1,5 @@
 package corp.tbm.cleanwizard.gradle.implementation.extensions
 
-import corp.tbm.cleanwizard.gradle.implementation.builders.dependencyInjectionFrameworks.CleanWizardDependencyInjectionFrameworkBuilderImplementation
-import corp.tbm.cleanwizard.gradle.implementation.builders.serializers.CleanWizardJsonSerializerBuilderImplementation
-import corp.tbm.cleanwizard.gradle.implementation.builders.layerConfigs.CleanWizardDataLayerConfigBuilderImplementation
-import corp.tbm.cleanwizard.gradle.implementation.builders.layerConfigs.CleanWizardDomainLayerConfigBuilderImplementation
-import corp.tbm.cleanwizard.gradle.implementation.builders.layerConfigs.CleanWizardPresentationLayerConfigBuilderImplementation
 import corp.tbm.cleanwizard.gradle.api.builders.dependencyInjectionFrameworks.CleanWizardDependencyInjectionFrameworkBuilder
 import corp.tbm.cleanwizard.gradle.api.builders.jsonSerializers.CleanWizardJsonSerializerBuilder
 import corp.tbm.cleanwizard.gradle.api.builders.layerConfigs.CleanWizardDataLayerConfigBuilder
@@ -16,6 +11,11 @@ import corp.tbm.cleanwizard.gradle.api.config.layerConfigs.CleanWizardLayerConfi
 import corp.tbm.cleanwizard.gradle.api.config.layerConfigs.CleanWizardLayerConfigWrapper
 import corp.tbm.cleanwizard.gradle.api.config.serializer.CleanWizardJsonSerializer
 import corp.tbm.cleanwizard.gradle.api.extensions.CleanWizardExtension
+import corp.tbm.cleanwizard.gradle.implementation.builders.dependencyInjectionFrameworks.CleanWizardDependencyInjectionFrameworkBuilderImplementation
+import corp.tbm.cleanwizard.gradle.implementation.builders.layerConfigs.CleanWizardDataLayerConfigBuilderImplementation
+import corp.tbm.cleanwizard.gradle.implementation.builders.layerConfigs.CleanWizardDomainLayerConfigBuilderImplementation
+import corp.tbm.cleanwizard.gradle.implementation.builders.layerConfigs.CleanWizardPresentationLayerConfigBuilderImplementation
+import corp.tbm.cleanwizard.gradle.implementation.builders.serializers.CleanWizardJsonSerializerBuilderImplementation
 
 internal open class CleanWizardExtensionImplementation(
     override var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER,

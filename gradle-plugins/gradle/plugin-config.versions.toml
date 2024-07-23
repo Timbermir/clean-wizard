@@ -1,0 +1,3 @@
+[versions]
+cleanwizard-root-implementation = "corp.tbm.cleanwizard.gradle.plugins.CleanWizardPlugin"
+cleanwizard-multimodule-implementation = "corp.tbm.cleanwizard.gradle.plugins.CleanWizardMultiModulePlugin"

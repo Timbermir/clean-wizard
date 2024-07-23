@@ -1,4 +1,6 @@
 [versions]
+# Clean Wizard
+cleanwizard = "2.0.0-RC8"
 # MavenPublish
 vanniktech-maven-publish = "0.29.0"
 # Gradle
@@ -8,9 +10,7 @@ kotlin = "2.0.0"
 kotlin-dsl = "4.4.0"
 # KotlinX
 kotlinx-collections-immutable = "0.3.7"
-kotlinx-datetime = "0.6.0"
 kotlinx-serialization-json = "1.7.0"
-kotlinx-coroutines = "1.9.0-RC"
 # Google
 google-devtools-ksp = "2.0.0-1.0.22"
 google-gson = "2.11.0"
@@ -22,17 +22,18 @@ koin = "3.5.6"
 koin-annotations = "1.3.1"
 # Kodein
 kodein = "7.22.0"
+# JavaX
 javax-inject = "1"
 [libraries]
+# Clean Wizard
+cleanwizard-gradle-plugins-api = { group = "io.github.timbermir.clean-wizard", name = "gradle-plugins-api", version.ref = "cleanwizard" }
 # Vanniktech Maven Publish
 vanniktech-maven-publish = { group = "com.vanniktech", name = "gradle-maven-publish-plugin", version.ref = "vanniktech-maven-publish" }
 # Kotlin
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 # KotlinX
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
-kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
-kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 # Google
 google-devtools-ksp = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "google-devtools-ksp" }
 google-gson = { group = "com.google.code.gson", name = "gson", version.ref = "google-gson" }
@@ -48,23 +49,18 @@ kodein = { group = "org.kodein.di", name = "kodein-di", version.ref = "kodein" }
 # JavaX
 javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javax-inject" }
 [bundles]
-kotlinx = ["kotlinx-collections-immutable", "kotlinx-datetime", "kotlinx-serialization-json", "kotlinx-coroutines-core"]
-foundation-codegen = ["kotlinx-serialization-json", "google-devtools-ksp", "squareup-kotlinpoet-ksp"]
 di = ["kodein", "koin-core", "koin-annotations", "javax-inject"]
 [plugins]
 # Gradle
 gradle-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-publish" }
-# Maven
-maven-publish = { id = "maven-publish" }
-maven-signing = { id = "signing" }
+gradle-signing = { id = "signing" }
 # Custom Plugins
-cleanwizard-core = { id = "corp.tbm.cleanwizard", version = "2.0.0" }
-cleanwizard-multimodule = { id = "corp.tbm.cleanwizard.multimodule" }
-cleanwizard-internal-kotlin = { id = "corp.tbm.cleanwizard.internal.kotlin" }
-cleanwizard-internal-codegen = { id = "corp.tbm.cleanwizard.internal.codegen" }
-cleanwizard-internal-processor = { id = "corp.tbm.cleanwizard.internal.processor" }
-cleanwizard-internal-visitor = { id = "corp.tbm.cleanwizard.internal.visitor" }
-cleanwizard-internal-publish = { id = "corp.tbm.cleanwizard.internal.publish" }
+cleanwizard-core = { id = "io.github.timbermir.clean-wizard", version.ref = "cleanwizard" }
+cleanwizard-multimodule = { id = "io.github.timbermir.clean-wizard.multimodule", version.ref = "cleanwizard" }
+cleanwizard-internal-kotlin = { id = "corp.tbm.clean-wizard.internal.kotlin" }
+cleanwizard-internal-codegen = { id = "corp.tbm.clean-wizard.internal.codegen" }
+cleanwizard-internal-processor = { id = "corp.tbm.clean-wizard.internal.processor" }
+cleanwizard-internal-publish = { id = "corp.tbm.clean-wizard.internal.publish" }
 # MavenPublish
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }
 # Kotlin

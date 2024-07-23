@@ -13,7 +13,3 @@ internal fun DependencyHandlerScope.testImplementation(dependencyNotation: Any) 
 internal fun DependencyHandlerScope.api(dependencyNotation: Any) {
     "api"(dependencyNotation)
 }
-
-internal fun DependencyHandlerScope.ksp(dependencyNotation: Any) {
-    "ksp"(dependencyNotation)
-}

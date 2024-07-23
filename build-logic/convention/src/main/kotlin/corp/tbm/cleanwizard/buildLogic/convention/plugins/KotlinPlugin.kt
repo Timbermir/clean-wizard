@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.buildLogic.convention.plugins.internal
+package corp.tbm.cleanwizard.buildLogic.convention.plugins
 
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.*
 import org.gradle.api.Plugin
@@ -16,7 +16,7 @@ internal class KotlinPlugin : Plugin<Project> {
             alias(libs.plugins.kotlin.serialization)
 
             dependencies {
-                implementation(libs.bundles.kotlinx)
+                implementation(libs.kotlinx.serialization.json)
                 implementation(libs.google.gson)
                 implementation(libs.squareup.moshi)
             }

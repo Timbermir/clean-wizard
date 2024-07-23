@@ -1,4 +1,4 @@
-package corp.tbm.cleanwizard.buildLogic.convention.plugins.internal
+package corp.tbm.cleanwizard.buildLogic.convention.plugins
 
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.alias
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.implementation
@@ -17,8 +17,8 @@ internal class CodegenPlugin : Plugin<Project> {
 
             dependencies {
                 implementation(project(":foundation:annotations"))
-//                implementation(("build-logic:config"))
-                implementation(libs.bundles.foundation.codegen)
+                implementation(libs.google.devtools.ksp)
+                implementation(libs.squareup.kotlinpoet.ksp)
             }
         }
     }

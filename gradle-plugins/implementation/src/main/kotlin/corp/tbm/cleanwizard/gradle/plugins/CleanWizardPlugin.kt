@@ -14,8 +14,8 @@ internal class CleanWizardPlugin : Plugin<Project> {
 
         with(target) {
 
-            if (project != rootProject) {
-                error("Should be applied at the root project.")
+            check(project == rootProject) {
+                "Should be applied at the root project."
             }
 
             extensions.create(

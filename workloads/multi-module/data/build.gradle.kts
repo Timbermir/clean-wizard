@@ -5,8 +5,7 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.cleanWizard)
-    implementation(projects.foundation.annotations)
+    implementation(projects.workloads.core)
     implementation(projects.workloads.multiModule.domain)
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.room.common)

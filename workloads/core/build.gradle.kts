@@ -4,5 +4,6 @@ plugins {
 }
 
 dependencies {
+    api(projects.foundation.annotations)
     ksp(projects.processors.dataClass)
 }

@@ -24,6 +24,7 @@ sealed class CleanWizardLayerConfig(
         override val packageName: String = "dtos",
         val interfaceMapperConfig: CleanWizardInterfaceMapperConfig = CleanWizardInterfaceMapperConfig(),
         val schemaSuffix: String = "DTOSchema",
+        val toDomainAsTopLevel: Boolean = true,
         val toDomainMapFunctionName: String = "toDomain",
         val roomConfig: CleanWizardRoomConfig = CleanWizardRoomConfig(),
     ) : CleanWizardLayerConfig(moduleName, classSuffix, packageName)

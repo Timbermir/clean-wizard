@@ -7,6 +7,7 @@ abstract class CleanWizardDataLayerConfigBuilder(data: CleanWizardLayerConfig.Da
     CleanWizardLayerConfigBuilder<CleanWizardLayerConfig.Data>(data) {
 
     var schemaSuffix: String = layerConfig.schemaSuffix
+    var toDomainAsTopLevel: Boolean = layerConfig.toDomainAsTopLevel
     var toDomainMapFunctionName: String = layerConfig.toDomainMapFunctionName
 
     abstract fun interfaceMapper(block: CleanWizardDataLayerInterfaceMapperConfigBuilder.() -> Unit)

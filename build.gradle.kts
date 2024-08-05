@@ -4,6 +4,7 @@ import corp.tbm.cleanwizard.gradle.api.config.CleanWizardUseCaseFunctionType
 import kotlinx.serialization.json.JsonNamingStrategy
 
 plugins {
+    alias(libs.plugins.java)
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.google.devtools.ksp) apply false
@@ -15,6 +16,12 @@ plugins {
 buildscript {
     dependencies {
         classpath(libs.kotlin.gradle.plugin)
+    }
+}
+
+java {
+    toolchain {
+        withSourcesJar()
     }
 }
 
@@ -46,7 +53,7 @@ buildscript {
         toDomainMapFunctionName = "toModel"
         interfaceMapper {
             className = "DTOMapper"
-            pathToModuleToGenerateInterfaceMapper = projects.cleanWizard.dependencyProject.name
+            pathToModuleToGenerateInterfaceMapper = projects.workloads.core.dependencyProject.name
         }
     }
 
@@ -66,16 +73,7 @@ buildscript {
         moduleName = "ui"
         classSuffix = "Ui"
         packageName = "uis"
+        shouldGenerate = true
         toDomainMapFunctionName = "fromUI"
     }
 }
-
-tasks.register("deleteOrphanedDirs", Delete::class) {
-    delete(
-        "build-logic/config/build",
-        "build-logic/convention/build",
-        "build-logic/.gradle",
-        "build-logic/build",
-    )
-}
-tasks.prepareKotlinBuildScriptModel { dependsOn("deleteOrphanedDirs") }

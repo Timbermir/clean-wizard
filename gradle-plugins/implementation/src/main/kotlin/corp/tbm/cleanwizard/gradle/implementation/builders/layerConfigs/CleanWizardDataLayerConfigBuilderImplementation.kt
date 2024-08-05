@@ -27,6 +27,7 @@ internal class CleanWizardDataLayerConfigBuilderImplementation(data: CleanWizard
             packageName,
             interfaceMapperConfigBuilder.build(),
             schemaSuffix,
+            toDomainAsTopLevel,
             toDomainMapFunctionName,
             roomConfigBuilder.build()
         )

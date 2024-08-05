@@ -10,7 +10,7 @@ kotlin = "2.0.0"
 kotlin-dsl = "4.4.0"
 # KotlinX
 kotlinx-collections-immutable = "0.3.7"
-kotlinx-serialization-json = "1.7.0"
+kotlinx-serialization-json = "1.7.1"
 # Google
 google-devtools-ksp = "2.0.0-1.0.22"
 google-gson = "2.11.0"

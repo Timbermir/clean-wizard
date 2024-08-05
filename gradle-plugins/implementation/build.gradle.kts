@@ -9,7 +9,7 @@ plugins {
 
 dependencies {
     compileClasspath(libs.kotlin.gradle.plugin)
-    implementation(projects.gradlePlugins.api)
+    implementation(libs.cleanwizard.gradle.plugins.api)
     implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.google.gson)
     compileOnly(libs.google.devtools.ksp)

@@ -1,0 +1,5 @@
+[versions]
+kotlin = "2.0"
+jdk = "19"
+group = "io.github.timbermir.clean-wizard"
+version = "1.0.0-RC1"

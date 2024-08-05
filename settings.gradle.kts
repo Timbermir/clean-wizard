@@ -1,8 +1,10 @@
 pluginManagement {
+    includeBuild("gradle-plugins")
     repositories {
+        mavenLocal()
+        mavenCentral()
         gradlePluginPortal()
         google()
-        mavenCentral()
     }
 }
 
@@ -17,12 +19,27 @@ dependencyResolutionManagement {
     }
 
     versionCatalogs {
-        create("gradleProjectConfig") {
-            from(files("gradle/gradle-project-config.versions.toml"))
+        create("projectConfig") {
+            from(files("gradle/project-config.versions.toml"))
         }
     }
 }
 
-rootProject.name = "clean-architecture-mapper"
-include("processor")
-include("workload")
+rootProject.name = "clean-wizard"
+includeBuild(".")
+includeBuild("build-logic")
+include(
+    "foundation:annotations",
+    "foundation:codegen"
+)
+include(
+    "processors:data-class",
+    "processors:use-case"
+)
+include("workloads:core")
+include("workloads:single-module")
+include(
+    "workloads:multi-module:data",
+    "workloads:multi-module:domain",
+    "workloads:multi-module:presentation"
+)

@@ -2,6 +2,7 @@ package corp.tbm.cleanwizard.gradle.plugins
 
 import com.google.devtools.ksp.gradle.KspTask
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardDependencyInjectionFramework
+import corp.tbm.cleanwizard.gradle.api.config.serializer.CleanWizardJsonSerializer
 import corp.tbm.cleanwizard.gradle.foundation.extensions.cleanWizardExtension
 import corp.tbm.cleanwizard.gradle.foundation.extensions.jvmTarget
 import corp.tbm.cleanwizard.gradle.foundation.extensions.kspMainBuildDirectory
@@ -184,7 +185,9 @@ internal class CleanWizardMultiModulePlugin : Plugin<Project> {
 
         when {
 
-            !dataDependencies.contains(cleanWizardExtension.jsonSerializer.dependency) -> {
+            cleanWizardExtension.jsonSerializer != CleanWizardJsonSerializer.None && !dataDependencies.contains(
+                cleanWizardExtension.jsonSerializer.dependency
+            ) -> {
                 error("[${cleanWizardExtension.jsonSerializer::class.java.simpleName}] serializer is applied at the root, but no [${cleanWizardExtension.jsonSerializer.dependency}] dependency was found.")
             }
 

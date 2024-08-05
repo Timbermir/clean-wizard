@@ -7,7 +7,7 @@ import corp.tbm.cleanwizard.gradle.api.config.serializer.CleanWizardJsonSerializ
 
 internal class CleanWizardJsonSerializerBuilderImplementation : CleanWizardJsonSerializerBuilder() {
 
-    override var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization()
+    override var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.None
 
     private val kotlinXSerializationBuilder = CleanWizardKotlinXSerializationBuilderImplementation()
 

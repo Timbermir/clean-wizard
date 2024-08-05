@@ -19,7 +19,7 @@ import corp.tbm.cleanwizard.gradle.implementation.builders.serializers.CleanWiza
 
 internal open class CleanWizardExtensionImplementation(
     override var dataClassGenerationPattern: CleanWizardDataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER,
-    internal var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.KotlinXSerialization(),
+    internal var jsonSerializer: CleanWizardJsonSerializer = CleanWizardJsonSerializer.None,
     internal var dependencyInjectionFramework: CleanWizardDependencyInjectionFramework = CleanWizardDependencyInjectionFramework.None,
 ) : CleanWizardExtension() {
 

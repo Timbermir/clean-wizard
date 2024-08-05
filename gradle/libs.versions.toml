@@ -1,6 +1,6 @@
 [versions]
 # Clean Wizard
-cleanwizard = "2.0.0-RC8"
+cleanwizard = "1.0.0-RC1"
 # MavenPublish
 vanniktech-maven-publish = "0.29.0"
 # Gradle
@@ -59,6 +59,8 @@ di = ["kodein", "koin-core", "koin-annotations", "javax-inject"]
 # Gradle
 gradle-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-publish" }
 gradle-signing = { id = "signing" }
+# Java
+java = { id = "java" }
 # Custom Plugins
 cleanwizard-core = { id = "io.github.timbermir.clean-wizard", version.ref = "cleanwizard" }
 cleanwizard-multimodule = { id = "io.github.timbermir.clean-wizard.multimodule", version.ref = "cleanwizard" }

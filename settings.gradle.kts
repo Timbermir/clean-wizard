@@ -1,9 +1,9 @@
 pluginManagement {
     repositories {
         mavenLocal()
+        mavenCentral()
         gradlePluginPortal()
         google()
-        mavenCentral()
     }
 }
 
@@ -24,7 +24,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "clean-wizard-root"
+rootProject.name = "clean-wizard"
 includeBuild(".")
 includeBuild("build-logic")
 includeBuild("gradle-plugins") {
@@ -36,11 +36,11 @@ include(
     "foundation:annotations",
     "foundation:codegen"
 )
-include("clean-wizard")
 include(
     "processors:data-class",
     "processors:use-case"
 )
+include("workloads:core")
 include("workloads:single-module")
 include(
     "workloads:multi-module:data",

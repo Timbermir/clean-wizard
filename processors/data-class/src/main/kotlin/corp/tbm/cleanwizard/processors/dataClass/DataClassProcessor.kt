@@ -39,7 +39,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
 import java.io.OutputStreamWriter
-import kotlin.reflect.KClass
 
 const val PARAMETER_SEPARATOR = ", \n    "
 const val PARAMETER_PREFIX = "\n    "
@@ -361,13 +360,15 @@ private class DataClassProcessor(
                 }
                 this
             }, propertyBuilder = { _, _, property ->
-                val jsonAnnotationSpec =
-                    property.annotations.find { it.shortName.asString() == jsonSerializer.annotation.simpleName }
-                        ?.toAnnotationSpec()
-                        ?: AnnotationSpec.builder(jsonSerializer.annotation)
-                            .addMember("${jsonSerializer.nameProperty} = %S", property.name)
-                            .build()
-                addAnnotation(jsonAnnotationSpec)
+                if (jsonSerializer !is CleanWizardJsonSerializer.None) {
+                    val jsonAnnotationSpec =
+                        property.annotations.find { it.shortName.asString() == jsonSerializer.annotation.simpleName }
+                            ?.toAnnotationSpec()
+                            ?: AnnotationSpec.builder(jsonSerializer.annotation)
+                                .addMember("${jsonSerializer.nameProperty} = %S", property.name)
+                                .build()
+                    addAnnotation(jsonAnnotationSpec)
+                }
 
                 property.annotations.find { it.shortName.asString() == PrimaryKey::class.simpleName }
                     ?.let { primaryKeyAnnotation ->
@@ -451,7 +452,10 @@ private class DataClassProcessor(
     @OptIn(KspExperimental::class)
     private fun TypeSpec.Builder.addAnnotationsForDTO(symbol: KSClassDeclaration): TypeSpec.Builder {
         if (symbol.isAnnotationPresent(DTO::class)) {
-            symbol.annotations.filter { it.shortName.asString() == "Serializable" }.forEach { _ ->
+            if (jsonSerializer is CleanWizardJsonSerializer.KotlinXSerialization && symbol.isAnnotationPresent(
+                    Serializable::class
+                )
+            ) {
                 addAnnotation(AnnotationSpec.builder(Serializable::class).build())
             }
             symbol.annotations.filter { it.shortName.asString() == "Entity" }.forEach { entityAnnotation ->
@@ -491,23 +495,24 @@ private class DataClassProcessor(
     ): FileSpec {
         val fileSpecBuilder = FileSpec.builder(converterPackageName, converterClassName)
 
-        when (jsonSerializer) {
-            is CleanWizardJsonSerializer.KotlinXSerialization -> {
-                fileSpecBuilder
-                    .addImport(ClassDiscriminatorMode::class, "")
-                    .addImport(Json::class, "")
-                    .addImport("kotlinx.serialization", "encodeToString")
-            }
+        if (jsonSerializer !is CleanWizardJsonSerializer.None)
+            when {
+                jsonSerializer is CleanWizardJsonSerializer.KotlinXSerialization -> {
+                    fileSpecBuilder
+                        .addImport(ClassDiscriminatorMode::class, "")
+                        .addImport(Json::class, "")
+                        .addImport("kotlinx.serialization", "encodeToString")
+                }
 
-            is CleanWizardJsonSerializer.Gson -> {
-                fileSpecBuilder.addImport(TypeToken::class, "")
-                fileSpecBuilder.addImport(GsonBuilder::class, "")
-            }
+                jsonSerializer is CleanWizardJsonSerializer.Gson -> {
+                    fileSpecBuilder.addImport(TypeToken::class, "")
+                    fileSpecBuilder.addImport(GsonBuilder::class, "")
+                }
 
-            is CleanWizardJsonSerializer.Moshi -> {
+                jsonSerializer is CleanWizardJsonSerializer.Moshi -> {
 
+                }
             }
-        }
         return fileSpecBuilder.addType(converterClassBuilder.build()).build()
     }
 
@@ -764,15 +769,6 @@ private class DataClassProcessor(
             FileSpec.builder(packageName, className)
                 .addType(classToBuild), packageName, className, properties
         ).build().writeNewFile(codeGenerator, Dependencies(true, symbol.containingFile!!))
-    }
-
-    private fun KSPropertyDeclaration.hasAnnotation(
-        annotation: KClass<out Annotation>
-    ): Boolean {
-        return annotations.any { ann ->
-            val resolvedName = ann.annotationType.resolve().declaration.qualifiedName?.asString()
-            resolvedName == annotation.qualifiedName
-        }
     }
 
     private fun KSAnnotation.toAnnotationSpec(): AnnotationSpec {

@@ -10,6 +10,8 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.room.common)
     implementation(libs.kodein)
+    ksp(projects.processors.dataClass)
+    ksp(projects.processors.useCase)
 }
 
 `clean-wizard-codegen` {

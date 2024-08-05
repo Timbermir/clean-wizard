@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("gradle-plugins")
     repositories {
         mavenLocal()
         mavenCentral()
@@ -27,11 +28,6 @@ dependencyResolutionManagement {
 rootProject.name = "clean-wizard"
 includeBuild(".")
 includeBuild("build-logic")
-includeBuild("gradle-plugins") {
-    dependencySubstitution {
-        substitute(module("io.github.timbermir.clean-wizard:gradle-plugins-api")).using(project(":api"))
-    }
-}
 include(
     "foundation:annotations",
     "foundation:codegen"

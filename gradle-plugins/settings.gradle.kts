@@ -25,7 +25,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "gradle-plugins"
 includeBuild("../build-logic")
-include(
-    ":api",
-    ":implementation"
-)
+includeBuild("api") {
+    dependencySubstitution {
+        substitute(module("io.github.timbermir.clean-wizard:gradle-plugins-api")).using(project(":"))
+    }
+}
+include("implementation")

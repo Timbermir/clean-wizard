@@ -1,6 +1,7 @@
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardDataClassGenerationPattern
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardUseCaseFunctionType
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.JsonNamingStrategy
 
 plugins {
@@ -33,6 +34,7 @@ java {
                 encodeDefaults = true
                 prettyPrint = true
                 explicitNulls = false
+                @OptIn(ExperimentalSerializationApi::class)
                 namingStrategy = JsonNamingStrategy.KebabCase
             }
         }

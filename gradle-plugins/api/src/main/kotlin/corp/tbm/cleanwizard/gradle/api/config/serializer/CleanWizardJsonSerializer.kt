@@ -19,6 +19,7 @@ private object KClassSerializer : KSerializer<KClass<out Annotation>> {
         encoder.encodeString(value.qualifiedName ?: "")
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun deserialize(decoder: Decoder): KClass<out Annotation> {
         val className = decoder.decodeString()
         return Class.forName(className).kotlin as KClass<out Annotation>
@@ -33,6 +34,9 @@ sealed class CleanWizardJsonSerializer(
     val annotation: KClass<out Annotation>,
     val nameProperty: String = "value"
 ) {
+    @Serializable
+    @SerialName("none")
+    data object None : CleanWizardJsonSerializer("", Nothing::class)
 
     @Serializable
     @SerialName("kotlinx-serialization")

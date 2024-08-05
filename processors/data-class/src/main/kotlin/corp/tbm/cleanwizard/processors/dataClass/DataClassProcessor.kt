@@ -342,7 +342,6 @@ private class DataClassProcessor(
                         }
                     }
 
-
                     addFunction(
                         generateTopLevelMappingFunctions(
                             backWardMappingFunctionName,

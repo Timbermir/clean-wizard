@@ -7,7 +7,7 @@ vanniktech-maven-publish = "0.29.0"
 gradle-publish = "1.2.1"
 # Kotlin
 kotlin = "2.0.0"
-kotlin-dsl = "4.4.0"
+kotlin-dsl = "4.5.0"
 # KotlinX
 kotlinx-collections-immutable = "0.3.7"
 kotlinx-serialization-json = "1.7.1"

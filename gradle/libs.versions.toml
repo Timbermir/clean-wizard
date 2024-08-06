@@ -15,7 +15,7 @@ kotlinx-serialization-json = "1.7.1"
 google-devtools-ksp = "2.0.0-1.0.24"
 google-gson = "2.11.0"
 # Squareup
-squareup-kotlinpoet = "1.17.0"
+squareup-kotlinpoet = "1.18.1"
 squareup-moshi = "1.15.1"
 # Koin
 koin = "3.5.6"

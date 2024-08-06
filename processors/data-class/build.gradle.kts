@@ -5,3 +5,7 @@ plugins {
 dependencies {
     implementation(libs.room.common)
 }
+
+publish {
+    artifactId = "data-class-compiler"
+}

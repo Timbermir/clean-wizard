@@ -5,23 +5,27 @@ import com.vanniktech.maven.publish.SonatypeHost
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.alias
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.libs
 import corp.tbm.cleanwizard.buildLogic.convention.foundation.extensions.projectConfig
+import corp.tbm.cleanwizard.buildLogic.convention.plugins.extensions.PublishExtensionImplementation
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.create
 
-class PublishPlugin : Plugin<Project> {
+internal class PublishPlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
         with(target) {
 
             alias(libs.plugins.vanniktech.maven.publish)
 
+            val extension = extensions.create("publish", PublishExtensionImplementation::class)
             afterEvaluate {
                 extensions.configure<MavenPublishBaseExtension> {
                     coordinates(
                         groupId = projectConfig.versions.group.get(),
-                        artifactId = project.displayName.replace("project", "").replaceFirst(":", "").replace(":", "-")
-                            .replace("'", "").replace(" ", ""),
+                        artifactId = extension.artifactId.takeIf { it.isNotEmpty() }
+                            ?: project.displayName.replace("project", "").replaceFirst(":", "").replace(":", "-")
+                                .replace("'", "").replace(" ", ""),
                         version = projectConfig.versions.version.get()
                     )
                     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)

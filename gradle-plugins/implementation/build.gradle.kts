@@ -1,10 +1,10 @@
 plugins {
+    alias(libs.plugins.cleanwizard.internal.kotlin)
+    alias(libs.plugins.cleanwizard.internal.publish)
     alias(libs.plugins.kotlin.dsl)
     alias(libs.plugins.google.devtools.ksp)
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.gradle.publish)
     alias(libs.plugins.gradle.signing)
-    alias(libs.plugins.cleanwizard.internal.kotlin)
 }
 
 dependencies {

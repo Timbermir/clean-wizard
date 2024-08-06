@@ -399,7 +399,7 @@ You need to apply `clean-wizard` plugin to your root `build.gradle.kts`
 
 ```gradle
 plugins {
-    id 'corp.tbm.cleanwizard' version '2.0.0'
+    id 'io.github.timbermir.clean-wizard' version '1.0.0'
 }
 ```
 </details>
@@ -409,7 +409,7 @@ plugins {
 
 ```gradle
 plugins {
-    id("corp.tbm.cleanwizard") version "2.0.0"
+    id("io.github.timbermir.clean-wizard") version "1.0.0"
 }
 ```
 </details>
@@ -419,7 +419,9 @@ Use `` `clean-wizard` `` extension in your root `build.gradle.kts` and change th
 
 ```kotlin
 `clean-wizard` {
-    dtoClassSuffix = "Dto"
+    data {
+        classSuffix = "DTO"
+    }
 }
 ```
 
@@ -451,15 +453,57 @@ public fun ComputerDto.toModel(): ComputerDomain = ComputerDomain(
 Ready-to-use block with all the fields needed
 ```kotlin
 `clean-wizard` {
-    dtoClassSuffix = "Dto"
-    dtoClassPackageName = "dtos"
-    dtoToDomainMapFunctionName = "toModel"
-    domainClassSuffix = "Domain"
-    domainClassPackageName = "models"
-    uiClassSuffix = "Ui"
-    uiClassPackageName = "uis"
-    domainToUiMapFunctionName = "toUI"
-    defaultJsonSerializer = CleanWizardJsonSerializer.KOTLINX_SERIALIZATION
+
+    jsonSerializer {
+        kotlinXSerialization {
+            json {
+                encodeDefaults = true
+                prettyPrint = true
+                explicitNulls = false
+                @OptIn(ExperimentalSerializationApi::class)
+                namingStrategy = JsonNamingStrategy.KebabCase
+            }
+        }
+    }
+
+    dataClassGenerationPattern = CleanWizardDataClassGenerationPattern.LAYER
+
+    dependencyInjection {
+        kodein {
+            useSimpleFunctions = true
+            binding = CleanWizardDependencyInjectionFramework.Kodein.KodeinBinding.Multiton()
+        }
+    }
+
+    data {
+        classSuffix = "DTO"
+        packageName = "dtos"
+        toDomainMapFunctionName = "toModel"
+        interfaceMapper {
+            className = "DTOMapper"
+            pathToModuleToGenerateInterfaceMapper = projects.workloads.core.dependencyProject.name
+        }
+    }
+
+    domain {
+        classSuffix = "Domain"
+        packageName = "models"
+        toDTOMapFunctionName = "fromDomain"
+        toUIMapFunctionName = "toUI"
+        useCase {
+            packageName = "useCase"
+            useCaseFunctionType = CleanWizardUseCaseFunctionType.CustomFunctionName("execute")
+            classSuffix = "UseCase"
+        }
+    }
+
+    presentation {
+        moduleName = "ui"
+        classSuffix = "Ui"
+        packageName = "uis"
+        shouldGenerate = true
+        toDomainMapFunctionName = "fromUI"
+    }
 }
 ```
 
@@ -508,8 +552,8 @@ plugins {
 
 ```gradle
 dependencies {
-    implementation 'io.github.timbermir:clean-wizard:1.0.0-snapshot'
-    ksp 'io.github.timbermir:clean-wizard:1.0.0-snapshot'
+    implementation 'io.github.timbermir.clean-wizard:clean-wizard:1.0.0'
+    ksp 'io.github.timbermir.clean-wizard:data-class-compiler:1.0.0'
 }
 ```
 
@@ -520,8 +564,8 @@ dependencies {
 
 ```gradle
 dependencies {
-    implementation("io.github.timbermir:clean-wizard:1.0.0-snapshot")
-    ksp("io.github.timbermir:clean-wizard:1.0.0-snapshot")
+    implementation("io.github.timbermir.clean-wizard:clean-wizard:1.0.0")
+    ksp("io.github.timbermir.clean-wizard:data-class-compiler:1.0.0")
 }
 ```
 
@@ -533,7 +577,7 @@ dependencies {
 
 ```gradle
 plugins {
-    id 'corp.tbm.cleanwizard' version '2.0.0'
+    id 'io.github.timbermir.clean-wizard' version '1.0.0'
 }
 ```
 </details>
@@ -543,30 +587,30 @@ plugins {
 
 ```gradle
 plugins {
-    id("corp.tbm.cleanwizard") version "2.0.0"
+    id("io.github.timbermir.clean-wizard") version "1.0.0"
 }
 ```
 </details>
 
 ## Current Processor limitations 🚧
 
-- **SUPPORTS data class generation only in a single module, in other words you can't generate `DTO`s for `data` module,
-  or `Model`s for `domain module`, they are generated in module where `DTOSchema` is located**
-- **SUPPORTS only [kotlinx-serialization-json](https://github.com/Kotlin/kotlinx.serialization)**
+- ~~**SUPPORTS data class generation only in a single module, in other words you can't generate `DTO`s for `data` module,
+  or `Model`s for `domain module`, they are generated in module where `DTOSchema` is located**~~
+- ~~**SUPPORTS only [kotlinx-serialization-json](https://github.com/Kotlin/kotlinx.serialization)**~~
 - ~~**DOES NOT support `enums`, `collections` or any custom type but the source ones**~~
-- **DOES NOT support inheriting other annotations**
-- **DOES NOT support inheriting `@SerialName` value if present, generated `@SerialName` value is derived from field's
-  name**
+- ~~**DOES NOT support inheriting other annotations**~~
+- ~~**DOES NOT support inheriting `@SerialName` value if present, generated `@SerialName` value is derived from field's
+  name**~~
 - ~~**DOES NOT support backwards mapping, i.e., from `model` to `DTO`**~~
 - ~~**DOES NOT
   support [custom processor options](https://kotlinlang.org/docs/ksp-quickstart.html#pass-options-to-processors),
   i.e.,
   change `DTO` classes suffix to `Dto`**~~
 - **DOES NOT support multiplatform**
-- **DOES NOT support [Room](https://developer.android.com/jetpack/androidx/releases/room) entity generation, therefore
-  no `TypeConverters` generation**
+- ~~**DOES NOT support [Room](https://developer.android.com/jetpack/androidx/releases/room) entity generation, therefore
+  no `TypeConverters` generation**~~
 - **DOES NOT utilize [Incremental processing](https://kotlinlang.org/docs/ksp-incremental.html)**
-- **DOES NOT utilize [Multiple round processing](https://kotlinlang.org/docs/ksp-multi-round.html)**
+- ~~**DOES NOT utilize [Multiple round processing](https://kotlinlang.org/docs/ksp-multi-round.html)**~~
 
 ## Building
 
@@ -575,7 +619,7 @@ You can download
 [IntelliJ IDEA](https://www.jetbrains.com/idea/download/) here.
 
 The project **relies on [**`Gradle`**](https://gradle.org/) as its main build tool**.
-[**Currently used version is** `8.8`](https://docs.gradle.org/8.8/release-notes.html?_gl=1*1gusy0x*_ga*NDAwNDUzNzY3LjE3MTU4NDUzOTY.*_ga_7W7NC6YNPT*MTcxNzc1MDYxOS43LjEuMTcxNzc1MTAxMC40OS4wLjA.).
+[**Currently used version is** `8.9`](https://docs.gradle.org/8.8/release-notes.html?_gl=1*1gusy0x*_ga*NDAwNDUzNzY3LjE3MTU4NDUzOTY.*_ga_7W7NC6YNPT*MTcxNzc1MDYxOS43LjEuMTcxNzc1MTAxMC40OS4wLjA.).
 **IntelliJ will try to find it among the installed Gradle Versions** or **download it automatically if it
 couldn't be found**.
 

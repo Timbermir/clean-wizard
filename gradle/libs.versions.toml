@@ -6,7 +6,7 @@ vanniktech-maven-publish = "0.29.0"
 # Gradle
 gradle-publish = "1.2.1"
 # Kotlin
-kotlin = "2.0.0"
+kotlin = "2.0.10"
 kotlin-dsl = "4.5.0"
 # KotlinX
 kotlinx-collections-immutable = "0.3.7"

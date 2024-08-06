@@ -1,4 +1,4 @@
 plugins {
-    alias(libs.plugins.cleanwizard.internal.kotlin)
+    alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.cleanwizard.internal.publish)
 }

@@ -1,18 +1,19 @@
 plugins {
     alias(libs.plugins.kotlin.dsl)
     alias(libs.plugins.google.devtools.ksp)
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.gradle.publish)
     alias(libs.plugins.gradle.signing)
-    alias(libs.plugins.cleanwizard.internal.kotlin)
+    alias(libs.plugins.cleanwizard.internal.publish)
 }
 
 dependencies {
-    compileClasspath(libs.kotlin.gradle.plugin)
     implementation(libs.cleanwizard.gradle.plugins.api)
     implementation(libs.kotlinx.serialization.json)
-    compileOnly(libs.google.gson)
+    compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.google.devtools.ksp)
+    compileOnly(libs.google.gson)
+    compileOnly(libs.squareup.moshi)
+    compileOnly(libs.squareup.moshi.kotlin)
     compileOnly(files(ksp.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(projectConfig.javaClass.superclass.protectionDomain.codeSource.location))

@@ -3,16 +3,11 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.google.devtools.ksp)
-    implementation(libs.google.gson)
-    implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.vanniktech.maven.publish)
     compileOnly(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(projectConfig.javaClass.superclass.protectionDomain.codeSource.location))
 }
-
-group = projectConfig.versions.group.get()
 
 gradlePlugin {
 

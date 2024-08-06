@@ -5,3 +5,7 @@ plugins {
 dependencies {
     implementation(libs.bundles.di)
 }
+
+publish {
+    artifactId = "use-case-compiler"
+}

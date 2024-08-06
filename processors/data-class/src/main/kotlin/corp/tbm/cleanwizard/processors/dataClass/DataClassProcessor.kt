@@ -12,8 +12,10 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.LongSerializationPolicy
 import com.google.gson.reflect.TypeToken
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -39,6 +41,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
 import java.io.OutputStreamWriter
+import java.text.DateFormat
 
 const val PARAMETER_SEPARATOR = ", \n    "
 const val PARAMETER_PREFIX = "\n    "
@@ -590,26 +593,32 @@ private class DataClassProcessor(
                             gsonAdded = true
                             val gsonConfig = (jsonSerializer as CleanWizardJsonSerializer.Gson).serializerConfig
                             val gsonBuilderCode = buildString {
-                                append("GsonBuilder().apply {\n")
-                                append("    setLongSerializationPolicy(com.google.gson.LongSerializationPolicy.${gsonConfig.longSerializationPolicy.name})\n")
-                                append("    setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.${gsonConfig.fieldNamingPolicy.name})\n")
-                                if (gsonConfig.serializeNulls) append("    serializeNulls()\n")
-                                gsonConfig.datePattern?.let { append("    setDateFormat(\"$it\")\n") }
-                                append("    setDateFormat(${gsonConfig.dateStyle}, ${gsonConfig.timeStyle})\n")
-                                if (gsonConfig.complexMapKeySerialization) append("    enableComplexMapKeySerialization()\n")
-                                if (gsonConfig.serializeSpecialFloatingPointValues) append("    serializeSpecialFloatingPointValues()\n")
-                                if (!gsonConfig.htmlSafe) append("    disableHtmlEscaping()\n")
-                                if (gsonConfig.generateNonExecutableJson) append("    generateNonExecutableJson()\n")
-                                gsonConfig.strictness?.let { append("    setStrictness(com.google.gson.Strictness.${it.name})\n") }
-                                if (!gsonConfig.useJdkUnsafe) append("    disableJdkUnsafe()\n")
-//                              TODO append("    setObjectToNumberStrategy(${gsonConfig.objectToNumberStrategy}())\n")
-//                              TODO append("    setNumberToNumberStrategy(${gsonConfig.numberToNumberStrategy}())\n")
-                                append("}.create()")
+                                fun String.appendWithIndent() {
+                                    append("  .${this}\n")
+                                }
+
+                                append("GsonBuilder()\n")
+                                if (gsonConfig.longSerializationPolicy != LongSerializationPolicy.DEFAULT) "setLongSerializationPolicy(com.google.gson.LongSerializationPolicy.${gsonConfig.longSerializationPolicy.name})".appendWithIndent()
+                                if (gsonConfig.fieldNamingPolicy != FieldNamingPolicy.IDENTITY) "setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.${gsonConfig.fieldNamingPolicy.name})".appendWithIndent()
+                                if (gsonConfig.serializeNulls) "serializeNulls()".appendWithIndent()
+                                gsonConfig.datePattern?.let { "setDateFormat(\"$it\")".appendWithIndent() }
+                                if (gsonConfig.dateStyle != DateFormat.DEFAULT && gsonConfig.timeStyle != DateFormat.DEFAULT)
+                                    "setDateFormat(${gsonConfig.dateStyle}, ${gsonConfig.timeStyle})".appendWithIndent()
+                                if (gsonConfig.complexMapKeySerialization) "enableComplexMapKeySerialization()".appendWithIndent()
+                                if (gsonConfig.serializeSpecialFloatingPointValues) "serializeSpecialFloatingPointValues()".appendWithIndent()
+                                if (!gsonConfig.htmlSafe) "disableHtmlEscaping()".appendWithIndent()
+                                if (gsonConfig.generateNonExecutableJson) "generateNonExecutableJson()".appendWithIndent()
+                                gsonConfig.strictness?.let {
+                                    "setStrictness(com.google.gson.Strictness.${it.name})".appendWithIndent()
+                                }
+//                                TODO append("    setObjectToNumberStrategy(${gsonConfig.objectToNumberStrategy}())\n")
+//                                TODO append("    setNumberToNumberStrategy(${gsonConfig.numberToNumberStrategy}())\n")
+                                if (!gsonConfig.useJdkUnsafe) "disableJdkUnsafe()".appendWithIndent()
                             }
 
                             converterClassBuilder.addProperty(
                                 PropertySpec.builder("gson", Gson::class)
-                                    .initializer(gsonBuilderCode)
+                                    .initializer(gsonBuilderCode + "  " + if (gsonBuilderCode.substringAfterLast("\n") == ".") "create()" else ".create()")
                                     .build()
                             )
                         }

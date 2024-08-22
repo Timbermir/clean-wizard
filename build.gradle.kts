@@ -11,18 +11,11 @@ plugins {
     alias(libs.plugins.google.devtools.ksp) apply false
     alias(libs.plugins.cleanwizard.core)
     alias(libs.plugins.cleanwizard.multimodule) apply false
-    alias(libs.plugins.vanniktech.maven.publish) apply false
 }
 
 buildscript {
     dependencies {
         classpath(libs.kotlin.gradle.plugin)
-    }
-}
-
-java {
-    toolchain {
-        withSourcesJar()
     }
 }
 

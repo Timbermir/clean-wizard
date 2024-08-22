@@ -27,6 +27,7 @@ import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dependencyInjectionFramework
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
+import corp.tbm.cleanwizard.gradle.api.annotations.CleanWizardInternalAPI
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardDependencyInjectionFramework
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardUseCaseFunctionType
 import org.kodein.di.DI
@@ -38,7 +39,8 @@ import javax.inject.Inject
 const val PARAMETER_SEPARATOR = ", \n    "
 const val PARAMETER_PREFIX = "\n    "
 
-class UseCaseProcessor(
+@OptIn(CleanWizardInternalAPI::class)
+private class UseCaseProcessor(
     private val codeGenerator: CodeGenerator,
     processorOptions: Map<String, String>,
     logger: KSPLogger

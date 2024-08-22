@@ -15,7 +15,7 @@ abstract class CleanWizardDomainLayerConfigBuilder(domain: CleanWizardLayerConfi
     @CleanWizardConfigDsl
     abstract inner class CleanWizardUseCaseConfigBuilder {
 
-        val domain = this@CleanWizardDomainLayerConfigBuilder.layerConfig
+        private val domain = this@CleanWizardDomainLayerConfigBuilder.layerConfig
 
         var classSuffix: String = domain.useCaseConfig.classSuffix
         var packageName: String = domain.useCaseConfig.packageName

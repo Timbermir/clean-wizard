@@ -1,6 +1,7 @@
 package corp.tbm.cleanwizard.gradle.api.config.layerConfigs
 
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardInterfaceMapperConfig
+import corp.tbm.cleanwizard.gradle.api.config.CleanWizardNullResolutionStrategy
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardRoomConfig
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardUseCaseConfig
 import kotlinx.serialization.SerialName
@@ -24,6 +25,7 @@ sealed class CleanWizardLayerConfig(
         override val packageName: String = "dtos",
         val interfaceMapperConfig: CleanWizardInterfaceMapperConfig = CleanWizardInterfaceMapperConfig(),
         val schemaSuffix: String = "DTOSchema",
+        val nullResolutionStrategy: CleanWizardNullResolutionStrategy = CleanWizardNullResolutionStrategy.STUB_GENERATION,
         val toDomainAsTopLevel: Boolean = true,
         val toDomainMapFunctionName: String = "toDomain",
         val roomConfig: CleanWizardRoomConfig = CleanWizardRoomConfig(),

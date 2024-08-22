@@ -28,6 +28,7 @@ import corp.tbm.cleanwizard.foundation.codegen.extensions.*
 import corp.tbm.cleanwizard.foundation.codegen.extensions.kotlinpoet.writeNewFile
 import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.*
+import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.log
 import corp.tbm.cleanwizard.foundation.codegen.processor.DataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.processor.Logger
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions
@@ -40,7 +41,6 @@ import corp.tbm.cleanwizard.processors.dataClass.visitors.EnumGenerateVisitor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
-import java.io.OutputStreamWriter
 import java.text.DateFormat
 
 const val PARAMETER_SEPARATOR = ", \n    "
@@ -64,35 +64,135 @@ private class DataClassProcessor(
         EnumGenerateVisitor(codeGenerator)
     }
 
-    private val statementListFormatMapping: (functionName: String, packageName: String, properties: List<KSPropertyDeclaration>) -> String =
-        { mappingFunctionName, packageName, properties ->
-            "return %T(${
-                properties.map { it }
-                    .joinToString(
-                        separator = PARAMETER_SEPARATOR,
-                        prefix = PARAMETER_PREFIX
-                    )
-                    { currentProperty ->
-                        val filteredProperties = properties.filter { it.name == currentProperty.name }
-                        when {
-
-                            filteredProperties.any { it.type.resolve().isClassMappable } ->
-                                "${currentProperty.name}.$mappingFunctionName()"
-
-                            filteredProperties.any { it.type.resolve().isListMappable } ->
-                                "${currentProperty.name}.map { ${
-                                    currentProperty.getParameterName(
-                                        packageName
-                                    ).firstCharLowercase()
-                                } -> ${
-                                    currentProperty.getParameterName(packageName).firstCharLowercase()
-                                }.$mappingFunctionName() }"
-
-                            else -> currentProperty.name
-                        }
-                    }
-            }\n)"
+    private fun mapAndFormatStatementList(
+        symbol: KSClassDeclaration,
+        resolver: Resolver,
+        layerConfig: CleanWizardLayerConfig,
+        returns: ClassName,
+        functionName: String,
+        packageName: String,
+        properties: List<KSPropertyDeclaration>,
+        fileSpec: FileSpec.Builder? = null
+    ): String {
+        fun FileSpec.Builder?.addKotlinxCollectionsImmutableBlockWithImport(block: String): String {
+            return block.also {
+                this?.addImport(KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE_NAME, block.removeSuffix("()"))
+            }
         }
+
+        val collectionNameCheck: (propertyName: String) -> String = { propertyName ->
+            when (propertyName) {
+                "List" -> "emptyList()"
+                "ImmutableList", "PersistentList" -> fileSpec.addKotlinxCollectionsImmutableBlockWithImport("persistentListOf()")
+                "MutableList" -> "mutableListOf()"
+                "ArrayList" -> "arrayListOf()"
+                "Set" -> "emptySet()"
+                "ImmutableSet", "PersistentSet" -> fileSpec.addKotlinxCollectionsImmutableBlockWithImport("persistentSetOf()")
+                "HashSet" -> "hashSetOf()"
+                "MutableSet" -> "mutableSetOf()"
+                "Map" -> "emptyMap()"
+                "ImmutableMap", "PersistentMap" -> fileSpec.addKotlinxCollectionsImmutableBlockWithImport("persistentMapOf()")
+                "HashMap" -> "hashMapOf()"
+                "MutableMap" -> "mutableMapOf()"
+                else -> "null"
+            }
+        }
+
+        return "return %T(${
+            properties.map { it }
+                .joinToString(
+                    separator = PARAMETER_SEPARATOR,
+                    prefix = PARAMETER_PREFIX
+                )
+                { currentProperty ->
+                    val currentPropertyTypeDeclarationName = currentProperty.type.resolve().declaration.name
+                    logger.log(currentProperty.type.resolve().declaration.name)
+                    val filteredProperties = properties.filter { it.name == currentProperty.name }
+                    when {
+                        filteredProperties.any { it.type.resolve().isClassMappable } ->
+                            "${currentProperty.name}${if (currentProperty.isNullable(layerConfig)) "?" else ""}.$functionName() ${
+                                currentProperty.elvis(
+                                    "${
+                                        currentProperty.determineParameterType(
+                                            symbol,
+                                            resolver,
+                                            dataClassGenerationPattern.classNameReplacement(
+                                                packageName,
+                                                returns.simpleName,
+                                                layerConfigs.data
+                                            ).packageName
+                                        )
+                                    }()"
+                                )
+                            }"
+
+                        filteredProperties.any { it.type.resolve().isListMappable } ->
+                            "${currentProperty.name}${
+                                currentProperty.safeCall(
+                                    "map { ${
+                                        currentProperty.getParameterName(
+                                            packageName
+                                        ).firstCharLowercase()
+                                    } -> ${
+                                        currentProperty.getParameterName(packageName).firstCharLowercase()
+                                    }.$functionName() } ${
+                                        currentProperty.elvis(
+                                            collectionNameCheck(currentPropertyTypeDeclarationName), layerConfig
+                                        )
+                                    }"
+                                )
+                            }"
+
+                        else -> "${currentProperty.name} ${
+                            currentProperty.elvis(
+                                when (currentPropertyTypeDeclarationName) {
+                                    "Byte", "Short", "Int", "Long" -> "-1"
+                                    "Float" -> "-1f"
+                                    "Double" -> "-1.0"
+                                    "Boolean" -> "false"
+                                    "String" -> "\"\""
+                                    else -> collectionNameCheck(currentPropertyTypeDeclarationName)
+                                }, layerConfig
+                            )
+                        }"
+                    }
+                }
+        }\n)"
+
+    }
+
+    private fun mapAndFormatStatementList(
+        mappingFunctionName: String,
+        packageName: String,
+        properties: List<KSPropertyDeclaration>,
+    ): String {
+
+        return "return %T(${
+            properties.map { it }
+                .joinToString(
+                    separator = PARAMETER_SEPARATOR,
+                    prefix = PARAMETER_PREFIX
+                )
+                { currentProperty ->
+                    val filteredProperties = properties.filter { it.name == currentProperty.name }
+                    when {
+                        filteredProperties.any { it.type.resolve().isClassMappable } ->
+                            "${currentProperty.name}.$mappingFunctionName()"
+
+                        filteredProperties.any { it.type.resolve().isListMappable } ->
+                            "${currentProperty.name}.map { ${
+                                currentProperty.getParameterName(
+                                    packageName
+                                ).firstCharLowercase()
+                            } -> ${
+                                currentProperty.getParameterName(packageName).firstCharLowercase()
+                            }.$mappingFunctionName() }"
+
+                        else -> currentProperty.name
+                    }
+                }
+        }\n)"
+    }
 
     private val generateDomainClassName: ClassName.() -> ClassName = {
         if (dataClassGenerationPattern == DataClassGenerationPattern.LAYER)
@@ -303,10 +403,15 @@ private class DataClassProcessor(
                                     className
                                 ),
                                 domainClassName,
-                                statementFormat = statementListFormatMapping(
+                                statementFormat = mapAndFormatStatementList(
+                                    symbol,
+                                    resolver,
+                                    layerConfigs.data,
+                                    domainClassName,
                                     mappingFunctionName,
                                     packageName,
-                                    properties
+                                    properties,
+                                    this
                                 )
                             )
                         )
@@ -356,16 +461,21 @@ private class DataClassProcessor(
                                 packageName,
                                 className
                             ),
-                            statementFormat = statementListFormatMapping(
+                            statementFormat = mapAndFormatStatementList(
+                                symbol,
+                                resolver,
+                                layerConfigs.data,
+                                domainClassName,
                                 backWardMappingFunctionName,
                                 packageName.replace(layerConfigs.data.packageName, layerConfigs.domain.packageName),
-                                properties
+                                properties,
+                                this
                             )
                         )
                     )
                 }
                 this
-            }, propertyBuilder = { _, _, property ->
+            }, propertyBuilder = { property ->
                 if (jsonSerializer !is CleanWizardJsonSerializer.None) {
                     val jsonAnnotationSpec =
                         property.annotations.find { it.shortName.asString() == jsonSerializer.annotation.simpleName }
@@ -380,8 +490,6 @@ private class DataClassProcessor(
                     ?.let { primaryKeyAnnotation ->
                         addAnnotation(primaryKeyAnnotation.toAnnotationSpec())
                     }
-
-                this
             }
         )
 
@@ -403,13 +511,13 @@ private class DataClassProcessor(
                         generateTopLevelMappingFunctions(
                             layerConfigs.domain.toUIMapFunctionName, properties, domainClassName,
                             ClassName(packageName, className),
-                            statementFormat = statementListFormatMapping(
+                            statementFormat = mapAndFormatStatementList(
                                 layerConfigs.domain.toUIMapFunctionName,
                                 dataClassGenerationPattern.packageNameReplacement(
                                     packageName,
                                     layerConfigs.presentation
                                 ),
-                                properties
+                                properties,
                             )
                         )
                     )
@@ -442,10 +550,10 @@ private class DataClassProcessor(
                                     className
                                 ),
                                 domainClassName,
-                                statementFormat = statementListFormatMapping(
+                                statementFormat = mapAndFormatStatementList(
                                     backWardMappingFunctionName,
                                     packageName,
-                                    properties
+                                    properties,
                                 )
                             )
                         )
@@ -477,21 +585,14 @@ private class DataClassProcessor(
         className: String,
         resolver: Resolver
     ) {
-        val converterClassName = "${className}Converter"
-        val converterPackageName = "$packageName.converters"
+        val converterClassName = "${className}${layerConfigs.data.roomConfig.roomTypeConvertersConfig.classSuffix}"
+        val converterPackageName = "$packageName.${layerConfigs.data.roomConfig.roomTypeConvertersConfig.packageName}"
         val converterClassBuilder = TypeSpec.objectBuilder(converterClassName)
 
-        val converterFile = codeGenerator.createNewFile(
-            Dependencies(true, symbol.containingFile!!),
-            converterPackageName,
-            converterClassName
-        )
-
         generateTypeConverters(symbol, resolver, packageName, converterClassBuilder)
-
-        OutputStreamWriter(converterFile).use { writer ->
-            generateConverterFile(converterPackageName, converterClassName, converterClassBuilder).writeTo(writer)
-        }
+        generateConverterFile(converterPackageName, converterClassName, converterClassBuilder).writeNewFile(
+            codeGenerator
+        )
     }
 
     private fun generateConverterFile(
@@ -692,15 +793,15 @@ private class DataClassProcessor(
         receiver: TypeName,
         returns: TypeName,
         statementFormat: String = "return %T(${
-            properties.map { it.name }
+            properties.map { it }
                 .joinToString(
                     separator = PARAMETER_SEPARATOR,
                     prefix = PARAMETER_PREFIX
                 )
-                { propertyName ->
-                    if (properties.filter { it.name == propertyName }
+                { property ->
+                    if (properties.filter { it.name == property.name }
                             .any { it.type.resolve().isMappable })
-                        "$propertyName.$functionName()" else propertyName
+                        "${property.name}${if (property.isNullable()) "?" else ""}.$functionName()" else property.name
                 }
         }\n)",
         statementArgs: Any = returns,
@@ -719,8 +820,8 @@ private class DataClassProcessor(
         symbol: KSClassDeclaration,
         layerConfig: CleanWizardLayerConfig,
         classBuilder: TypeSpec.Builder.(packageName: String, className: String, properties: List<KSPropertyDeclaration>) -> TypeSpec.Builder = { _, _, _ -> this },
-        fileSpecBuilder: FileSpec.Builder.(packageName: String, className: String, properties: List<KSPropertyDeclaration>) -> FileSpec.Builder = { _, _, _ -> this },
-        propertyBuilder: PropertySpec.Builder.(packageName: String, className: String, property: KSPropertyDeclaration) -> PropertySpec.Builder = { _, _, _ -> this }
+        propertyBuilder: PropertySpec.Builder.(property: KSPropertyDeclaration) -> Unit = {},
+        fileSpecBuilder: FileSpec.Builder.(packageName: String, className: String, properties: List<KSPropertyDeclaration>) -> FileSpec.Builder = { _, _, _ -> this }
     ) {
 
         val properties = symbol.getDeclaredProperties().toList()
@@ -744,8 +845,9 @@ private class DataClassProcessor(
                                 ParameterSpec.builder(
                                     property.name,
                                     property.determineParameterType(symbol, resolver, packageName)
+                                        .copy(property.isNullable(layerConfig))
                                 ).also {
-                                    if (property.type.resolve().isMarkedNullable)
+                                    if (property.isNullable(layerConfig))
                                         it.defaultValue("%S", null)
                                 }.build()
                             )
@@ -757,6 +859,7 @@ private class DataClassProcessor(
                         PropertySpec.builder(
                             property.name,
                             property.determineParameterType(symbol, resolver, packageName)
+                                .copy(property.isNullable(layerConfig))
                         ).also {
                             it.mutable(property.isMutable)
                             it.addModifiers(property.modifiers.toList().map { modifier -> modifier.toKModifier() }
@@ -771,8 +874,7 @@ private class DataClassProcessor(
                                 }
                                 .filterNotNull())
                             it.initializer(property.name)
-                            propertyBuilder(it, packageName, className, property)
-
+                            propertyBuilder(it, property)
                         }.build()
                     }), packageName, className, properties
         ).build()
@@ -806,6 +908,10 @@ private class DataClassProcessor(
                 )
             }
         return builder.build()
+    }
+
+    private companion object {
+        private const val KOTLINX_COLLECTIONS_IMMUTABLE_PACKAGE_NAME = "kotlinx.collections.immutable"
     }
 }
 

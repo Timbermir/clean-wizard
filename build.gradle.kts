@@ -1,5 +1,6 @@
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardDataClassGenerationPattern
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardDependencyInjectionFramework
+import corp.tbm.cleanwizard.gradle.api.config.CleanWizardNullResolutionStrategy
 import corp.tbm.cleanwizard.gradle.api.config.CleanWizardUseCaseFunctionType
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -46,9 +47,18 @@ buildscript {
         classSuffix = "DTO"
         packageName = "dtos"
         toDomainMapFunctionName = "toModel"
+        nullResolutionStrategy = CleanWizardNullResolutionStrategy.STUB_GENERATION
         interfaceMapper {
             className = "DTOMapper"
             pathToModuleToGenerateInterfaceMapper = projects.workloads.core.dependencyProject.name
+        }
+        room {
+            typeConverters {
+                classSuffix = "DTOConverters"
+                packageName = "typeConverters"
+                generateSeparateConverterForEachDTO = true
+                useProvidedTypeConverter = true
+            }
         }
     }
 

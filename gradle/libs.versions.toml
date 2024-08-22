@@ -1,8 +1,6 @@
 [versions]
 # Clean Wizard
 cleanwizard = "1.0.0-RC1"
-# MavenPublish
-vanniktech-maven-publish = "0.29.0"
 # Gradle
 gradle-publish = "1.2.1"
 # Kotlin
@@ -29,8 +27,6 @@ room = "2.6.1"
 [libraries]
 # Clean Wizard
 cleanwizard-gradle-plugins-api = { group = "io.github.timbermir.clean-wizard", name = "gradle-plugins-api", version.ref = "cleanwizard" }
-# Vanniktech Maven Publish
-vanniktech-maven-publish = { group = "com.vanniktech", name = "gradle-maven-publish-plugin", version.ref = "vanniktech-maven-publish" }
 # Kotlin
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 # KotlinX
@@ -58,6 +54,7 @@ di = ["kodein", "koin-core", "koin-annotations", "javax-inject"]
 [plugins]
 # Gradle
 gradle-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-publish" }
+maven-publish = { id = "maven-publish" }
 gradle-signing = { id = "signing" }
 # Java
 java = { id = "java" }
@@ -68,8 +65,6 @@ cleanwizard-internal-kotlin = { id = "corp.tbm.clean-wizard.internal.kotlin" }
 cleanwizard-internal-codegen = { id = "corp.tbm.clean-wizard.internal.codegen" }
 cleanwizard-internal-processor = { id = "corp.tbm.clean-wizard.internal.processor" }
 cleanwizard-internal-publish = { id = "corp.tbm.clean-wizard.internal.publish" }
-# MavenPublish
-vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }
 # Kotlin
 kotlin-dsl = { id = "org.gradle.kotlin.kotlin-dsl", version.ref = "kotlin-dsl" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

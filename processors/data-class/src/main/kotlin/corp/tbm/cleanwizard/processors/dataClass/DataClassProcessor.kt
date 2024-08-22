@@ -122,8 +122,11 @@ private class DataClassProcessor(
 
         when (processingRound) {
             1 -> {
-                if (layerConfigs.data.interfaceMapperConfig.pathToModuleToGenerateInterfaceMapper.isNotEmpty() && resolver.getModuleName()
-                        .asString() == layerConfigs.data.interfaceMapperConfig.pathToModuleToGenerateInterfaceMapper
+
+                val pathToModule = layerConfigs.data.interfaceMapperConfig.pathToModuleToGenerateInterfaceMapper
+
+                if (pathToModule.isEmpty() || (pathToModule.isNotEmpty() && resolver.getModuleName()
+                        .asString() == pathToModule)
                 ) {
                     val typeVariable = TypeVariableName(layerConfigs.domain.classSuffix)
                     val interfaceBuilder = TypeSpec.interfaceBuilder(

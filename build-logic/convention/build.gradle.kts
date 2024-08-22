@@ -1,10 +1,11 @@
 plugins {
     alias(libs.plugins.kotlin.dsl)
+    alias(libs.plugins.maven.publish)
+    alias(libs.plugins.gradle.signing)
 }
 
 dependencies {
     compileOnly(libs.kotlin.gradle.plugin)
-    compileOnly(libs.vanniktech.maven.publish)
     compileOnly(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
     compileOnly(files(projectConfig.javaClass.superclass.protectionDomain.codeSource.location))
 }

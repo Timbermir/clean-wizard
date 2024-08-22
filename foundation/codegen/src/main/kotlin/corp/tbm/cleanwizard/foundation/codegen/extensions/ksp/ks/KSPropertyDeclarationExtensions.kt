@@ -15,6 +15,8 @@ import corp.tbm.cleanwizard.foundation.codegen.extensions.firstCharUppercase
 import corp.tbm.cleanwizard.foundation.codegen.extensions.withoutDTOSchemaSuffix
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.dataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions.layerConfigs
+import corp.tbm.cleanwizard.gradle.api.config.CleanWizardNullResolutionStrategy
+import corp.tbm.cleanwizard.gradle.api.config.layerConfigs.CleanWizardLayerConfig
 
 inline val KSPropertyDeclaration.name
     get() = simpleName.asString()
@@ -97,4 +99,29 @@ fun KSPropertyDeclaration.determineParameterType(
 
         else -> type.toTypeName()
     }
+}
+
+fun KSPropertyDeclaration.isNullable(layerConfig: CleanWizardLayerConfig? = null): Boolean {
+    val isNullableType = type.resolve().isMarkedNullable
+    val isStubGeneration =
+        layerConfigs.data.nullResolutionStrategy == CleanWizardNullResolutionStrategy.STUB_GENERATION
+    val isDataLayer = layerConfig is CleanWizardLayerConfig.Data
+
+    return isNullableType || isStubGeneration && (layerConfig == null || isDataLayer)
+}
+
+fun KSPropertyDeclaration.elvis(
+    block: String,
+    layerConfig: CleanWizardLayerConfig? = null,
+    predicate: Boolean = isNullable(layerConfig),
+): String {
+    return if (predicate) "?: $block" else ""
+}
+
+fun KSPropertyDeclaration.safeCall(
+    block: String,
+    layerConfig: CleanWizardLayerConfig? = null,
+    predicate: Boolean = isNullable(layerConfig)
+): String {
+    return "${if (predicate) "?" else ""}.$block"
 }

@@ -483,6 +483,14 @@ Ready-to-use block with all the fields needed
             className = "DTOMapper"
             pathToModuleToGenerateInterfaceMapper = projects.workloads.core.dependencyProject.name
         }
+        room {
+            typeConverters {
+                classSuffix = "DTOConverters"
+                packageName = "typeConverters"
+                generateSeparateConverterForEachDTO = true
+                useProvidedTypeConverter = true
+            }
+        }
     }
 
     domain {
@@ -506,6 +514,80 @@ Ready-to-use block with all the fields needed
     }
 }
 ```
+
+> [!TIP]  
+> In case you don't know what block has, just type `this.` and available methods or properties will be shown.
+> 
+3.0 You can define the `serializer` that you want Clean Wizard to use in `jsonSerializer` block. The following
+serializers are available:
+- `kotlinx-serialization`
+- `Gson`
+- `Moshi`
+
+3.1 You can define the config for `kotlinx-serialization` & `Gson` inside their respective blocks just like that:
+
+```kotlin
+jsonSerializer {
+    json {
+        encodeDefaults = true
+        ignoreUnknownKeys = true
+        isLenient = false
+        allowStructuredMapKeys = true
+        prettyPrint = true
+        explicitNulls = false
+        prettyPrintIndent = "   "
+        @OptIn(ExperimentalSerializationApi::class)
+        namingStrategy = JsonNamingStrategy.KebabCase
+        ...
+    }
+}
+```
+
+```kotlin
+jsonSerializer {
+    gson {
+        longSerializationPolicy = LongSerializationPolicy.DEFAULT
+        fiendNamingPolicy = FieldNamingPolicy.IDENTITY
+        serializeNulls = false
+        datePattern = ""
+        dateStyle = DateFormat.DEFAULT
+        timeStyle = DateFormat.DEFAULT
+        ...
+    }
+}
+```
+
+3.2 If you don't like defining the config using the extension, you can just pass the `Gson` directly.
+
+```kotlin
+jsonSerializer {
+    gson {
+        gson = GsonBuilder().serializeNulls().disableHtmlEscaping().create()
+    }
+}
+```
+The serializer that you have defined is going to be used when generating data classes and `Room` `TypeConverters`.
+
+4.0 You can define the `Dependency Injection` framework that is used for generating use cases. You can choose from:
+- Koin
+- Koin Annotations
+- Dagger2
+- Kodein
+
+This can be configured in the `dependencyInjection` block.
+
+```kotlin
+dependencyInjection {
+        kodein {
+            useSimpleFunctions = true
+            binding = CleanWizardDependencyInjectionFramework.Kodein.KodeinBinding.Multiton()
+        }
+    }
+```
+
+4.0 You can completely disable the generation of presentation UI classes by assigning value of the `shouldGenerate`
+property in
+`presentation` block to `false`.
 
 You can see the list of available
 options [here](build-logic/convention/src/main/kotlin/corp/tbm/cleanwizard/buildLogic/convention/foundation/CleanWizardProcessorConfig.kt)

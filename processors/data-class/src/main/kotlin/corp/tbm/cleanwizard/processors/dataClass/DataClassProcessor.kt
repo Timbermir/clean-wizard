@@ -3,10 +3,7 @@ package corp.tbm.cleanwizard.processors.dataClass
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getAnnotationsByType
-import com.google.devtools.ksp.getDeclaredProperties
-import com.google.devtools.ksp.isAnnotationPresent
+import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -28,7 +25,6 @@ import corp.tbm.cleanwizard.foundation.codegen.extensions.*
 import corp.tbm.cleanwizard.foundation.codegen.extensions.kotlinpoet.writeNewFile
 import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.getAnnotatedSymbols
 import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.ks.*
-import corp.tbm.cleanwizard.foundation.codegen.extensions.ksp.log
 import corp.tbm.cleanwizard.foundation.codegen.processor.DataClassGenerationPattern
 import corp.tbm.cleanwizard.foundation.codegen.processor.Logger
 import corp.tbm.cleanwizard.foundation.codegen.processor.ProcessorOptions
@@ -80,8 +76,13 @@ private class DataClassProcessor(
             }
         }
 
-        val collectionNameCheck: (propertyName: String) -> String = { propertyName ->
+        val typeNameCheck: (propertyName: String) -> String = { propertyName ->
             when (propertyName) {
+                "Byte", "Short", "Int", "Long" -> "-1"
+                "Float" -> "-1f"
+                "Double" -> "-1.0"
+                "Boolean" -> "false"
+                "String" -> "\"\""
                 "List" -> "emptyList()"
                 "ImmutableList", "PersistentList" -> fileSpec.addKotlinxCollectionsImmutableBlockWithImport("persistentListOf()")
                 "MutableList" -> "mutableListOf()"
@@ -106,53 +107,57 @@ private class DataClassProcessor(
                 )
                 { currentProperty ->
                     val currentPropertyTypeDeclarationName = currentProperty.type.resolve().declaration.name
-                    logger.log(currentProperty.type.resolve().declaration.name)
                     val filteredProperties = properties.filter { it.name == currentProperty.name }
                     when {
-                        filteredProperties.any { it.type.resolve().isClassMappable } ->
-                            "${currentProperty.name}${if (currentProperty.isNullable(layerConfig)) "?" else ""}.$functionName() ${
+                        filteredProperties.any { it.type.resolve().isClassMappable } -> {
+                            val classType = currentProperty.determineParameterTypeNoList(
+                                symbol,
+                                resolver,
+                                dataClassGenerationPattern.classNameReplacement(
+                                    packageName,
+                                    returns.simpleName,
+                                    layerConfigs.data
+                                ).packageName
+                            )
+                            val classFullyQualifiedName =
+                                "${classType.packageName}.${layerConfigs.domain.packageName}.${classType.simpleName}"
+
+                            fileSpec?.addImport(
+                                classFullyQualifiedName,
+                                ""
+                            )
+                            "${currentProperty.safeCall("$functionName()")} ${
                                 currentProperty.elvis(
                                     "${
-                                        currentProperty.determineParameterType(
-                                            symbol,
-                                            resolver,
-                                            dataClassGenerationPattern.classNameReplacement(
-                                                packageName,
-                                                returns.simpleName,
-                                                layerConfigs.data
-                                            ).packageName
-                                        )
-                                    }()"
+                                        classType.simpleName
+                                    }(${
+                                        resolver.getClassDeclarationByName(classType.simpleName)
+                                            ?.getDeclaredProperties()?.joinToString {
+                                                typeNameCheck(it.type.resolve().declaration.name)
+                                            }
+                                    })"
                                 )
                             }"
+                        }
 
                         filteredProperties.any { it.type.resolve().isListMappable } ->
-                            "${currentProperty.name}${
-                                currentProperty.safeCall(
-                                    "map { ${
-                                        currentProperty.getParameterName(
-                                            packageName
-                                        ).firstCharLowercase()
-                                    } -> ${
-                                        currentProperty.getParameterName(packageName).firstCharLowercase()
-                                    }.$functionName() } ${
-                                        currentProperty.elvis(
-                                            collectionNameCheck(currentPropertyTypeDeclarationName), layerConfig
-                                        )
-                                    }"
-                                )
-                            }"
+                            currentProperty.safeCall(
+                                "map { ${
+                                    currentProperty.getParameterName(
+                                        packageName
+                                    ).firstCharLowercase()
+                                } -> ${
+                                    currentProperty.getParameterName(packageName).firstCharLowercase()
+                                }.$functionName() } ${
+                                    currentProperty.elvis(
+                                        typeNameCheck(currentPropertyTypeDeclarationName), layerConfig
+                                    )
+                                }"
+                            )
 
                         else -> "${currentProperty.name} ${
                             currentProperty.elvis(
-                                when (currentPropertyTypeDeclarationName) {
-                                    "Byte", "Short", "Int", "Long" -> "-1"
-                                    "Float" -> "-1f"
-                                    "Double" -> "-1.0"
-                                    "Boolean" -> "false"
-                                    "String" -> "\"\""
-                                    else -> collectionNameCheck(currentPropertyTypeDeclarationName)
-                                }, layerConfig
+                                typeNameCheck(currentPropertyTypeDeclarationName), layerConfig
                             )
                         }"
                     }

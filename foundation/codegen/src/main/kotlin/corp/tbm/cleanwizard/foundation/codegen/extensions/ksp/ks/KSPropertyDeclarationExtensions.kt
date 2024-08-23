@@ -100,6 +100,47 @@ fun KSPropertyDeclaration.determineParameterType(
         else -> type.toTypeName()
     }
 }
+@OptIn(KspExperimental::class)
+fun KSPropertyDeclaration.determineParameterTypeNoList(
+    symbol: KSClassDeclaration,
+    resolver: Resolver,
+    packageName: String
+): ClassName{
+
+    val type = type.resolve()
+
+    return when {
+
+        annotations.filter { it.isEnum }.toList().isNotEmpty() -> {
+            val filteredAnnotations =
+                annotations.filter { it.isEnum }
+                    .toList().first()
+
+            val enumPackageName =
+                "${dataClassGenerationPattern.generatePackageName(symbol, layerConfigs.domain)}.enums"
+
+            val declarations = resolver.getDeclarationsFromPackage(
+                enumPackageName
+            ).toList()
+
+            val enum =
+                declarations.firstOrNull {
+                    it.name == this.name.firstCharUppercase() || it.name == filteredAnnotations.arguments.first { valueArgument ->
+                        valueArgument.simpleName == "enumName"
+                    }.simpleName
+                }
+
+            ClassName(enum?.packageName?.asString().toString(), enum.name)
+        }
+
+        type.isClassMappable -> ClassName(
+            getQualifiedPackageNameBasedOnParameterName(packageName),
+            getParameterName(packageName).firstCharUppercase()
+        )
+
+        else -> type.toClassName()
+    }
+}
 
 fun KSPropertyDeclaration.isNullable(layerConfig: CleanWizardLayerConfig? = null): Boolean {
     val isNullableType = type.resolve().isMarkedNullable
@@ -123,5 +164,5 @@ fun KSPropertyDeclaration.safeCall(
     layerConfig: CleanWizardLayerConfig? = null,
     predicate: Boolean = isNullable(layerConfig)
 ): String {
-    return "${if (predicate) "?" else ""}.$block"
+    return "$name${if (predicate) "?" else ""}.$block"
 }

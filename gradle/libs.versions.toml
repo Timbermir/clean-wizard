@@ -9,7 +9,7 @@ gradle-publish = "1.2.1"
 kotlin = "2.0.20"
 kotlin-dsl = "5.1.0"
 # KotlinX
-kotlinx-collections-immutable = "0.3.7"
+kotlinx-collections-immutable = "0.3.8"
 kotlinx-serialization-json = "1.7.1"
 # Google
 google-devtools-ksp = "2.0.20-1.0.24"

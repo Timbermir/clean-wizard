@@ -2,7 +2,7 @@
 # Clean Wizard
 cleanwizard = "1.0.0-RC1"
 # MavenPublish
-vanniktech-maven-publish = "0.29.0"
+vanniktech-maven-publish = "0.30.0"
 # Gradle
 gradle-publish = "1.2.1"
 # Kotlin

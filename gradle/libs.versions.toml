@@ -12,7 +12,7 @@ kotlin-dsl = "5.1.0"
 kotlinx-collections-immutable = "0.3.7"
 kotlinx-serialization-json = "1.7.1"
 # Google
-google-devtools-ksp = "2.0.20-1.0.24"
+google-devtools-ksp = "2.0.21-1.0.26"
 google-gson = "2.11.0"
 # Squareup
 squareup-kotlinpoet = "1.18.1"
